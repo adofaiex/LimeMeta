@@ -159,6 +159,73 @@ DataType: "MySql"
 
 换数据库后需要实际验证建表、JSON 字段和索引行为，不能只改连接串就默认完全兼容。
 
+### PostgreSQL 权限说明
+
+LimeMeta 启动时会根据模型自动建表，所以连接数据库的用户不能只是“能登录、能连接数据库”，还必须能在目标 schema 中创建表。
+
+如果使用 PostgreSQL，常见连接串如下：
+
+```yaml
+ConnectionString: "Host=127.0.0.1;Port=5432;Database=limemeta;Username=limemeta;Password=your-password"
+```
+
+其中 `Username=limemeta` 这个用户至少需要：
+
+- 目标数据库的连接权限。
+- `public` schema 的 `USAGE` 权限。
+- `public` schema 的 `CREATE` 权限。
+
+只执行下面这种数据库级授权是不够的：
+
+```sql
+GRANT ALL PRIVILEGES ON DATABASE limemeta TO limemeta;
+```
+
+因为 PostgreSQL 里数据库、schema、表是分层授权的。数据库级权限不等于 schema 建表权限。
+
+如果启动时报错：
+
+```text
+42501: permission denied for schema public
+```
+
+说明应用用户没有 `public` schema 的建表权限。进入数据库后执行：
+
+```sql
+\c limemeta
+
+GRANT USAGE, CREATE ON SCHEMA public TO limemeta;
+```
+
+测试环境也可以直接把 `public` schema 的所有者改成应用用户：
+
+```sql
+\c limemeta
+
+ALTER SCHEMA public OWNER TO limemeta;
+```
+
+如果已经创建过一些表、序列和函数，还可以补充授权：
+
+```sql
+\c limemeta
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO limemeta;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO limemeta;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO limemeta;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT ALL PRIVILEGES ON TABLES TO limemeta;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT ALL PRIVILEGES ON SEQUENCES TO limemeta;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT ALL PRIVILEGES ON FUNCTIONS TO limemeta;
+```
+
+在 PostgreSQL 15 及以后版本中，默认权限比早期版本更收紧。很多面板创建数据库和用户时，只会授予数据库级权限，不一定会把 `public` schema 的建表权限也给应用用户。LimeMeta 这种会自动建表的框架，需要额外确认 schema 权限。
+
 `LimeMeta:FileStorePath`
 
 上传文件保存根目录。
@@ -625,6 +692,73 @@ Urls: "http://0.0.0.0:8082"
 ```
 
 并在宝塔安全中放行 `8082`。更推荐使用反向代理，不直接暴露后端端口。
+
+### 宝塔 PostgreSQL 注意事项
+
+宝塔面板中新建 PostgreSQL 数据库和用户后，应用用户可能只拥有数据库级权限，不一定拥有 `public` schema 的建表权限。LimeMeta 启动时会自动同步表结构，如果权限不足，会在启动时出现：
+
+```text
+42501: permission denied for schema public
+```
+
+这不是 LimeMeta 的建表逻辑错误，而是数据库用户权限不够。进入宝塔终端后可以用 PostgreSQL 管理员进入目标库：
+
+```bash
+/www/server/pgsql/bin/psql -U postgres -d limemeta
+```
+
+如果服务器要求切换系统用户，可以使用：
+
+```bash
+sudo -u postgres /www/server/pgsql/bin/psql -d limemeta
+```
+
+然后执行：
+
+```sql
+GRANT USAGE, CREATE ON SCHEMA public TO limemeta;
+```
+
+测试环境也可以执行：
+
+```sql
+ALTER SCHEMA public OWNER TO limemeta;
+```
+
+宝塔 PostgreSQL 如果要允许远程连接，需要同时满足：
+
+- `postgresql.conf` 中 `listen_addresses` 允许外部地址，例如 `listen_addresses = '*'`。
+- `pg_hba.conf` 中有匹配数据库、用户、来源 IP 的 `host` 规则。
+- 云服务器安全组和宝塔安全都放行 PostgreSQL 端口，默认是 `5432`。
+
+注意：`listen_addresses` 不能只 reload 生效，修改后必须重启 PostgreSQL。重启后可以用下面命令确认监听状态：
+
+```bash
+ss -lntp | grep 5432
+```
+
+如果只看到：
+
+```text
+127.0.0.1:5432
+```
+
+说明它仍然只监听本机。正确的远程监听通常会看到：
+
+```text
+0.0.0.0:5432
+```
+
+### PostgreSQL 管理工具
+
+常用 PostgreSQL 管理工具：
+
+- pgAdmin：PostgreSQL 官方图形化管理工具，功能完整，适合日常管理、查表、执行 SQL。
+- DBeaver：通用数据库客户端，支持 PostgreSQL、MySQL、SQLite、SQL Server 等，适合同时管理多种数据库。
+- DataGrip：JetBrains 的数据库 IDE，SQL 编写和结构浏览体验很好，适合长期开发使用。
+- Navicat Premium：商业数据库管理工具，界面友好，适合习惯图形化操作的团队。
+- TablePlus：轻量客户端，启动快，适合简单查看和执行 SQL。
+- psql：PostgreSQL 自带命令行工具，服务器排错时最可靠。
 
 ## 新增业务模型
 
