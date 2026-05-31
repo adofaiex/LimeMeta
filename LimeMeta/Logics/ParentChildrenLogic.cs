@@ -47,17 +47,24 @@ public sealed class ParentChildrenLogic : BaseLogic<IParentChildren>
         var updateObjs = new List<IParentChildren>();
         foreach (var (oldObj, newObj) in args.Objs)
         {
-            newObj.Path = CalcIdPath(args.LimeMeta, newObj, args.ModelType, args.UserId);
+            var path = CalcIdPath(args.LimeMeta, newObj, args.ModelType, args.UserId);
+            var namePath = newObj.NamePath;
             if (args.ModelType.GetProperty(NamePropertyName) != null)
             {
-                newObj.NamePath = CalcNamePath(args.LimeMeta, newObj, args.ModelType, args.UserId);
+                namePath = CalcNamePath(args.LimeMeta, newObj, args.ModelType, args.UserId);
             }
-            updateObjs.Add(newObj);
+
+            if (newObj.Path != path || newObj.NamePath != namePath)
+            {
+                newObj.Path = path;
+                newObj.NamePath = namePath;
+                updateObjs.Add(newObj);
+            }
         }
 
         if (updateObjs.Count != 0)
         {
-            args.LimeMeta.Update(args.ModelType, updateObjs);
+            args.LimeMeta.Update(args.ModelType, updateObjs, args.UserId, false);
         }
     }
 
@@ -77,7 +84,7 @@ public sealed class ParentChildrenLogic : BaseLogic<IParentChildren>
             }
         }
 
-        args.LimeMeta.Update(args.ModelType, args.Objs);
+        args.LimeMeta.Update(args.ModelType, args.Objs, args.UserId, false);
     }
 
     /// <summary>
