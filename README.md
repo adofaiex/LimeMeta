@@ -303,7 +303,16 @@ dotnet publish LimeMeta.WebAPI/LimeMeta.WebAPI.csproj -c Release -o publish
 publish/
 ```
 
-部署到 Linux 时，上传 `publish` 目录中的所有文件。
+部署到 Linux 时，上传 `publish` 目录中的所有文件。发布产物中会包含：
+
+```text
+appsettings.yml
+appsettings.Development.yml
+Seed/
+LimeMeta.WebAPI.dll
+```
+
+线上部署时主要修改 `publish/appsettings.yml`，也就是上传到服务器后的 `appsettings.yml`。
 
 如果服务器没有安装 .NET Runtime，可以发布自包含版本：
 
@@ -784,4 +793,3 @@ AutoMapper 的新版本存在授权要求，商业项目使用前需要确认许
 - 敏感字段必须同时处理查询暴露、DTO 入参、更新拦截。
 - 业务规则放在 Logic，不要散落在前端或多个接口里。
 - 配置和密钥不要提交真实值。
-

@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="appsettings*.yml" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Seed\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
