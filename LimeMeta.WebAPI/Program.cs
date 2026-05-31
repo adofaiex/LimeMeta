@@ -1,7 +1,6 @@
 using System.Text;
 using LimeMeta;
 using LimeMeta.GraphQL;
-using LimeMeta.Workflow;
 using Serilog;
 
 Console.OutputEncoding = Encoding.UTF8;
@@ -36,20 +35,12 @@ builder.Host.UseSerilog((context, services, configuration) =>
 // Add services to the container.
 builder.Services.AddLimeMeta(builder.Configuration, builder.Environment);
 
-// Add HttpClient for MAF workflow trigger
-builder.Services.AddHttpClient("MAF", client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
-
 var gqlBuilder = builder.Services.AddLimeMetaGraphQL();
-builder.Services.AddLimeMetaWorkflow(gqlBuilder, builder.Configuration);
 
 // Build the app
 var app = builder.Build();
 app.UseLimeMeta();
 app.UseLimeMetaGraphQL();
-app.UseLimeMetaWorkflow();
 
 try
 {

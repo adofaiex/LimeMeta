@@ -12,7 +12,6 @@ LimeMeta 是一个基于模型驱动的 .NET 后端框架。它把实体模型�
 - 用户、角色、权限、部门基础模型：内置 RBAC 相关表结构。
 - 文件上传下载：内置 `/api/file/upload` 和 `/api/file/download`。
 - 种子数据：启动时加载 `LimeMeta.WebAPI/Seed/*.yaml`。
-- 工作流扩展：`LimeMeta.Workflow` 提供表单、表单数据、签核、通知等模型。
 
 ## 项目结构
 
@@ -20,7 +19,6 @@ LimeMeta 是一个基于模型驱动的 .NET 后端框架。它把实体模型�
 LimeMeta/
 ├─ LimeMeta/              # 核心框架：模型、数据访问、Logic、FastEndpoints 文件接口
 ├─ LimeMeta.GraphQL/      # GraphQL 查询、Mutation 自动注册
-├─ LimeMeta.Workflow/     # 工作流相关模型和扩展
 ├─ LimeMeta.WebAPI/       # Web 启动项目、配置、种子数据
 ├─ LimeMeta.sln           # 解决方案
 ├─ run.bat                # 本地启动
@@ -48,16 +46,16 @@ dotnet run --project LimeMeta.WebAPI/LimeMeta.WebAPI.csproj
 主要配置节：
 
 ```yaml
+Urls: "http://127.0.0.1:8082"
+
 LimeMeta:
   ConnectionString: "Host=localhost;Port=5432;Database=limemeta_dev;Username=postgres;Password=postgres"
   DataType: "PostgreSQL"
   FileStorePath: "./FileStore"
   FileStoreCount: 8192
-
-LimeMetaWorkflow:
-  EngineUrl: "http://localhost:8000/workflow"
-  EngineKey: "change-me"
 ```
+
+`Urls` 是服务监听地址。开发环境可以使用 `http://*:8082`，线上建议使用 `http://127.0.0.1:8082`，再由 Nginx 或宝塔反向代理到公网域名。
 
 生产环境不要把真实密码、密钥、连接字符串提交进仓库，优先使用环境变量或部署平台的密钥配置。
 
@@ -287,4 +285,3 @@ AutoMapper 的新版本存在授权要求，商业项目使用前需要确认许
 - 敏感字段必须同时处理查询暴露、DTO 入参、更新拦截。
 - 业务规则放在 Logic，不要散落在前端或多个接口里。
 - 配置和密钥不要提交真实值。
-

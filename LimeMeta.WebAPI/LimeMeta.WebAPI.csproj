@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LimeMeta.GraphQL\LimeMeta.GraphQL.csproj" />
-    <ProjectReference Include="..\LimeMeta.Workflow\LimeMeta.Workflow.csproj" />
   </ItemGroup>
 
   <ItemGroup>

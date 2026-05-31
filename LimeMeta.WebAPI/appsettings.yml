@@ -1,11 +1,10 @@
+Urls: "http://127.0.0.1:8082"
+
 LimeMeta:
   ConnectionString: "Host=postgres;Port=5432;Database=limemeta;Username=limemeta;Password=change-me"
   DataType: "PostgreSQL"
   FileStorePath: "/FileStore"
   FileStoreCount: 8192
-LimeMetaWorkflow:
-  EngineUrl: "http://maf:8000/workflow"
-  EngineKey: "change-me"
 Serilog:
   MinimumLevel:
     Default: Information
