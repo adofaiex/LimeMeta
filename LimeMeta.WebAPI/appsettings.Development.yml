@@ -1,0 +1,7 @@
+LimeMeta:
+  ConnectionString: "Host=localhost;Port=5432;Database=limemeta_dev;Username=postgres;Password=postgres"
+  DataType: "PostgreSQL"
+  FileStorePath: "./FileStore"
+LimeMetaWorkflow:
+  EngineUrl: "http://localhost:8000/workflow"
+  EngineKey: "change-me"

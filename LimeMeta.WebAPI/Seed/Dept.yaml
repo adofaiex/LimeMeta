@@ -1,0 +1,22 @@
+- id: 019e15c1-01c4-775a-b72b-ff1837a3becc
+  name: 甘肃省公路公路发集团有限公司
+
+- id: 019e15c1-a9b0-73fd-9d75-8ca869953121
+  name: 甘肃恒石公路检测科技有限公司
+  parentId: 019e15c1-01c4-775a-b72b-ff1837a3becc
+
+- id: 019e15c2-fd00-7736-a795-4fce1d920b05
+  name: 科技信息部
+  parentId: 019e15c1-a9b0-73fd-9d75-8ca869953121
+
+- id: 019e15c3-6875-71aa-ac46-fc4e9b9f31bb
+  name: 甘肃恒通路桥工程有限公司
+  parentId: 019e15c1-01c4-775a-b72b-ff1837a3becc
+
+- id: 019e15c4-a692-77cd-aafc-6959d818aefe
+  name: 工程部
+  parentId: 019e15c3-6875-71aa-ac46-fc4e9b9f31bb
+
+- id: 019e431d-427d-7599-bd88-d3e7cd328cdd
+  name: 人力资源部
+  parentId: 019e15c3-6875-71aa-ac46-fc4e9b9f31bb

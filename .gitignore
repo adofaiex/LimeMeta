@@ -1,0 +1,28 @@
+# Build outputs
+bin/
+obj/
+out/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Logs and backups
+*.log
+*.tmp
+*.bak
+
+# NuGet packages
+packages/
+*.nupkg
+
+# Coverage and test artifacts
+TestResult*/
+*.coverage
+*.coveragexml
+coverage/

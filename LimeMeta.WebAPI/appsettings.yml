@@ -1,0 +1,26 @@
+LimeMeta:
+  ConnectionString: "Host=postgres;Port=5432;Database=limemeta;Username=limemeta;Password=change-me"
+  DataType: "PostgreSQL"
+  FileStorePath: "/FileStore"
+  FileStoreCount: 8192
+LimeMetaWorkflow:
+  EngineUrl: "http://maf:8000/workflow"
+  EngineKey: "change-me"
+Serilog:
+  MinimumLevel:
+    Default: Information
+    Override:
+      Microsoft: Information
+      Microsoft.AspNetCore: Information
+  WriteTo:
+    - Name: Console
+      Args:
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"
+    - Name: File
+      Args:
+        path: "Logs/error-.log"
+        restrictedToMinimumLevel: Error
+        rollingInterval: Day
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+AllowedHosts: "*"
+

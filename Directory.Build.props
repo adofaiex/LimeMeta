@@ -1,0 +1,11 @@
+<Project>
+  <!-- 版本：年.月日(月*100+日).时分(时*100+分)，例如 2026.512.1430 表示 2026-05-12 14:30，且符合 SemVer 数字段无前导零的要求 -->
+  <PropertyGroup>
+    <!-- 避免 InformationalVersion 被追加 +git 哈希（SDK 默认行为） -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <Version>$([System.DateTime]::Now.Year).$([MSBuild]::Add($([MSBuild]::Multiply($([System.DateTime]::Now.Month), 100)), $([System.DateTime]::Now.Day))).$([MSBuild]::Add($([MSBuild]::Multiply($([System.DateTime]::Now.Hour), 100)), $([System.DateTime]::Now.Minute)))</Version>
+    <AssemblyVersion>$(Version).0</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <InformationalVersion>$(Version)</InformationalVersion>
+  </PropertyGroup>
+</Project>
