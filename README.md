@@ -4,14 +4,14 @@ LimeMeta 是一个基于模型驱动的 .NET 后端框架。它把实体模型�
 
 ## 核心能力
 
-- 模型自动建表：启动时扫描所有带 `[Table]` 且继承 `BaseObject` 的模型，并通过 FreeSql 同步表结构。
+- 模型自动建表：可配置启动时扫描所有带 `[Table]` 且继承 `BaseObject` 的模型，并通过 FreeSql 同步表结构。
 - GraphQL 自动查询：每个模型会自动生成同名查询字段，支持分页、过滤、排序和导航属性加载。
 - GraphQL 自动变更：每个模型会自动生成 `insertXxx`、`updateXxx`、`deleteXxx`。
 - Logic 事件机制：查询、新增、更新、删除前后都能挂业务逻辑。
 - JWT 认证：支持 Bearer Token，也支持 AppKey 换取用户身份。
 - 用户、角色、权限、部门基础模型：内置 RBAC 相关表结构。
 - 文件上传下载：内置 `/api/file/upload` 和 `/api/file/download`。
-- 种子数据：启动时加载 `LimeMeta.WebAPI/Seed/*.yaml`。
+- 种子数据：可配置启动时加载 `LimeMeta.WebAPI/Seed/*.yaml`。
 
 ## 项目结构
 
@@ -82,6 +82,8 @@ LimeMeta:
   AdminUserName: "admin"
   AdminUserPassword: "change-me-admin-password"
   DefaultUserPassword: "change-me-user-password"
+  AutoSyncSchema: false
+  LoadSeedOnStartup: false
 
 Serilog:
   MinimumLevel:
@@ -301,6 +303,26 @@ AdminUserPassword: "change-me-admin-password"
 DefaultUserPassword: "change-me-user-password"
 ```
 
+`LimeMeta:AutoSyncSchema`
+
+启动时是否自动同步数据库表结构。
+
+```yaml
+AutoSyncSchema: true
+```
+
+开发环境建议开启，新增模型后重启即可自动建表。生产环境建议谨慎开启：第一次部署或确认模型变更后可以打开执行一次，稳定运行后建议关闭。
+
+`LimeMeta:LoadSeedOnStartup`
+
+启动时是否自动加载种子数据。
+
+```yaml
+LoadSeedOnStartup: true
+```
+
+开发环境建议开启，方便初始化管理员、角色和权限。生产环境如果不希望每次启动都检查种子文件，可以关闭。
+
 `Serilog`
 
 日志配置。当前配置了：
@@ -348,6 +370,8 @@ LimeMeta:
   AdminUserName: "admin"
   AdminUserPassword: "change-me-admin-password"
   DefaultUserPassword: "change-me-user-password"
+  AutoSyncSchema: true
+  LoadSeedOnStartup: true
 ```
 
 ### IDE 调试配置
@@ -358,7 +382,7 @@ Visual Studio、Rider、VS Code 或 `dotnet run` 通常会读取：
 LimeMeta.WebAPI/Properties/launchSettings.json
 ```
 
-它只用于本地开发调试。发布到 Linux 后，不要依赖这个文件。
+它只用于本地开发调试。当前项目不在 `launchSettings.json` 中配置端口，开发端口统一由 `appsettings.Development.yml` 的 `Urls` 控制。发布到 Linux 后，不要依赖这个文件。
 
 当前配置：
 
@@ -366,7 +390,9 @@ LimeMeta.WebAPI/Properties/launchSettings.json
 {
   "profiles": {
     "http": {
-      "applicationUrl": "http://*:8082",
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -491,6 +517,8 @@ LimeMeta:
   AdminUserName: "admin"
   AdminUserPassword: "change-me-admin-password"
   DefaultUserPassword: "change-me-user-password"
+  AutoSyncSchema: false
+  LoadSeedOnStartup: false
 
 Serilog:
   MinimumLevel:
@@ -636,6 +664,8 @@ LimeMeta:
   AdminUserName: "admin"
   AdminUserPassword: "change-me-admin-password"
   DefaultUserPassword: "change-me-user-password"
+  AutoSyncSchema: false
+  LoadSeedOnStartup: false
 
 Serilog:
   MinimumLevel:
@@ -803,7 +833,7 @@ public class ProjectDto : BaseDto
 - DTO 名称必须是 `实体名 + Dto`，例如 `Project` 对应 `ProjectDto`。
 - DTO 必须和实体在同一个程序集内，否则自动 Mutation 找不到 DTO。
 
-完成后启动服务，框架会自动同步表结构，并生成：
+完成后如果 `LimeMeta:AutoSyncSchema` 为 `true`，启动服务时框架会自动同步表结构，并生成：
 
 ```text
 Project
@@ -956,7 +986,7 @@ LimeMeta.WebAPI/Seed
 Project.yaml
 ```
 
-启动时框架会读取种子文件，并根据文件修改时间和对象 `Ver` 判断是否需要写入或更新。
+如果 `LimeMeta:LoadSeedOnStartup` 为 `true`，启动时框架会读取种子文件，并根据文件修改时间和对象 `Ver` 判断是否需要写入或更新。
 
 YAML 支持注释，使用 `#` 开头即可。当前种子文件已经写了字段说明和示例。
 

@@ -43,6 +43,16 @@ public sealed class LimeMetaConfiguration
     public string DefaultUserPassword { get; set; } = "change-me-user-password";
 
     /// <summary>
+    /// 启动时是否自动同步数据库表结构
+    /// </summary>
+    public bool AutoSyncSchema { get; set; } = true;
+
+    /// <summary>
+    /// 启动时是否自动加载种子数据
+    /// </summary>
+    public bool LoadSeedOnStartup { get; set; } = true;
+
+    /// <summary>
     /// 加密盐
     /// </summary>
     public string Salt { get; set; } = "$2a$12$v76VCF8eVvsTeLLTJ1Gu3O";

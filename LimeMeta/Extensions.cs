@@ -178,9 +178,18 @@ public static class Extensions
     public static IApplicationBuilder UseLimeMeta(this IApplicationBuilder app)
     {
         using var sc = app.ApplicationServices.CreateScope();
+        var config = sc.ServiceProvider.GetRequiredService<LimeMetaConfiguration>();
         var meta = sc.ServiceProvider.GetRequiredService<ILimeMeta>();
-        meta.UpdateSchema();
-        meta.LoadSeed();
+
+        if (config.AutoSyncSchema)
+        {
+            meta.UpdateSchema();
+        }
+
+        if (config.LoadSeedOnStartup)
+        {
+            meta.LoadSeed();
+        }
 
         app.UseAuthentication();
         app.UseAuthorization();

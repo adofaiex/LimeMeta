@@ -10,6 +10,8 @@ LimeMeta:
   AdminUserName: "admin"
   AdminUserPassword: "change-me-admin-password"
   DefaultUserPassword: "change-me-user-password"
+  AutoSyncSchema: false
+  LoadSeedOnStartup: false
 Serilog:
   MinimumLevel:
     Default: Information
@@ -27,4 +29,3 @@ Serilog:
         rollingInterval: Day
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
 AllowedHosts: "*"
-

@@ -9,3 +9,5 @@ LimeMeta:
   AdminUserName: "admin"
   AdminUserPassword: "change-me-admin-password"
   DefaultUserPassword: "change-me-user-password"
+  AutoSyncSchema: true
+  LoadSeedOnStartup: true
