@@ -21,43 +21,541 @@ LimeMeta/
 ├─ LimeMeta.GraphQL/      # GraphQL 查询、Mutation 自动注册
 ├─ LimeMeta.WebAPI/       # Web 启动项目、配置、种子数据
 ├─ LimeMeta.sln           # 解决方案
-├─ run.bat                # 本地启动
+├─ run.bat                # Windows 本地启动
 └─ rel.bat                # NuGet 打包脚本
 ```
 
-## 启动
+## 内置模块
 
-先修改 `LimeMeta.WebAPI/appsettings.Development.yml` 中的 PostgreSQL 连接字符串，然后执行：
+核心模块：
 
-```bash
-dotnet run --project LimeMeta.WebAPI/LimeMeta.WebAPI.csproj
-```
+- 用户：`User`
+- 角色：`Role`
+- 权限：`Perm`
+- 用户角色：`UserRole`
+- 部门：`Dept`
+- 部门用户：`DeptUser`
+- 部门角色：`DeptRole`
+- AppKey：`AppKey`
+- 文件信息：`FileInfo`
 
-默认 GraphQL 地址：
+接口模块：
+
+- GraphQL：`/api/gql`
+- 文件上传：`POST /api/file/upload`
+- 文件下载：`GET /api/file/download?id=文件ID`
+
+上传文件会写入 `LimeMeta:FileStorePath` 指定的目录，并在 `file_info` 表中记录文件元数据。
+
+## 配置文件
+
+LimeMeta 使用 YAML 作为主配置格式。配置加载顺序在 `LimeMeta.WebAPI/Program.cs` 中定义：
+
+1. `appsettings.yml`
+2. `appsettings.{Environment}.yml`
+3. 环境变量
+4. 命令行参数
+
+后加载的配置会覆盖先加载的配置。
+
+### 主配置文件
+
+主配置文件是：
 
 ```text
-/api/gql
+LimeMeta.WebAPI/appsettings.yml
 ```
 
-开发环境会开启 Swagger。
-
-## 配置
-
-主要配置节：
+生产部署主要改这个文件。完整示例：
 
 ```yaml
 Urls: "http://127.0.0.1:8082"
 
 LimeMeta:
+  ConnectionString: "Host=127.0.0.1;Port=5432;Database=limemeta;Username=limemeta;Password=change-me"
+  DataType: "PostgreSQL"
+  FileStorePath: "/www/wwwroot/limemeta/FileStore"
+  FileStoreCount: 8192
+
+Serilog:
+  MinimumLevel:
+    Default: Information
+    Override:
+      Microsoft: Information
+      Microsoft.AspNetCore: Information
+  WriteTo:
+    - Name: Console
+      Args:
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"
+    - Name: File
+      Args:
+        path: "Logs/error-.log"
+        restrictedToMinimumLevel: Error
+        rollingInterval: Day
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+
+AllowedHosts: "*"
+```
+
+### 主配置含义
+
+`Urls`
+
+服务监听地址。线上建议使用：
+
+```yaml
+Urls: "http://127.0.0.1:8082"
+```
+
+这样服务只监听服务器本机端口，再由 Nginx 或宝塔反向代理到公网域名。
+
+如果需要直接暴露端口，可以写：
+
+```yaml
+Urls: "http://0.0.0.0:8082"
+```
+
+开发环境也可以写：
+
+```yaml
+Urls: "http://*:8082"
+```
+
+`LimeMeta:ConnectionString`
+
+数据库连接字符串。当前项目默认安装的是 PostgreSQL Provider，所以开箱使用 PostgreSQL。
+
+PostgreSQL 示例：
+
+```yaml
+ConnectionString: "Host=127.0.0.1;Port=5432;Database=limemeta;Username=limemeta;Password=your-password"
+```
+
+`LimeMeta:DataType`
+
+FreeSql 数据库类型。当前默认：
+
+```yaml
+DataType: "PostgreSQL"
+```
+
+如果要使用 MySQL，需要先在 `LimeMeta.WebAPI.csproj` 添加 MySQL Provider：
+
+```xml
+<PackageReference Include="FreeSql.Provider.MySql" Version="3.5.309" />
+```
+
+然后配置：
+
+```yaml
+ConnectionString: "Server=127.0.0.1;Port=3306;Database=limemeta;Uid=root;Pwd=your-password;Charset=utf8mb4;"
+DataType: "MySql"
+```
+
+换数据库后需要实际验证建表、JSON 字段和索引行为，不能只改连接串就默认完全兼容。
+
+`LimeMeta:FileStorePath`
+
+上传文件保存根目录。
+
+Linux 推荐使用绝对路径：
+
+```yaml
+FileStorePath: "/www/wwwroot/limemeta/FileStore"
+```
+
+如果写相对路径：
+
+```yaml
+FileStorePath: "./FileStore"
+```
+
+它会相对于程序运行目录保存。宝塔中通常就是项目运行路径。
+
+上传后的实际文件路径格式：
+
+```text
+FileStorePath/存储编号/原文件名_GUID.扩展名
+```
+
+`LimeMeta:FileStoreCount`
+
+每个文件存储子目录最多放多少个文件。默认：
+
+```yaml
+FileStoreCount: 8192
+```
+
+当一个子目录文件数量达到这个值后，会进入下一个编号目录。
+
+`Serilog`
+
+日志配置。当前配置了：
+
+- 控制台输出：方便直接查看运行日志。
+- 文件输出：错误日志写入 `Logs/error-.log`，按天滚动。
+
+部署时如果运行目录是 `/www/wwwroot/limemeta`，日志目录就是：
+
+```text
+/www/wwwroot/limemeta/Logs
+```
+
+`AllowedHosts`
+
+ASP.NET Core Host 过滤配置。默认：
+
+```yaml
+AllowedHosts: "*"
+```
+
+表示允许所有 Host。需要更严格时可以改成指定域名。
+
+### 开发环境配置
+
+开发环境配置文件：
+
+```text
+LimeMeta.WebAPI/appsettings.Development.yml
+```
+
+当环境是 `Development` 时，会覆盖 `appsettings.yml` 中的同名配置。
+
+本地开发一般放本机数据库、本机文件目录：
+
+```yaml
+Urls: "http://*:8082"
+
+LimeMeta:
   ConnectionString: "Host=localhost;Port=5432;Database=limemeta_dev;Username=postgres;Password=postgres"
   DataType: "PostgreSQL"
   FileStorePath: "./FileStore"
-  FileStoreCount: 8192
 ```
 
-`Urls` 是服务监听地址。开发环境可以使用 `http://*:8082`，线上建议使用 `http://127.0.0.1:8082`，再由 Nginx 或宝塔反向代理到公网域名。
+### IDE 调试配置
 
-生产环境不要把真实密码、密钥、连接字符串提交进仓库，优先使用环境变量或部署平台的密钥配置。
+Visual Studio、Rider、VS Code 或 `dotnet run` 通常会读取：
+
+```text
+LimeMeta.WebAPI/Properties/launchSettings.json
+```
+
+它只用于本地开发调试。发布到 Linux 后，不要依赖这个文件。
+
+当前配置：
+
+```json
+{
+  "profiles": {
+    "http": {
+      "applicationUrl": "http://*:8082",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+```
+
+## 本地运行
+
+先确认本机 PostgreSQL 可用，并修改：
+
+```text
+LimeMeta.WebAPI/appsettings.Development.yml
+```
+
+然后在项目根目录执行：
+
+```bash
+dotnet run --project LimeMeta.WebAPI/LimeMeta.WebAPI.csproj
+```
+
+Windows 可以直接执行：
+
+```bat
+run.bat
+```
+
+访问：
+
+```text
+http://localhost:8082/api/gql
+```
+
+## 构建和发布
+
+构建解决方案：
+
+```bash
+dotnet build LimeMeta.sln
+```
+
+发布 WebAPI：
+
+```bash
+dotnet publish LimeMeta.WebAPI/LimeMeta.WebAPI.csproj -c Release -o publish
+```
+
+发布后产物在：
+
+```text
+publish/
+```
+
+部署到 Linux 时，上传 `publish` 目录中的所有文件。
+
+如果服务器没有安装 .NET Runtime，可以发布自包含版本：
+
+```bash
+dotnet publish LimeMeta.WebAPI/LimeMeta.WebAPI.csproj -c Release -r linux-x64 --self-contained true -o publish
+```
+
+自包含发布体积更大，但服务器不需要安装 .NET Runtime。
+
+## Linux 部署
+
+### 方式一：普通 Linux + systemd
+
+服务器需要安装与项目版本匹配的 ASP.NET Core Runtime。当前项目是 `net10.0`。
+
+检查运行环境：
+
+```bash
+dotnet --info
+```
+
+创建部署目录：
+
+```bash
+sudo mkdir -p /opt/limemeta
+```
+
+上传 `publish` 中的所有文件到：
+
+```text
+/opt/limemeta
+```
+
+编辑生产配置：
+
+```bash
+sudo nano /opt/limemeta/appsettings.yml
+```
+
+推荐生产配置：
+
+```yaml
+Urls: "http://127.0.0.1:8082"
+
+LimeMeta:
+  ConnectionString: "Host=127.0.0.1;Port=5432;Database=limemeta;Username=limemeta;Password=your-password"
+  DataType: "PostgreSQL"
+  FileStorePath: "/data/limemeta/files"
+  FileStoreCount: 8192
+
+Serilog:
+  MinimumLevel:
+    Default: Information
+    Override:
+      Microsoft: Information
+      Microsoft.AspNetCore: Information
+  WriteTo:
+    - Name: Console
+      Args:
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"
+    - Name: File
+      Args:
+        path: "Logs/error-.log"
+        restrictedToMinimumLevel: Error
+        rollingInterval: Day
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+
+AllowedHosts: "*"
+```
+
+创建上传目录和日志目录：
+
+```bash
+sudo mkdir -p /data/limemeta/files
+sudo mkdir -p /opt/limemeta/Logs
+```
+
+如果使用 `www-data` 作为运行用户：
+
+```bash
+sudo chown -R www-data:www-data /data/limemeta
+sudo chown -R www-data:www-data /opt/limemeta
+```
+
+临时运行测试：
+
+```bash
+cd /opt/limemeta
+dotnet LimeMeta.WebAPI.dll
+```
+
+看到服务启动后，本机测试：
+
+```bash
+curl http://127.0.0.1:8082/api/gql
+```
+
+创建 systemd 服务：
+
+```bash
+sudo nano /etc/systemd/system/limemeta.service
+```
+
+写入：
+
+```ini
+[Unit]
+Description=LimeMeta WebAPI
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/limemeta
+ExecStart=/usr/bin/dotnet /opt/limemeta/LimeMeta.WebAPI.dll
+Restart=always
+RestartSec=5
+User=www-data
+Environment=ASPNETCORE_ENVIRONMENT=Production
+
+[Install]
+WantedBy=multi-user.target
+```
+
+启动服务：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable limemeta
+sudo systemctl start limemeta
+```
+
+查看状态：
+
+```bash
+sudo systemctl status limemeta
+```
+
+查看日志：
+
+```bash
+sudo journalctl -u limemeta -f
+```
+
+Nginx 反向代理示例：
+
+```nginx
+server {
+    listen 80;
+    server_name api.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:8082;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+### 方式二：宝塔 .NET 项目
+
+本地发布：
+
+```bash
+dotnet publish LimeMeta.WebAPI/LimeMeta.WebAPI.csproj -c Release -o publish
+```
+
+上传 `publish` 中的所有文件到：
+
+```text
+/www/wwwroot/limemeta
+```
+
+修改服务器上的：
+
+```text
+/www/wwwroot/limemeta/appsettings.yml
+```
+
+推荐配置：
+
+```yaml
+Urls: "http://127.0.0.1:8082"
+
+LimeMeta:
+  ConnectionString: "Host=127.0.0.1;Port=5432;Database=limemeta;Username=limemeta;Password=your-password"
+  DataType: "PostgreSQL"
+  FileStorePath: "/www/wwwroot/limemeta/FileStore"
+  FileStoreCount: 8192
+
+Serilog:
+  MinimumLevel:
+    Default: Information
+    Override:
+      Microsoft: Information
+      Microsoft.AspNetCore: Information
+  WriteTo:
+    - Name: Console
+      Args:
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"
+    - Name: File
+      Args:
+        path: "Logs/error-.log"
+        restrictedToMinimumLevel: Error
+        rollingInterval: Day
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+
+AllowedHosts: "*"
+```
+
+创建目录并授权：
+
+```bash
+mkdir -p /www/wwwroot/limemeta/FileStore
+mkdir -p /www/wwwroot/limemeta/Logs
+chown -R www:www /www/wwwroot/limemeta
+```
+
+宝塔添加 `.Net项目` 时填写：
+
+```text
+项目名称：LimeMeta
+运行路径：/www/wwwroot/limemeta
+启动命令：dotnet LimeMeta.WebAPI.dll
+项目端口：8082
+.Net版本：选择服务器已安装的 .NET 10 / ASP.NET Core Runtime 10
+开机启动：建议勾选
+启动用户：www
+项目备注：LimeMeta 后端服务
+```
+
+因为端口已经写在 `appsettings.yml` 的 `Urls` 中，所以启动命令不需要带 `--urls`。
+
+宝塔网站反向代理：
+
+```text
+目标 URL：http://127.0.0.1:8082
+```
+
+如果使用域名 `api.example.com`，最终访问：
+
+```text
+https://api.example.com/api/gql
+```
+
+如果不做反向代理，且想直接访问服务器端口，需要把 `Urls` 改成：
+
+```yaml
+Urls: "http://0.0.0.0:8082"
+```
+
+并在宝塔安全中放行 `8082`。更推荐使用反向代理，不直接暴露后端端口。
 
 ## 新增业务模型
 
@@ -88,7 +586,7 @@ public class ProjectDto : BaseDto
 }
 ```
 
-约定很重要：
+约定：
 
 - 实体必须继承 `BaseObject` 或它的子类。
 - 实体必须有 `[Table(Name = "...")]`。
@@ -185,6 +683,7 @@ Logic 会被框架自动扫描。执行顺序由 `Order` 控制，数值越小�
 
 ```csharp
 using HotChocolate.Types;
+using LimeMeta.Data;
 using LimeMeta.GraphQL;
 
 namespace LimeMeta.ProjectModule;
@@ -285,3 +784,4 @@ AutoMapper 的新版本存在授权要求，商业项目使用前需要确认许
 - 敏感字段必须同时处理查询暴露、DTO 入参、更新拦截。
 - 业务规则放在 Logic，不要散落在前端或多个接口里。
 - 配置和密钥不要提交真实值。
+
