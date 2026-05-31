@@ -1,4 +1,4 @@
-Urls: "http://127.0.0.1:8082"
+Urls: "http://127.0.0.1:6675"
 
 LimeMeta:
   ConnectionString: "Host=postgres;Port=5432;Database=limemeta;Username=limemeta;Password=change-me"

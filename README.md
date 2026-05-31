@@ -41,6 +41,7 @@ LimeMeta/
 
 接口模块：
 
+- 健康检查：`GET /api/health`
 - GraphQL：`/api/gql`
 - 文件上传：`POST /api/file/upload`
 - 文件下载：`GET /api/file/download?id=文件ID`
@@ -397,6 +398,12 @@ run.bat
 访问：
 
 ```text
+http://localhost:8082/api/health
+```
+
+GraphQL 地址：
+
+```text
 http://localhost:8082/api/gql
 ```
 
@@ -529,7 +536,7 @@ dotnet LimeMeta.WebAPI.dll
 看到服务启动后，本机测试：
 
 ```bash
-curl http://127.0.0.1:8082/api/gql
+curl http://127.0.0.1:8082/api/health
 ```
 
 创建 systemd 服务：
