@@ -11,6 +11,7 @@ using LimeMeta.Data;
 using LimeMeta.Logics;
 using LimeMeta.Models;
 using LimeMeta.TypeHandlers;
+using LimeMeta.WebSockets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -96,6 +97,7 @@ public static class Extensions
         });
         services.AddAuthorization();
         services.AddFastEndpoints();
+        services.AddLimeMetaWebSockets(configuration);
 
         if (env.IsDevelopment())
         {
@@ -193,6 +195,7 @@ public static class Extensions
 
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseLimeMetaWebSockets();
         app.UseFastEndpoints();
 
         var env = app.ApplicationServices.GetRequiredService<IHostEnvironment>();

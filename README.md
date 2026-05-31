@@ -9,6 +9,7 @@ LimeMeta 是一个基于模型驱动的 .NET 后端框架。它把实体模型�
 - GraphQL 自动变更：每个模型会自动生成 `insertXxx`、`updateXxx`、`deleteXxx`。
 - Logic 事件机制：查询、新增、更新、删除前后都能挂业务逻辑。
 - JWT 认证：支持 Bearer Token，也支持 AppKey 换取用户身份。
+- WebSocket：提供统一 `/api/ws` 入口，支持按消息类型分发到业务方法。
 - 用户、角色、权限、部门基础模型：内置 RBAC 相关表结构。
 - 文件上传下载：内置 `/api/file/upload` 和 `/api/file/download`。
 - 种子数据：可配置启动时加载 `LimeMeta.WebAPI/Seed/*.yaml`。
@@ -79,10 +80,15 @@ dotnet new install C:\Users\lizi\Documents\Doc\.NET\LimeMeta
 
 接口模块：
 
-- 健康检查：`GET /api/health`
 - GraphQL：`/api/gql`
+- WebSocket：`/api/ws`
 - 文件上传：`POST /api/file/upload`
 - 文件下载：`GET /api/file/download?id=文件ID`
+
+示例项目接口：
+
+- HTTP 健康检查示例：`GET /api/health`，代码在 `LimeMeta.WebAPI/Endpoints/HealthEndpoint.cs`。
+- WebSocket 健康检查示例：消息类型 `dev.health`，代码在 `LimeMeta.WebAPI/WebSockets/DevTestWs.cs`。
 
 上传文件会写入 `LimeMeta:FileStorePath` 指定的目录，并在 `file_info` 表中记录文件元数据。
 
@@ -122,6 +128,9 @@ LimeMeta:
   DefaultUserPassword: "change-me-user-password"
   AutoSyncSchema: false
   LoadSeedOnStartup: false
+  WebSocket:
+    Path: "/api/ws"
+    MaxMessageSize: 1048576
 
 Serilog:
   MinimumLevel:
@@ -361,6 +370,31 @@ LoadSeedOnStartup: true
 
 开发环境建议开启，方便初始化管理员、角色和权限。生产环境如果不希望每次启动都检查种子文件，可以关闭。
 
+`LimeMeta:WebSocket`
+
+WebSocket 统一入口配置。
+
+```yaml
+WebSocket:
+  Path: "/api/ws"
+  MaxMessageSize: 1048576
+```
+
+- `Path`：WebSocket 统一入口地址。HTTP 端口是多少，WebSocket 就走同一个端口，不需要额外开端口。
+- `MaxMessageSize`：单条消息最大字节数。
+
+如果服务监听地址是：
+
+```text
+http://127.0.0.1:6675
+```
+
+WebSocket 地址就是：
+
+```text
+ws://127.0.0.1:6675/api/ws
+```
+
 `Serilog`
 
 日志配置。当前配置了：
@@ -410,6 +444,9 @@ LimeMeta:
   DefaultUserPassword: "change-me-user-password"
   AutoSyncSchema: true
   LoadSeedOnStartup: true
+  WebSocket:
+    Path: "/api/ws"
+    MaxMessageSize: 1048576
 ```
 
 ### IDE 调试配置
@@ -1009,6 +1046,174 @@ public class PingEndpoint : EndpointWithoutRequest<string>
 ```
 
 REST 接口中需要访问数据库时，优先使用 `ILimeMeta`，不要直接绕过框架操作数据库，否则会跳过 Logic 事件。
+
+## 新增 WebSocket 消息
+
+LimeMeta 使用一个统一 WebSocket 入口：
+
+```text
+/api/ws
+```
+
+业务功能通过消息里的 `type` 分发，不需要为每个业务再开一个 WebSocket 地址。
+
+客户端发送格式：
+
+```json
+{
+  "id": "1",
+  "type": "score.audit.submit",
+  "data": {
+    "scoreId": "00000000-0000-0000-0000-000000000000",
+    "passed": true
+  }
+}
+```
+
+服务端响应格式：
+
+```json
+{
+  "id": "1",
+  "type": "score.audit.submit.result",
+  "success": true,
+  "data": {}
+}
+```
+
+新增业务消息时，写一个 WebSocket 控制器即可：
+
+```csharp
+using LimeMeta.Data;
+using LimeMeta.WebSockets;
+
+[WsController]
+public class ScoreAuditWs
+{
+    private readonly ILimeMeta _meta;
+
+    public ScoreAuditWs(ILimeMeta meta)
+    {
+        _meta = meta;
+    }
+
+    [WsMessage("score.audit.submit")]
+    public Task<ScoreAuditResult> Submit(
+        ScoreAuditSubmitRequest req,
+        LimeMetaWebSocketContext ctx,
+        CancellationToken ct)
+    {
+        var userId = ctx.UserId;
+
+        return Task.FromResult(new ScoreAuditResult
+        {
+            Success = true
+        });
+    }
+}
+
+public class ScoreAuditSubmitRequest
+{
+    public Guid ScoreId { get; set; }
+
+    public bool Passed { get; set; }
+}
+
+public class ScoreAuditResult
+{
+    public bool Success { get; set; }
+}
+```
+
+框架会自动扫描 `[WsController]` 和 `[WsMessage]`，收到对应 `type` 后自动反序列化 `data`、创建控制器、调用方法，并把返回值发回客户端。
+
+项目中已经提供了一个可直接运行的 WebSocket 示例：
+
+```text
+LimeMeta.WebAPI/WebSockets/DevTestWs.cs
+```
+
+客户端发送：
+
+```json
+{
+  "id": "1",
+  "type": "dev.health",
+  "data": {}
+}
+```
+
+响应类型：
+
+```text
+dev.health.result
+```
+
+可以用浏览器控制台测试：
+
+```javascript
+const ws = new WebSocket("ws://127.0.0.1:6675/api/ws");
+
+ws.onopen = () => {
+  ws.send(JSON.stringify({
+    id: "health-1",
+    type: "dev.health",
+    data: {}
+  }));
+};
+
+ws.onmessage = event => {
+  console.log(JSON.parse(event.data));
+};
+
+ws.onerror = error => {
+  console.error(error);
+};
+```
+
+正常会收到类似响应：
+
+```json
+{
+  "id": "health-1",
+  "type": "dev.health.result",
+  "success": true,
+  "data": {
+    "status": "ok",
+    "connectionId": "连接ID",
+    "userId": null,
+    "time": "2026-05-31T00:00:00+00:00"
+  }
+}
+```
+
+如果部署在 HTTPS 域名下，地址要改成 `wss`：
+
+```javascript
+const ws = new WebSocket("wss://api.example.com/api/ws");
+```
+
+在业务代码中也可以注入连接管理器主动推送：
+
+```csharp
+public class NoticeService
+{
+    private readonly LimeMetaWebSocketConnectionManager _connections;
+
+    public NoticeService(LimeMetaWebSocketConnectionManager connections)
+    {
+        _connections = connections;
+    }
+
+    public Task SendAuditNotice(Guid userId, Guid scoreId)
+    {
+        return _connections.SendToUserAsync(userId, "score.audit.notice", new
+        {
+            ScoreId = scoreId
+        });
+    }
+}
+```
 
 ## 种子数据
 

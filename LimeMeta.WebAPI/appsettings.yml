@@ -12,6 +12,9 @@ LimeMeta:
   DefaultUserPassword: "change-me-user-password"
   AutoSyncSchema: true
   LoadSeedOnStartup: true
+  WebSocket:
+    Path: "/api/ws"
+    MaxMessageSize: 1048576
 Serilog:
   MinimumLevel:
     Default: Information

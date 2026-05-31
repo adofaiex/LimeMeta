@@ -1,11 +1,11 @@
 using FastEndpoints;
 
-namespace LimeMeta.Endpoints;
+namespace LimeMeta.WebAPI.Endpoints;
 
 /// <summary>
-/// HealthEndpoint
+/// HTTP 健康检查示例。
 /// </summary>
-public class HealthEndpoint : EndpointWithoutRequest<HealthResponse>
+public sealed class HealthEndpoint : EndpointWithoutRequest<HealthResponse>
 {
     /// <summary>
     /// Configure
@@ -33,22 +33,22 @@ public class HealthEndpoint : EndpointWithoutRequest<HealthResponse>
 }
 
 /// <summary>
-/// HealthResponse
+/// HTTP 健康检查示例响应。
 /// </summary>
-public class HealthResponse
+public sealed class HealthResponse
 {
     /// <summary>
-    /// Status
+    /// 状态。
     /// </summary>
     public required string Status { get; set; }
 
     /// <summary>
-    /// Service
+    /// 服务名称。
     /// </summary>
     public required string Service { get; set; }
 
     /// <summary>
-    /// Time
+    /// 服务端时间。
     /// </summary>
     public DateTimeOffset Time { get; set; }
 }
