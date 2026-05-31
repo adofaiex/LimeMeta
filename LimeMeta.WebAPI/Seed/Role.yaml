@@ -1,23 +1,16 @@
-- id: c6b36d2b-86c0-4880-8460-4def23da86f4
-  name: 管理员
+# Role.yaml
+# 用途：初始化角色数据，对应模型 LimeMeta.Models.Role。
+#
+# 字段说明：
+# - id: 角色固定 ID，必须是 Guid。
+# - name: 角色名称。
+# - sn: 排序号，可选。
+# - parentId: 父级角色 ID，可选；填写后会形成角色树。
+#
+# 说明：
+# 管理员角色不需要写在这里。框架启动时会自动根据 LimeMeta:AdminPerm 创建管理员角色。
+# 游客角色建议保留。新增普通用户时，如果没有显式分配角色，框架会尝试自动分配“游客”角色。
 
 - id: 019c404e-da35-72a9-8fe7-c0941aa0de11
   name: 游客
-
-- id: 019e5ce7-8831-739b-b632-e43b6394f93f
-  name: 工作流
-
-- id: 019e431e-55a6-724f-8e76-28a01cb4f068
-  name: 总经理
-
-- id: 019e431e-fa88-73cb-9f2e-bb75b07f19b3
-  name: 部长
-  parentId: 019e431e-55a6-724f-8e76-28a01cb4f068
-
-- id: 019e431f-463b-740c-bc81-fb0dd5a44644
-  name: 副部长
-  parentId: 019e431e-fa88-73cb-9f2e-bb75b07f19b3
-
-- id: 019e4320-00e3-70f8-9b04-47326fd269af
-  name: 正式员工
-  parentId: 019e431f-463b-740c-bc81-fb0dd5a44644
+  sn: 100

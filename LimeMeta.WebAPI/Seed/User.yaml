@@ -1,27 +1,20 @@
-- id: 019e5ce8-4852-75a8-bd54-abe858c7667f
-  name: 工作流
-  username: 工作流
+# User.yaml
+# 用途：初始化用户数据，对应模型 LimeMeta.Models.User。
+#
+# 字段说明：
+# - id: 用户固定 ID，必须是 Guid。固定 ID 方便其它种子文件引用。
+# - name: 用户显示名称。
+# - username: 登录用户名。
+# - password: 密码字段不建议写在种子里。未填写时，新增用户会使用 LimeMeta:DefaultUserPassword 的 MD5 值。
+#
+# 说明：
+# 管理员用户不需要写在这里。框架启动时会自动根据配置创建管理员用户：
+# - LimeMeta:AdminUserName
+# - LimeMeta:AdminUserPassword
+#
+# 示例：
+# - id: 11111111-1111-1111-1111-111111111111
+#   name: 审核员
+#   username: reviewer
 
-- id: 019e4321-1218-71db-8cac-9e443d20e6b1
-  name: 总经理1
-  username: 总经理1
-
-- id: 019e4321-a4df-7259-ac20-7d98c8694cc9
-  name: 工程部部长1
-  username: 工程部部长1
-
-- id: 019e4323-b802-70c8-9c37-8052c62bf552
-  name: 工程部副部长1
-  username: 工程部副部长1
-
-- id: 019e4323-d1ef-70e8-a96f-5cd2253290d8
-  name: 工程部正式员工1
-  username: 工程部正式员工1
-
-- id: 019e4324-2869-71ab-95be-200d29a96210
-  name: 人力资源部部长1
-  username: 人力资源部部长1
-
-- id: 019e4324-8771-74ad-b8cc-0f908eda3ffd
-  name: 人力资源部副部长1
-  username: 人力资源部副部长1
+[]

@@ -1,27 +1,17 @@
-- id: 202d96d2-7d36-4b2b-a9b9-2c3ba7029c83
-  userId: 019e4321-1218-71db-8cac-9e443d20e6b1
-  roleId: 019e431e-55a6-724f-8e76-28a01cb4f068
+# UserRole.yaml
+# 用途：初始化用户和角色的绑定关系，对应模型 LimeMeta.Models.UserRole。
+#
+# 字段说明：
+# - id: 关系固定 ID，必须是 Guid。
+# - userId: 用户 ID，对应 User.yaml 或数据库中已有用户的 id。
+# - roleId: 角色 ID，对应 Role.yaml 或数据库中已有角色的 id。
+#
+# 说明：
+# 管理员用户与管理员角色的绑定不需要写在这里，框架启动时会自动创建。
+#
+# 示例：
+# - id: 44444444-4444-4444-4444-444444444444
+#   userId: 11111111-1111-1111-1111-111111111111
+#   roleId: 55555555-5555-5555-5555-555555555555
 
-- id: 0f9ac1c2-630b-4b1c-a057-ed0e1d18c5f7
-  userId: 019e4321-a4df-7259-ac20-7d98c8694cc9
-  roleId: 019e431e-fa88-73cb-9f2e-bb75b07f19b3
-
-- id: a59b6043-8839-412c-9221-b13586940542
-  userId: 019e4323-b802-70c8-9c37-8052c62bf552
-  roleId: 019e431f-463b-740c-bc81-fb0dd5a44644
-
-- id: 73e14221-1029-49fc-a809-297a554c7629
-  userId: 019e4323-d1ef-70e8-a96f-5cd2253290d8
-  roleId: 019e4320-00e3-70f8-9b04-47326fd269af
-
-- id: 39171be7-218b-4d4f-bd39-8fe2696f59d1
-  userId: 019e4324-2869-71ab-95be-200d29a96210
-  roleId: 019e431e-fa88-73cb-9f2e-bb75b07f19b3
-
-- id: c58fe011-fa25-430f-9423-71126c32be63
-  userId: 019e4324-8771-74ad-b8cc-0f908eda3ffd
-  roleId: 019e431f-463b-740c-bc81-fb0dd5a44644
-
-- id: 019e5cf0-4be1-738f-8671-5dbd626c3329
-  userId: 019e5ce8-4852-75a8-bd54-abe858c7667f
-  roleId: 019e5ce7-8831-739b-b632-e43b6394f93f
+[]

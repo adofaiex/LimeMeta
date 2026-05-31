@@ -76,6 +76,11 @@ LimeMeta:
   DataType: "PostgreSQL"
   FileStorePath: "/www/wwwroot/limemeta/FileStore"
   FileStoreCount: 8192
+  AdminPerm: "管理员"
+  GuestPerm: "游客"
+  AdminUserName: "admin"
+  AdminUserPassword: "change-me-admin-password"
+  DefaultUserPassword: "change-me-user-password"
 
 Serilog:
   MinimumLevel:
@@ -188,6 +193,46 @@ FileStoreCount: 8192
 
 当一个子目录文件数量达到这个值后，会进入下一个编号目录。
 
+`LimeMeta:AdminPerm`
+
+管理员权限名称。启动时如果数据库中不存在这个权限，框架会自动创建。
+
+```yaml
+AdminPerm: "管理员"
+```
+
+`LimeMeta:GuestPerm`
+
+游客权限名称，目前保留为配置项。默认值：
+
+```yaml
+GuestPerm: "游客"
+```
+
+`LimeMeta:AdminUserName`
+
+管理员登录用户名。启动时如果数据库中不存在这个用户，框架会自动创建。
+
+```yaml
+AdminUserName: "admin"
+```
+
+`LimeMeta:AdminUserPassword`
+
+管理员初始密码。只在管理员用户第一次自动创建时生效。
+
+```yaml
+AdminUserPassword: "change-me-admin-password"
+```
+
+`LimeMeta:DefaultUserPassword`
+
+普通种子用户或自动新增用户没有填写密码时，使用这个默认密码。
+
+```yaml
+DefaultUserPassword: "change-me-user-password"
+```
+
 `Serilog`
 
 日志配置。当前配置了：
@@ -230,6 +275,11 @@ LimeMeta:
   ConnectionString: "Host=localhost;Port=5432;Database=limemeta_dev;Username=postgres;Password=postgres"
   DataType: "PostgreSQL"
   FileStorePath: "./FileStore"
+  AdminPerm: "管理员"
+  GuestPerm: "游客"
+  AdminUserName: "admin"
+  AdminUserPassword: "change-me-admin-password"
+  DefaultUserPassword: "change-me-user-password"
 ```
 
 ### IDE 调试配置
@@ -362,6 +412,11 @@ LimeMeta:
   DataType: "PostgreSQL"
   FileStorePath: "/data/limemeta/files"
   FileStoreCount: 8192
+  AdminPerm: "管理员"
+  GuestPerm: "游客"
+  AdminUserName: "admin"
+  AdminUserPassword: "change-me-admin-password"
+  DefaultUserPassword: "change-me-user-password"
 
 Serilog:
   MinimumLevel:
@@ -502,6 +557,11 @@ LimeMeta:
   DataType: "PostgreSQL"
   FileStorePath: "/www/wwwroot/limemeta/FileStore"
   FileStoreCount: 8192
+  AdminPerm: "管理员"
+  GuestPerm: "游客"
+  AdminUserName: "admin"
+  AdminUserPassword: "change-me-admin-password"
+  DefaultUserPassword: "change-me-user-password"
 
 Serilog:
   MinimumLevel:
@@ -756,6 +816,25 @@ Project.yaml
 ```
 
 启动时框架会读取种子文件，并根据文件修改时间和对象 `Ver` 判断是否需要写入或更新。
+
+YAML 支持注释，使用 `#` 开头即可。当前种子文件已经写了字段说明和示例。
+
+当前默认种子策略：
+
+- `User.yaml`：默认空。管理员用户由框架根据 `LimeMeta:AdminUserName` 和 `LimeMeta:AdminUserPassword` 自动创建。
+- `Role.yaml`：默认只保留“游客”角色。管理员角色由框架根据 `LimeMeta:AdminPerm` 自动创建。
+- `Perm.yaml`：默认空。管理员权限由框架根据 `LimeMeta:AdminPerm` 自动创建。
+- `UserRole.yaml`：默认空。管理员用户和管理员角色的关系由框架自动创建。
+- `RolePerm.yaml`：默认空。管理员角色和管理员权限的关系由框架自动创建。
+- `Dept.yaml`：默认空。不需要组织架构时不用配置。
+- `DeptUser.yaml`：默认空。不需要组织架构时不用配置。
+
+用户密码规则：
+
+- 管理员用户第一次创建时，密码来源于 `LimeMeta:AdminUserPassword`。
+- 种子用户没有写 `password` 时，密码来源于 `LimeMeta:DefaultUserPassword`。
+- 写入数据库时不会保存明文，而是保存密码文本的 MD5 值。
+- 当前登录接口内部使用 `UserLogic.VerifyPassword` 校验，前端通常应先调用 `crypt` Mutation 生成登录所需的加密值，再调用 `login`。
 
 ## 数据访问
 

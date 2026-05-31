@@ -4,3 +4,8 @@ LimeMeta:
   ConnectionString: "Host=localhost;Port=5432;Database=limemeta_dev;Username=postgres;Password=postgres"
   DataType: "PostgreSQL"
   FileStorePath: "./FileStore"
+  AdminPerm: "管理员"
+  GuestPerm: "游客"
+  AdminUserName: "admin"
+  AdminUserPassword: "change-me-admin-password"
+  DefaultUserPassword: "change-me-user-password"
