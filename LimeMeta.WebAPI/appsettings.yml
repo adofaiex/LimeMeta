@@ -1,7 +1,7 @@
 Urls: "http://127.0.0.1:6675"
 
 LimeMeta:
-  ConnectionString: "Host=postgres;Port=5432;Database=limemeta;Username=limemeta;Password=change-me"
+  ConnectionString: "Host=localhost;Port=5432;Database=limemeta_dev;Username=postgres;Password=postgres"
   DataType: "PostgreSQL"
   FileStorePath: "/FileStore"
   FileStoreCount: 8192
@@ -10,8 +10,8 @@ LimeMeta:
   AdminUserName: "admin"
   AdminUserPassword: "change-me-admin-password"
   DefaultUserPassword: "change-me-user-password"
-  AutoSyncSchema: false
-  LoadSeedOnStartup: false
+  AutoSyncSchema: true
+  LoadSeedOnStartup: true
 Serilog:
   MinimumLevel:
     Default: Information
@@ -29,3 +29,4 @@ Serilog:
         rollingInterval: Day
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
 AllowedHosts: "*"
+
