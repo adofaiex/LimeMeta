@@ -25,6 +25,44 @@ LimeMeta/
 └─ rel.bat                # NuGet 打包脚本
 ```
 
+## 生成新项目
+
+LimeMeta 可以作为 `.NET` 项目模板使用。框架本身叫 LimeMeta，但基于它创建业务项目时，不需要继续沿用这个名字。
+
+在本机安装模板：
+
+```bash
+dotnet new install C:\Users\lizi\Documents\Doc\.NET\LimeMeta
+```
+
+安装后可以生成新的后端项目：
+
+```bash
+dotnet new limemeta -n BeatmapHub -o C:\Users\lizi\Documents\Doc\.NET\BeatmapHub
+```
+
+其中：
+
+- `limemeta` 是模板短名称。
+- `BeatmapHub` 是新项目名称，可以换成自己的业务项目名。
+- `-o` 是输出目录。
+
+生成后，模板会把项目中的 `LimeMeta` 替换为新项目名，例如：
+
+```text
+BeatmapHub.sln
+BeatmapHub/
+BeatmapHub.GraphQL/
+BeatmapHub.WebAPI/
+```
+
+如果后续修改了 LimeMeta 模板，需要重新安装模板：
+
+```bash
+dotnet new uninstall C:\Users\lizi\Documents\Doc\.NET\LimeMeta
+dotnet new install C:\Users\lizi\Documents\Doc\.NET\LimeMeta
+```
+
 ## 内置模块
 
 核心模块：

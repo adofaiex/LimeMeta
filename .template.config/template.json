@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "LimeMeta",
+  "classifications": [
+    "Web",
+    "API",
+    "GraphQL"
+  ],
+  "identity": "LimeMeta.Backend.Template",
+  "name": "LimeMeta Backend Framework",
+  "shortName": "limemeta",
+  "sourceName": "LimeMeta",
+  "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "primaryOutputs": [
+    {
+      "path": "LimeMeta.sln"
+    },
+    {
+      "path": "LimeMeta.WebAPI/LimeMeta.WebAPI.csproj"
+    }
+  ],
+  "sources": [
+    {
+      "source": "./",
+      "target": "./",
+      "exclude": [
+        ".git/**",
+        ".vs/**",
+        "**/[Bb]in/**",
+        "**/[Oo]bj/**",
+        "publish/**",
+        "Logs/**",
+        "FileStore/**",
+        "*.user",
+        "*.suo"
+      ]
+    }
+  ]
+}
