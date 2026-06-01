@@ -5,6 +5,17 @@ LimeMeta:
   DataType: "PostgreSQL"
   FileStorePath: "/FileStore"
   FileStoreCount: 8192
+  FileStore:
+    Provider: "Local"
+    Local:
+      Path: "/FileStore"
+      Count: 8192
+    Pan123Cli:
+      Command: "pan123"
+      ParentFileId: 0
+      UseDirectLink: true
+      TempPath: "./TempUpload"
+      Overwrite: false
   AdminPerm: "管理员"
   GuestPerm: "游客"
   AdminUserName: "admin"

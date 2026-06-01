@@ -1,6 +1,7 @@
 using FastEndpoints;
 using LimeMeta.Configurations;
 using LimeMeta.Data;
+using LimeMeta.Files;
 using LimeMeta.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -31,15 +32,11 @@ public class FileInfoLogic : BaseLogic<FileInfo>
     private void OnAfterDelete(object? sender, AfterDeleteEventArgs<FileInfo> args)
     {
         using var sc = args.LimeMeta.ScopeFactory.CreateScope();
-        var config = sc.ServiceProvider.GetRequiredService<LimeMetaConfiguration>();
+        var storageResolver = sc.ServiceProvider.GetRequiredService<IFileStorageProviderResolver>();
 
         foreach (var obj in args.Objs)
         {
-            var path = GetStorePath(obj, config);
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
+            storageResolver.Get(obj.Provider).DeleteAsync(obj, CancellationToken.None).GetAwaiter().GetResult();
         }
     }
 
@@ -55,13 +52,13 @@ public class FileInfoLogic : BaseLogic<FileInfo>
         var config = sc.ServiceProvider.GetRequiredService<LimeMetaConfiguration>();
 
         var maxStore = meta.Query<FileInfo>().Max(r => r.Store);
-        var cntStore = meta.Query<FileInfo>().Where(r => r.Store == maxStore).Count();
-        if (cntStore >= config.FileStoreCount)
+        var cntStore = meta.Query<FileInfo>().Where(r => r.Store == maxStore && (r.Provider == null || r.Provider == LocalFileStorageProvider.ProviderName)).Count();
+        if (cntStore >= LocalFileStorageProvider.GetStoreCount(config))
         {
             maxStore++;
         }
 
-        var path = Path.Combine(config.FileStorePath, $"{maxStore}");
+        var path = Path.Combine(LocalFileStorageProvider.GetRootPath(config), $"{maxStore}");
         if (!Directory.Exists(path))
         {
             Directory.CreateDirectory(path);
@@ -81,7 +78,8 @@ public class FileInfoLogic : BaseLogic<FileInfo>
             Real = real,
             Type = fileExt,
             Size = 0,
-            Hash = string.Empty
+            Hash = string.Empty,
+            Provider = LocalFileStorageProvider.ProviderName
         };
 
         path = Path.Combine(path, info.Real);
@@ -112,5 +110,5 @@ public class FileInfoLogic : BaseLogic<FileInfo>
     /// <param name="info"></param>
     /// <param name="config"></param>
     /// <returns></returns>
-    public static string GetStorePath(FileInfo info, LimeMetaConfiguration config) => Path.Combine(config.FileStorePath, $"{info.Store}", info.Real);
+    public static string GetStorePath(FileInfo info, LimeMetaConfiguration config) => LocalFileStorageProvider.GetStorePath(info, config);
 }

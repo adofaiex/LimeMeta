@@ -1,11 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using FastEndpoints;
 using LimeMeta.Data;
-using LimeMeta.Logics;
+using LimeMeta.Files;
 using Microsoft.AspNetCore.StaticFiles;
+using ModelFileInfo = LimeMeta.Models.FileInfo;
+using SystemFileInfo = System.IO.FileInfo;
 
 namespace LimeMeta.Endpoints;
 
@@ -28,19 +26,34 @@ public class FileDownloadEndpoint : Endpoint<FileDownloadRequest>
     /// <param name="req"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public override Task HandleAsync(FileDownloadRequest req, CancellationToken ct)
+    public override async Task HandleAsync(FileDownloadRequest req, CancellationToken ct)
     {
         // var cliam = User.Claims.First(r => r.Type == UserLogic.ClaimUserId);
         // var userId = Guid.Parse(cliam.Value);
 
         var meta = Resolve<ILimeMeta>();
-        var (info, path) = FileInfoLogic.Find(meta, req.Id);
-        if (info == null || path == null)
+        var info = meta.Query<ModelFileInfo>().FirstOrDefault(r => r.Id == req.Id);
+        if (info == null)
         {
-            return Send.NotFoundAsync(ct);
+            await Send.NotFoundAsync(ct);
+            return;
         }
 
-        var file = new FileInfo(path);
+        var storage = Resolve<IFileStorageProviderResolver>().Get(info.Provider);
+        var openResult = await storage.OpenAsync(info, ct);
+        if (!string.IsNullOrWhiteSpace(openResult.RedirectUrl))
+        {
+            HttpContext.Response.Redirect(openResult.RedirectUrl);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(openResult.FilePath) || !File.Exists(openResult.FilePath))
+        {
+            await Send.NotFoundAsync(ct);
+            return;
+        }
+
+        var file = new SystemFileInfo(openResult.FilePath);
         var contentType = "application/octet-stream";
         if (info.Type != null)
         {
@@ -51,7 +64,8 @@ public class FileDownloadEndpoint : Endpoint<FileDownloadRequest>
             }
         }
 
-        return Send.FileAsync(file, contentType, null, true, ct);
+        HttpContext.Response.Headers.ContentDisposition = $"attachment; filename*=UTF-8''{Uri.EscapeDataString(info.Name)}";
+        await Send.FileAsync(file, contentType, null, true, ct);
     }
 }
 

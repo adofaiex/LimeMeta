@@ -1,7 +1,9 @@
 using FastEndpoints;
 using LimeMeta.Data;
+using LimeMeta.Files;
 using LimeMeta.Logics;
 using Microsoft.AspNetCore.Http;
+using FileInfo = LimeMeta.Models.FileInfo;
 
 namespace LimeMeta.Endpoints;
 
@@ -31,20 +33,30 @@ public class FileUploadEndpoint : Endpoint<FileUploadRequest, FileUploadResponse
         var userId = Guid.Parse(cliam.Value);
 
         var meta = Resolve<ILimeMeta>();
+        var storage = Resolve<IFileStorageProviderResolver>().Current;
 
         var items = new List<FileUploadResponseItem>();
         foreach (var file in req.Files)
         {
             if (file is null || file.Length == 0) continue;
 
-            var (info, path) = FileInfoLogic.Create(meta, file.FileName);
-            info.Size = file.Length;
-
-            await using (var fs = File.Create(path))
+            await using var stream = file.OpenReadStream();
+            var saveResult = await storage.SaveAsync(stream, file.FileName, file.ContentType, file.Length, ct);
+            var info = new FileInfo
             {
-                await file.CopyToAsync(fs, ct);
-                info.Hash = fs.GetMD5();
-            }
+                Id = Guid.NewGuid(),
+                Name = file.FileName,
+                Real = saveResult.Real ?? string.Empty,
+                Type = Path.GetExtension(file.FileName),
+                Size = saveResult.Size,
+                Hash = saveResult.Hash,
+                Store = saveResult.Store,
+                Provider = saveResult.Provider,
+                ProviderId = saveResult.ProviderId,
+                ProviderPath = saveResult.ProviderPath,
+                Url = saveResult.Url,
+                Meta = saveResult.Meta
+            };
 
             meta.Insert(new[] { info }, userId);
 
@@ -52,6 +64,8 @@ public class FileUploadEndpoint : Endpoint<FileUploadRequest, FileUploadResponse
             {
                 Id = info.Id,
                 Name = file.FileName,
+                Provider = info.Provider,
+                ProviderId = info.ProviderId
             };
             items.Add(item);
         }
@@ -96,4 +110,14 @@ public class FileUploadResponseItem
     /// Name
     /// </summary>
     public required string Name { get; set; }
+
+    /// <summary>
+    /// Provider
+    /// </summary>
+    public string? Provider { get; set; }
+
+    /// <summary>
+    /// ProviderId
+    /// </summary>
+    public string? ProviderId { get; set; }
 }

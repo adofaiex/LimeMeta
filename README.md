@@ -90,7 +90,7 @@ dotnet new install C:\Users\lizi\Documents\Doc\.NET\LimeMeta
 - HTTP 健康检查示例：`GET /api/health`，代码在 `LimeMeta.WebAPI/Endpoints/HealthEndpoint.cs`。
 - WebSocket 健康检查示例：消息类型 `dev.health`，代码在 `LimeMeta.WebAPI/WebSockets/DevTestWs.cs`。
 
-上传文件会写入 `LimeMeta:FileStorePath` 指定的目录，并在 `file_info` 表中记录文件元数据。
+文件存储支持本地目录和 123 云盘 CLI 两种服务，当前服务由 `LimeMeta:FileStore:Provider` 决定，并在 `file_info` 表中记录文件元数据。
 
 ## 配置文件
 
@@ -121,6 +121,17 @@ LimeMeta:
   DataType: "PostgreSQL"
   FileStorePath: "/www/wwwroot/limemeta/FileStore"
   FileStoreCount: 8192
+  FileStore:
+    Provider: "Local"
+    Local:
+      Path: "/www/wwwroot/limemeta/FileStore"
+      Count: 8192
+    Pan123Cli:
+      Command: "pan123"
+      ParentFileId: 0
+      UseDirectLink: true
+      TempPath: "./TempUpload"
+      Overwrite: false
   AdminPerm: "管理员"
   GuestPerm: "游客"
   AdminUserName: "admin"
@@ -310,6 +321,56 @@ FileStoreCount: 8192
 
 当一个子目录文件数量达到这个值后，会进入下一个编号目录。
 
+`LimeMeta:FileStore`
+
+文件存储服务配置。旧配置 `FileStorePath` 和 `FileStoreCount` 仍然兼容；如果同时配置了 `FileStore:Local`，本地存储优先使用 `FileStore:Local`。
+
+本地存储：
+
+```yaml
+LimeMeta:
+  FileStore:
+    Provider: "Local"
+    Local:
+      Path: "/www/wwwroot/limemeta/FileStore"
+      Count: 8192
+```
+
+123 云盘存储：
+
+```yaml
+LimeMeta:
+  FileStore:
+    Provider: "Pan123Cli"
+    Pan123Cli:
+      Command: "pan123"
+      ParentFileId: 0
+      UseDirectLink: true
+      TempPath: "./TempUpload"
+      Overwrite: false
+```
+
+字段说明：
+
+- `Provider`：当前使用的存储服务，支持 `Local` 和 `Pan123Cli`。
+- `Local:Path`：本地文件根目录，为空时使用旧配置 `FileStorePath`。
+- `Local:Count`：每个本地编号目录保存的最大文件数，为空时使用旧配置 `FileStoreCount`。
+- `Pan123Cli:Command`：`pan123` 命令名称或绝对路径。
+- `Pan123Cli:ParentFileId`：上传到 123 云盘的父目录 ID。
+- `Pan123Cli:UseDirectLink`：下载时是否使用 123 云盘直链。为 `true` 时，`GET /api/file/download?id=文件ID` 会返回 302 跳转到直链。
+- `Pan123Cli:TempPath`：临时目录。HTTP 上传流会先写入临时文件，再交给 `pan123 upload`；不使用直链下载时也会下载到这个目录。
+- `Pan123Cli:Overwrite`：上传同名文件时是否传递 `--overwrite`。
+
+123 云盘服务依赖服务器已经安装并登录配置好 `pan123`。框架调用的命令如下：
+
+```bash
+pan123 --json upload 本地临时文件 --parent 父目录ID --name 文件名
+pan123 --json direct-link url 文件ID
+pan123 --json download 文件ID --out 临时目录
+```
+
+当前 `123PanCLi` 没有删除命令，因此删除 `file_info` 记录时不会删除云盘上的真实文件。
+
 `LimeMeta:AdminPerm`
 
 管理员权限名称。启动时如果数据库中不存在这个权限，框架会自动创建。
@@ -437,6 +498,18 @@ LimeMeta:
   ConnectionString: "Host=localhost;Port=5432;Database=limemeta_dev;Username=postgres;Password=postgres"
   DataType: "PostgreSQL"
   FileStorePath: "./FileStore"
+  FileStoreCount: 8192
+  FileStore:
+    Provider: "Local"
+    Local:
+      Path: "./FileStore"
+      Count: 8192
+    Pan123Cli:
+      Command: "pan123"
+      ParentFileId: 0
+      UseDirectLink: true
+      TempPath: "./TempUpload"
+      Overwrite: false
   AdminPerm: "管理员"
   GuestPerm: "游客"
   AdminUserName: "admin"
@@ -587,6 +660,17 @@ LimeMeta:
   DataType: "PostgreSQL"
   FileStorePath: "/data/limemeta/files"
   FileStoreCount: 8192
+  FileStore:
+    Provider: "Local"
+    Local:
+      Path: "/data/limemeta/files"
+      Count: 8192
+    Pan123Cli:
+      Command: "pan123"
+      ParentFileId: 0
+      UseDirectLink: true
+      TempPath: "/data/limemeta/temp-upload"
+      Overwrite: false
   AdminPerm: "管理员"
   GuestPerm: "游客"
   AdminUserName: "admin"
@@ -619,6 +703,7 @@ AllowedHosts: "*"
 
 ```bash
 sudo mkdir -p /data/limemeta/files
+sudo mkdir -p /data/limemeta/temp-upload
 sudo mkdir -p /opt/limemeta/Logs
 ```
 
@@ -734,6 +819,17 @@ LimeMeta:
   DataType: "PostgreSQL"
   FileStorePath: "/www/wwwroot/limemeta/FileStore"
   FileStoreCount: 8192
+  FileStore:
+    Provider: "Local"
+    Local:
+      Path: "/www/wwwroot/limemeta/FileStore"
+      Count: 8192
+    Pan123Cli:
+      Command: "pan123"
+      ParentFileId: 0
+      UseDirectLink: true
+      TempPath: "/www/wwwroot/limemeta/TempUpload"
+      Overwrite: false
   AdminPerm: "管理员"
   GuestPerm: "游客"
   AdminUserName: "admin"
@@ -766,6 +862,7 @@ AllowedHosts: "*"
 
 ```bash
 mkdir -p /www/wwwroot/limemeta/FileStore
+mkdir -p /www/wwwroot/limemeta/TempUpload
 mkdir -p /www/wwwroot/limemeta/Logs
 chown -R www:www /www/wwwroot/limemeta
 ```

@@ -10,6 +10,12 @@ namespace LimeMeta.Models;
 public class FileInfo : BaseAudit
 {
     /// <summary>
+    /// 文件存储服务
+    /// </summary>
+    [Column(Name = "provider"), Indexed]
+    public string? Provider { get; set; } = "Local";
+
+    /// <summary>
     /// 存储位置
     /// </summary>
     [Column(Name = "store"), Indexed]
@@ -44,6 +50,30 @@ public class FileInfo : BaseAudit
     /// </summary>
     [Column(Name = "hash"), Indexed]
     public required string Hash { get; set; }
+
+    /// <summary>
+    /// 第三方存储文件 ID
+    /// </summary>
+    [Column(Name = "provider_id"), Indexed]
+    public string? ProviderId { get; set; }
+
+    /// <summary>
+    /// 第三方存储路径或父目录 ID
+    /// </summary>
+    [Column(Name = "provider_path"), Indexed]
+    public string? ProviderPath { get; set; }
+
+    /// <summary>
+    /// 外部访问地址
+    /// </summary>
+    [Column(Name = "url")]
+    public string? Url { get; set; }
+
+    /// <summary>
+    /// 第三方存储返回的原始信息
+    /// </summary>
+    [Column(Name = "meta")]
+    public string? Meta { get; set; }
 }
 
 /// <summary>

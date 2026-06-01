@@ -8,6 +8,7 @@ using FreeSql.DataAnnotations;
 using LimeMeta.Attributes;
 using LimeMeta.Configurations;
 using LimeMeta.Data;
+using LimeMeta.Files;
 using LimeMeta.Logics;
 using LimeMeta.Models;
 using LimeMeta.TypeHandlers;
@@ -54,6 +55,12 @@ public static class Extensions
         services.AddFreeSql();
         services.AddSingleton<ILogicManager, LogicManager>();
         services.AddScoped<ILimeMeta, FreeSqlLimeMeta>();
+        services.AddScoped<LocalFileStorageProvider>();
+        services.AddScoped<Pan123CliRunner>();
+        services.AddScoped<Pan123CliFileStorageProvider>();
+        services.AddScoped<IFileStorageProvider>(sp => sp.GetRequiredService<LocalFileStorageProvider>());
+        services.AddScoped<IFileStorageProvider>(sp => sp.GetRequiredService<Pan123CliFileStorageProvider>());
+        services.AddScoped<IFileStorageProviderResolver, FileStorageProviderResolver>();
 
         // 添加 Jwt（支持 Authorization: Bearer 与 URL 查询参数 access_token，与 login 返回的 JWT 一致）
         services.AddAuthenticationJwtBearer(s => s.SigningKey = config.JwtSignKey, opt =>
