@@ -92,6 +92,13 @@ public class LogicManager : ILogicManager
         }
 
         AssignModelLogics();
+
+        // 触发逻辑创建事件
+        foreach (var logic in _logics)
+        {
+            var args = new CreatedEventArgs(this);
+            logic.InvokeCreated(args);
+        }
     }
 
     /// <summary>
@@ -309,5 +316,23 @@ public class LogicManager : ILogicManager
     {
         var typeName = $"{modelType.FullName}Dto";
         return modelType.Assembly.GetType(typeName) ?? throw new Exception($"缺少Dto定义: model={modelType.FullName}");
+    }
+
+    /// <summary>
+    /// GetLogic
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public T GetLogic<T>() where T : BaseLogic
+    {
+        var logicType = typeof(T);
+        var logic = _logics.FirstOrDefault(r => r.GetType() == logicType);
+        if (logic != null)
+        {
+            return (T)logic;
+        }
+
+        throw new Exception($"未找到逻辑: {logicType.FullName}");
     }
 }

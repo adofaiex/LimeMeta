@@ -28,7 +28,10 @@ public static class Extensions
             .AddProjections()
             .AddFiltering()
             .AddSorting()
-            .AddMutationType<MutationType>();
+            .AddMutationType<MutationType>()
+            .AddSpatialTypes()
+            .AddSpatialProjections()
+            .AddSpatialFiltering();
     }
 
     /// <summary>

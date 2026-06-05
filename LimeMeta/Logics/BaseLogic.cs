@@ -57,6 +57,7 @@ public abstract class BaseLogic : ILogic
     public abstract void InvokeAfterUpdate<T>(AfterUpdateEventArgs<T> args) where T : class;
     public abstract void InvokeBeforeDelete<T>(BeforeDeleteEventArgs<T> args) where T : class;
     public abstract void InvokeAfterDelete<T>(AfterDeleteEventArgs<T> args) where T : class;
+    public abstract void InvokeCreated(CreatedEventArgs args);
 }
 
 /// <summary>
@@ -240,6 +241,13 @@ public abstract class BaseLogic<T> : BaseLogic where T : class
             AfterDelete?.Invoke(this, args1);
         }
     }
+
+    public event EventHandler<CreatedEventArgs>? Created;
+    /// <summary>
+    /// InvokeCreated
+    /// </summary>
+    /// <param name="args"></param>
+    public override void InvokeCreated(CreatedEventArgs args) => Created?.Invoke(this, args);
 }
 
 
@@ -387,3 +395,22 @@ public class AfterDeleteEventArgs<T> : BaseEventArgs where T : class
     public List<T> Objs { get; }
 }
 
+/// <summary>
+/// CreatedEventArgs
+/// </summary>
+public class CreatedEventArgs : EventArgs
+{
+    /// <summary>
+    /// CreatedEventArgs
+    /// </summary>
+    /// <param name="logicManager"></param>
+    public CreatedEventArgs(ILogicManager logicManager)
+    {
+        LogicManager = logicManager;
+    }
+
+    /// <summary>
+    /// LogicManager
+    /// </summary>
+    public ILogicManager LogicManager { get; }
+}

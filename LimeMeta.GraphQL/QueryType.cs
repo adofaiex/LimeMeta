@@ -241,7 +241,7 @@ public class QueryType : ObjectType<Query>
             return query;
         }
 
-        if (context.Selection.Features.TryGet<SortingFeature>(out var sortingFeature) &&
+        if (context.Selection.Field.Features.TryGet(out SortingFeature? sortingFeature) &&
             sortingFeature is not null &&
             argument.Type is ListType lt &&
             lt.ElementType is NonNullType nn &&

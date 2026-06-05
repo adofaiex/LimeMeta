@@ -5,12 +5,12 @@ LimeMeta 是一个基于模型驱动的 .NET 后端框架。它把实体模型�
 ## 核心能力
 
 - 模型自动建表：可配置启动时扫描所有带 `[Table]` 且继承 `BaseObject` 的模型，并通过 FreeSql 同步表结构。
-- GraphQL 自动查询：每个模型会自动生成同名查询字段，支持分页、过滤、排序和导航属性加载。
+- GraphQL 自动查询：每个模型会自动生成同名查询字段，支持分页、过滤、排序、导航属性加载和空间类型。
 - GraphQL 自动变更：每个模型会自动生成 `insertXxx`、`updateXxx`、`deleteXxx`。
-- Logic 事件机制：查询、新增、更新、删除前后都能挂业务逻辑。
+- Logic 事件机制：查询、新增、更新、删除前后都能挂业务逻辑，也支持 Logic 创建完成后的初始化事件。
 - JWT 认证：支持 Bearer Token，也支持 AppKey 换取用户身份。
 - WebSocket：提供统一 `/api/ws` 入口，支持按消息类型分发到业务方法。
-- 用户、角色、权限、部门基础模型：内置 RBAC 相关表结构。
+- 用户、角色、权限、部门、消息基础模型：内置 RBAC 和消息相关表结构。
 - 文件上传下载：内置 `/api/file/upload` 和 `/api/file/download`。
 - 种子数据：可配置启动时加载 `LimeMeta.WebAPI/Seed/*.yaml`。
 

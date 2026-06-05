@@ -42,6 +42,12 @@ public class User : BaseAudit
     /// </summary>
     [Navigate(ManyToMany = typeof(UserRole))]
     public List<Role> Roles { get; set; } = [];
+
+    /// <summary>
+    /// 消息
+    /// </summary>
+    [Navigate(ManyToMany = typeof(MessageUser))]
+    public List<Message> Messages { get; set; } = [];
 }
 
 /// <summary>

@@ -61,6 +61,12 @@ public class Dept : BaseParentChildren<Dept>
     public string? Note { get; set; }
 
     /// <summary>
+    /// 机构类型（0集团; 1子公司; 2分公司; 3部门）
+    /// </summary>
+    [Column(Name = "org_type")]
+    public int? OrgType { get; set; }
+
+    /// <summary>
     /// 部门用户
     /// </summary>
     [Navigate(ManyToMany = typeof(DeptUser))]
@@ -117,5 +123,10 @@ public class DeptDto : BaseParentChildrenDto
     /// 备注
     /// </summary>
     public string? Note { get; set; }
+
+    /// <summary>
+    /// 机构类型（0集团; 1子公司; 2分公司; 3部门）
+    /// </summary>
+    public int? OrgType { get; set; }
 }
 

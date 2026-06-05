@@ -90,4 +90,11 @@ public interface ILogicManager
     /// <param name="modelType"></param>
     /// <returns></returns>
     Type GetModelDtoType(Type modelType);
+
+    /// <summary>
+    /// GetLogic
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    T GetLogic<T>() where T : BaseLogic;
 }

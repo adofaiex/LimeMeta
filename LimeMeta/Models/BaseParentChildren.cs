@@ -11,7 +11,7 @@ namespace LimeMeta.Models;
 /// 基础父级子级泛型
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public abstract class BaseParentChildren<T> : BaseObject, IParentChildren where T : BaseObject
+public abstract class BaseParentChildren<T> : BaseAudit, IParentChildren where T : BaseObject
 {
     /// <summary>
     /// 父级ID
