@@ -103,4 +103,29 @@ public class Query
         return UserLogic.GetPerms(meta, userId).ToArray();
     }
 
+    /// <summary>
+    /// GetAllDeptRole
+    /// </summary>
+    /// <param name="ctx"></param>
+    /// <param name="deptId"></param>
+    /// <returns></returns>
+    [GraphQLName("allDeptRole")]
+    public IEnumerable<Role> GetAllDeptRole(IResolverContext ctx, Guid deptId)
+    {
+        var meta = ctx.Service<ILimeMeta>();
+        return DeptLogic.GetRoles(meta, deptId).ToArray();
+    }
+
+    /// <summary>
+    /// GetAllDeptPerm
+    /// </summary>
+    /// <param name="ctx"></param>
+    /// <param name="deptId"></param>
+    /// <returns></returns>
+    [GraphQLName("allDeptPerm")]
+    public IEnumerable<Perm> GetAllDeptPerm(IResolverContext ctx, Guid deptId)
+    {
+        var meta = ctx.Service<ILimeMeta>();
+        return DeptLogic.GetPerms(meta, deptId).ToArray();
+    }
 }

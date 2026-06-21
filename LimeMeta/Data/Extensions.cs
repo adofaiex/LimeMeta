@@ -7,6 +7,8 @@ using System.Linq.Expressions;
 using Newtonsoft.Json.Linq;
 using System.Text.Json;
 using LimeMeta.Models;
+using NetTopologySuite.Geometries;
+using NetTopologySuite.IO;
 
 namespace LimeMeta.Data;
 
@@ -15,6 +17,8 @@ namespace LimeMeta.Data;
 /// </summary>
 public static class Extensions
 {
+    private static readonly GeoJsonReader GeoJsonReader = new();
+
     /// <summary>
     /// FirstOrDefault
     /// </summary>
@@ -60,6 +64,10 @@ public static class Extensions
             else if (pi.PropertyType == typeof(JsonElement) || pi.PropertyType == typeof(JsonElement?))
             {
                 val = JsonDocument.Parse(jp.Value.ToString(Newtonsoft.Json.Formatting.None)).RootElement;
+            }
+            else if (typeof(Geometry).IsAssignableFrom(pi.PropertyType))
+            {
+                val = GeoJsonReader.Read<Geometry>(jp.Value.ToString(Newtonsoft.Json.Formatting.None));
             }
             else
             {

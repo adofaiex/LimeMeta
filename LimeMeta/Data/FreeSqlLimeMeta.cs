@@ -7,8 +7,11 @@ using LimeMeta.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using LimeMeta.Logics;
+using Newtonsoft.Json.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
+using FreeSql.DataAnnotations;
 
 namespace LimeMeta.Data;
 
@@ -446,6 +449,98 @@ public class FreeSqlLimeMeta : BaseLimeMeta
         }
 
         return q;
+    }
+
+    /// <summary>
+    /// Aggr
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="q"></param>
+    /// <param name="fields"></param>
+    /// <param name="groups"></param>
+    /// <param name="userId"></param>
+    /// <param name="enableLogic"></param>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    public override JArray Aggr<T>(ISelect<T> q, IEnumerable<AggrField> fields, IEnumerable<string>? groups = null, Guid? userId = null, bool enableLogic = true, object? context = null)
+    {
+        if (!fields.Any()) return new JArray();
+
+        if (enableLogic)
+        {
+            var args = new BeforeSelectEventArgs<T>(this, typeof(T), q, userId, context);
+            LogicManager.RaiseBeforeSelectEvent(args);
+
+            q = args.Query;
+        }
+
+        var type = typeof(T);
+        var pis = type.GetProperties();
+
+        var dictGroup = new Dictionary<string, string>();
+        var sbGroup = new StringBuilder();
+        if (groups != null && groups.Any())
+        {
+            foreach (var group in groups)
+            {
+                var pi = pis.FirstOrDefault(r => r.Name.Equals(group, StringComparison.OrdinalIgnoreCase));
+                if (pi == null) continue;
+
+                var colAttr = pi.GetCustomAttribute(typeof(ColumnAttribute), true) as ColumnAttribute;
+                if (colAttr == null) continue;
+
+                dictGroup[group] = colAttr.Name;
+                sbGroup.Append($"a.{colAttr.Name},");
+            }
+
+            if (dictGroup.Any())
+            {
+                sbGroup.Remove(sbGroup.Length - 1, 1);
+                q = q.GroupBy(sbGroup.ToString());
+            }
+        }
+
+        var sbAggr = new StringBuilder();
+        foreach (var field in fields)
+        {
+            var pi = pis.FirstOrDefault(r => r.Name.Equals(field.Name, StringComparison.OrdinalIgnoreCase));
+            if (pi == null) continue;
+
+            var colAttr = pi.GetCustomAttribute(typeof(ColumnAttribute), true) as ColumnAttribute;
+            if (colAttr == null) continue;
+
+            if (field.Type == AggrType.Count)
+            {
+                var piId = pis.FirstOrDefault(r => r.Name.Equals(nameof(BaseObject.Id), StringComparison.OrdinalIgnoreCase));
+                if (piId == null) continue;
+
+                var colAttrId = piId.GetCustomAttribute(typeof(ColumnAttribute), true) as ColumnAttribute;
+                if (colAttrId == null) continue;
+
+                sbAggr.Append($"{field.Type}(a.{colAttrId.Name}) \"{field.Name}{field.Type}\",");
+            }
+            else
+            {
+                sbAggr.Append($"{field.Type}(a.{colAttr.Name}) \"{field.Name}{field.Type}\",");
+            }
+        }
+
+        foreach (var pair in dictGroup)
+        {
+            sbAggr.Append($"a.{pair.Value} \"{pair.Key}\",");
+        }
+
+        if (sbAggr.Length == 0)
+        {
+            return new JArray();
+        }
+
+        sbAggr.Remove(sbAggr.Length - 1, 1);
+
+        var sql = q.ToSql(sbAggr.ToString());
+        var res = FreeSql.Ado.Query<dynamic>(sql);
+
+        return JArray.FromObject(res);
     }
 }
 

@@ -21,6 +21,7 @@ using HotChocolate.Data.Filters;
 using HotChocolate.Data.Sorting.Expressions;
 using HotChocolate.Data.Sorting;
 using NetTopologySuite.Geometries;
+using System.Text.Json;
 
 namespace LimeMeta.GraphQL;
 /// <summary>
@@ -128,6 +129,32 @@ public class QueryType : ObjectType<Query>
                     logger.LogError(ex, "查询错误: model={TypeName}, message={Message}", typeName, ex.Message);
                     throw new GraphQLException(ex.Message);
                 }
+            });
+
+        // aggr
+        desc.Field($"{typeName}Aggr")
+            .Argument("fields", a => a.Type(typeof(AggrField[])))
+            .Argument("groups", a => a.Type<ListType<StringType>>())
+            .UseFiltering<T>()
+            .Resolve(ctx =>
+            {
+                var cliam = ctx.GetUser()!.Claims.First(r => r.Type == UserLogic.ClaimUserId);
+                var userId = Guid.Parse(cliam.Value);
+
+                var meta = ctx.Service<ILimeMeta>();
+                var q = meta.Query<T>();
+
+                var where = Where<T>(ctx);
+                if (where != null)
+                {
+                    q = q.Where(where);
+                }
+
+                var fieldsArg = ctx.ArgumentValue<AggrField[]>("fields");
+                var groupsArg = ctx.ArgumentOptional<List<string>>("groups");
+
+                var json = meta.Aggr(q, fieldsArg, groupsArg.HasValue ? groupsArg.Value : null, userId, true, ctx);
+                return JsonDocument.Parse(json.ToString()).RootElement;
             });
     }
 

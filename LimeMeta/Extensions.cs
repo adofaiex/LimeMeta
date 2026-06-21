@@ -24,6 +24,7 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using NetTopologySuite.Geometries;
 using Newtonsoft.Json.Linq;
+using Npgsql;
 using System;
 using System.Data.Common;
 using System.IO;
@@ -130,9 +131,24 @@ public static class Extensions
         {
             var cfg = sp.GetRequiredService<LimeMetaConfiguration>();
             var builder = new FreeSqlBuilder()
-                .UseConnectionString(cfg.DataType, cfg.ConnectionString!)
-                .UseAdoConnectionPool(true)
                 .UseAutoSyncStructure(false);
+
+            if (cfg.DataType == DataType.PostgreSQL)
+            {
+                var dataSource = new NpgsqlDataSourceBuilder(cfg.ConnectionString!)
+                    .UseNetTopologySuite()
+                    .Build();
+
+                builder
+                    .UseConnectionFactory(DataType.PostgreSQL, () => dataSource.OpenConnection())
+                    .UseAdoConnectionPool(false);
+            }
+            else
+            {
+                builder
+                    .UseConnectionString(cfg.DataType, cfg.ConnectionString!)
+                    .UseAdoConnectionPool(true);
+            }
 
             var logger = sp.GetService<ILogger<FreeSqlBuilder>>();
             if (logger != null)

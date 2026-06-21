@@ -178,6 +178,19 @@ public interface ILimeMeta
     /// <param name="context"></param>
     /// <returns></returns>
     PageResult<T> Select<T>(ISelect<T> query, PageModel page, IEnumerable<IncludeField>? includes = null, Guid? userId = null, bool enableLogic = true, object? context = null) where T : BaseObject;
+
+    /// <summary>
+    /// Aggr
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="query"></param>
+    /// <param name="fields"></param>
+    /// <param name="groups"></param>
+    /// <param name="userId"></param>
+    /// <param name="enableLogic"></param>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    JArray Aggr<T>(ISelect<T> query, IEnumerable<AggrField> fields, IEnumerable<string>? groups = null, Guid? userId = null, bool enableLogic = true, object? context = null) where T : BaseObject;
 }
 
 /// <summary>
@@ -231,3 +244,30 @@ public class PageResult<T>
     public IEnumerable<T> Items { get; set; } = Enumerable.Empty<T>();
 }
 
+/// <summary>
+/// AggrType
+/// </summary>
+public enum AggrType
+{
+    Count,
+    Avg,
+    Min,
+    Max,
+    Sum
+}
+
+/// <summary>
+/// AggrField
+/// </summary>
+public class AggrField
+{
+    /// <summary>
+    /// 类型
+    /// </summary>
+    public AggrType Type { get; set; }
+
+    /// <summary>
+    /// 名称
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+}
