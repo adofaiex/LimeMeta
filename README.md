@@ -71,15 +71,19 @@ YourProject/
 - `Extensions.cs`：业务模块入口，统一注册服务、配置、GraphQL 扩展和 Logic。
 - `YourProject.WebAPI/`：启动项目，只负责宿主、配置、种子数据和发布。
 
-## GitHub Packages
+## 发包、模板和升级
 
-LimeMeta 默认发布到 GitHub Packages：
+这一节专门记录 LimeMeta 框架包怎么发布，模板怎么安装、卸载、更新，以及业务项目怎么升级框架版本。
+
+### GitHub Packages 包源
+
+LimeMeta 默认发布到 GitHub Packages，包源地址是：
 
 ```xml
 <add key="github-limemeta" value="https://nuget.pkg.github.com/memsys-lizi/index.json" />
 ```
 
-第一次在机器上使用私有包源时，需要添加认证：
+第一次在一台电脑上还原 GitHub Packages 私有包，需要先配置包源认证：
 
 ```powershell
 dotnet nuget add source https://nuget.pkg.github.com/memsys-lizi/index.json `
@@ -89,59 +93,175 @@ dotnet nuget add source https://nuget.pkg.github.com/memsys-lizi/index.json `
   --store-password-in-clear-text
 ```
 
-GitHub PAT 至少需要读取私有包的权限。不要把 Token 写进仓库。
+GitHub PAT 至少需要 `read:packages` 权限。如果这台电脑还要发布包，还需要 `write:packages` 权限。
 
-## 打包和发布框架
+注意：
 
-只打包：
+- `--store-password-in-clear-text` 会把 token 明文保存到本机 NuGet 配置里，通常在 `C:\Users\<用户名>\AppData\Roaming\NuGet\NuGet.Config`。
+- 这是本机开发机可以接受的做法，但不要把带 token 的 `NuGet.Config` 提交到 git。
+- token 如果发给别人或贴到公开位置，需要马上去 GitHub 删除并重新生成。
+
+如果包源已经存在，重新配置前先删除旧源：
+
+```powershell
+dotnet nuget remove source github-limemeta
+```
+
+### 发布 LimeMeta 框架包
+
+发布前进入框架仓库：
 
 ```powershell
 cd C:\Users\lizi\Documents\Doc\.NET\LimeMeta
+```
+
+只打包，不推送：
+
+```powershell
 .\pack.bat
 ```
 
-发布到 GitHub Packages：
+执行后会在 `.nuget/` 目录生成：
+
+```text
+LimeMeta.x.x.x.nupkg
+LimeMeta.GraphQL.x.x.x.nupkg
+```
+
+推送到 GitHub Packages：
 
 ```powershell
 $env:GITHUB_TOKEN="<你的 GitHub PAT>"
 .\push-github-packages.bat
 ```
 
-说明：
+成功时会看到类似：
 
-- `LimeMeta` 会打成 `LimeMeta.x.x.x.nupkg`。
-- `LimeMeta.GraphQL` 会打成 `LimeMeta.GraphQL.x.x.x.nupkg`。
-- `LimeMeta.WebAPI` 设置了 `IsPackable=false`，不会被发布成包。
+```text
+正在将 LimeMeta.x.x.x.nupkg 推送到 ...
+OK
+已推送包。
+```
+
+发布规则：
+
+- `LimeMeta` 会发布成 `LimeMeta.x.x.x.nupkg`。
+- `LimeMeta.GraphQL` 会发布成 `LimeMeta.GraphQL.x.x.x.nupkg`。
+- `LimeMeta.WebAPI` 是框架调试用启动项目，已经设置 `IsPackable=false`，不会被发布。
 - 版本号由 `Directory.Build.props` 按当前时间生成，例如 `2026.621.1320`。
+- 如果同一个版本已经发布过，GitHub Packages 不允许覆盖。需要重新打一个新版本，或者去 GitHub Packages 删除旧版本。
 
-## 安装模板
+### 安装模板
 
-从当前仓库安装模板：
+模板用于创建新的业务项目。安装模板：
 
 ```powershell
 dotnet new install C:\Users\lizi\Documents\Doc\.NET\LimeMeta
 ```
 
-如果模板修改过，先卸载再安装：
+如果模板已经安装过，直接强制更新：
+
+```powershell
+dotnet new install C:\Users\lizi\Documents\Doc\.NET\LimeMeta --force
+```
+
+卸载模板：
 
 ```powershell
 dotnet new uninstall C:\Users\lizi\Documents\Doc\.NET\LimeMeta
-dotnet new install C:\Users\lizi\Documents\Doc\.NET\LimeMeta
 ```
 
-创建新业务项目：
+查看当前已安装模板：
+
+```powershell
+dotnet new list limemeta
+```
+
+### 创建业务项目
+
+创建业务项目时，推荐指定明确的框架版本：
+
+```powershell
+dotnet new limemeta `
+  -n LimeVoice `
+  -o C:\Users\lizi\Documents\Doc\.NET\LimeVoice `
+  --limeMetaVersion 2026.621.1243
+```
+
+如果不指定版本：
 
 ```powershell
 dotnet new limemeta -n LimeVoice -o C:\Users\lizi\Documents\Doc\.NET\LimeVoice
 ```
 
-指定框架包版本：
+默认 `--limeMetaVersion` 是 `*`，NuGet 会尝试还原包源里的最新版本。正式项目建议固定版本，避免某次 restore 悄悄升级框架。
+
+创建后运行：
 
 ```powershell
-dotnet new limemeta -n LimeVoice -o C:\Users\lizi\Documents\Doc\.NET\LimeVoice --limeMetaVersion 2026.621.1320
+cd C:\Users\lizi\Documents\Doc\.NET\LimeVoice
+dotnet restore
+dotnet build
 ```
 
-默认 `--limeMetaVersion` 是 `*`，会还原包源中最新的 LimeMeta 包。正式项目建议固定版本，升级时手动改版本号。
+### 升级业务项目里的 LimeMeta
+
+业务项目升级框架时，不需要复制源码，也不需要重新创建项目。只改业务项目 `.csproj` 里的包版本。
+
+例如打开：
+
+```text
+C:\Users\lizi\Documents\Doc\.NET\LimeVoice\LimeVoice\LimeVoice.csproj
+```
+
+把版本改成新发布的版本：
+
+```xml
+<PackageReference Include="LimeMeta" Version="2026.621.1243" />
+<PackageReference Include="LimeMeta.GraphQL" Version="2026.621.1243" />
+```
+
+然后执行：
+
+```powershell
+dotnet restore
+dotnet build
+```
+
+如果 NuGet 缓存导致还是旧包，可以清理缓存：
+
+```powershell
+dotnet nuget locals all --clear
+dotnet restore
+```
+
+### 模板更新和框架包更新的区别
+
+这两个东西不要混：
+
+- 发布 `LimeMeta` / `LimeMeta.GraphQL` 包：影响业务项目引用到的框架代码。
+- 安装或更新 `limemeta` 模板：只影响以后新建项目时生成的文件结构。
+- 已经创建出来的业务项目，不会因为模板更新而自动改变文件结构。
+- 已经创建出来的业务项目，要升级框架能力，改 `.csproj` 里的包版本。
+
+通常流程是：
+
+```text
+改 LimeMeta 框架源码
+运行 .\pack.bat
+运行 .\push-github-packages.bat
+业务项目修改 PackageReference 版本
+业务项目 dotnet restore
+业务项目 dotnet build
+```
+
+如果模板本身也改了：
+
+```text
+改 templates/LimeMeta.Service
+dotnet new install C:\Users\lizi\Documents\Doc\.NET\LimeMeta --force
+以后新项目用新模板创建
+```
 
 ## 业务项目怎么开发
 
@@ -453,4 +573,3 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO your_user;
 ### GitHub Packages 还原失败
 
 一般是没有配置包源认证，或者 PAT 没有私有包读取权限。重新执行 `dotnet nuget add source`，确认 `NuGet.config` 中有 `github-limemeta`。
-
