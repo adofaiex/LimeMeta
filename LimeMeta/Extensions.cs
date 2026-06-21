@@ -130,10 +130,11 @@ public static class Extensions
         services.AddSingleton(sp =>
         {
             var cfg = sp.GetRequiredService<LimeMetaConfiguration>();
+            var isPostgreSql = cfg.DataType == DataType.PostgreSQL;
             var builder = new FreeSqlBuilder()
                 .UseAutoSyncStructure(false);
 
-            if (cfg.DataType == DataType.PostgreSQL)
+            if (isPostgreSql)
             {
                 var dataSource = new NpgsqlDataSourceBuilder(cfg.ConnectionString!)
                     .UseNetTopologySuite()
@@ -175,11 +176,11 @@ public static class Extensions
                     {
                         var name = $"ix_{tabAttr.Name.Replace('.', '_')}_{colAttr.Name}";
                         var attr = new IndexAttribute(name, colAttr.Name);
-                        if (pi.PropertyType.IsSubclassOf(typeof(Geometry)))
+                        if (isPostgreSql && typeof(Geometry).IsAssignableFrom(pi.PropertyType))
                         {
                             attr.IndexMethod = IndexMethod.SP_GiST;
                         }
-                        else if (pi.PropertyType == typeof(JsonElement) || pi.PropertyType == typeof(JsonElement?))
+                        else if (isPostgreSql && (pi.PropertyType == typeof(JsonElement) || pi.PropertyType == typeof(JsonElement?)))
                         {
                             attr.IndexMethod = IndexMethod.GIN;
                         }

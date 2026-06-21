@@ -231,7 +231,7 @@ AllowedHosts: "*"
 | --- | --- |
 | `Urls` | 应用监听地址和端口。VS 调试、命令行运行、Linux 部署都优先看这里。 |
 | `LimeMeta.ConnectionString` | 数据库连接字符串。 |
-| `LimeMeta.DataType` | FreeSql 数据库类型。当前模板默认 `PostgreSQL`。 |
+| `LimeMeta.DataType` | FreeSql 数据库类型。常用 `PostgreSQL` 或 `MySql`，模板默认 `PostgreSQL`。 |
 | `LimeMeta.FileStorePath` | 旧版本地文件根目录配置，保留兼容。新项目优先用 `FileStore.Local.Path`。 |
 | `LimeMeta.FileStoreCount` | 旧版本地文件分目录数量配置，保留兼容。新项目优先用 `FileStore.Local.Count`。 |
 | `LimeMeta.FileStore.Provider` | 文件存储提供者，支持 `Local` 和 `Pan123Cli`。 |
@@ -263,7 +263,53 @@ AllowedHosts: "*"
 - 数据库用户必须有建表权限。
 - 文件目录、日志目录要确保运行用户有读写权限。
 
-## 5. 新增模型
+## 5. 数据库选择
+
+LimeMeta 底层使用 FreeSql。模板默认 PostgreSQL，因为框架对 PostgreSQL 做了更多验证和优化；MySQL 也可以用于普通业务模型、自动建表、GraphQL、Logic、文件、WebSocket 等常规能力。
+
+PostgreSQL：
+
+```yaml
+LimeMeta:
+  DataType: "PostgreSQL"
+  ConnectionString: "Host=127.0.0.1;Port=5432;Database=app;Username=postgres;Password=postgres"
+```
+
+MySQL：
+
+```yaml
+LimeMeta:
+  DataType: "MySql"
+  ConnectionString: "Server=127.0.0.1;Port=3306;Database=app;Uid=root;Pwd=your_password;Charset=utf8mb4;"
+```
+
+Provider 包：
+
+- 模板 WebAPI 已经引用 `FreeSql.Provider.PostgreSQL` 和 `FreeSql.Provider.MySqlConnector`。
+- 删除某个 Provider 包后，对应数据库不能使用。
+- MySQL、MariaDB、Percona、Aurora、TiDB 等 MySQL 兼容数据库优先使用 `FreeSql.Provider.MySqlConnector`。
+
+兼容情况：
+
+| 能力 | PostgreSQL | MySQL |
+| --- | --- | --- |
+| 普通模型自动建表 | 支持 | 支持 |
+| 自动 GraphQL 查询和修改 | 支持 | 支持 |
+| Logic 事件 | 支持 | 支持 |
+| 用户、角色、权限、部门 | 支持 | 支持 |
+| 文件上传下载、123 云盘、WebSocket | 支持 | 支持 |
+| 普通 `[Indexed]` 索引 | 支持 | 支持 |
+| `JsonElement` 字段保存 | 支持 | 基础支持，建议按项目测试 |
+| `JsonElement` GIN 索引 | 支持 | 不启用 |
+| Geometry 空间字段 | 优先支持 | 暂不承诺完整支持 |
+
+注意：
+
+- MySQL 建议使用 `utf8mb4` 字符集。
+- 切换数据库类型前先创建空库。
+- 从 PostgreSQL 切到 MySQL 不是无痛迁移，已有数据需要单独迁移。
+
+## 6. 新增模型
 
 模型写在：
 
@@ -319,7 +365,7 @@ public class DecorationDto : BaseAuditDto
 | `BaseAudit` | 需要创建人、创建时间、修改人、修改时间的模型。 |
 | `BaseParentChildren` | 树形结构模型，例如分类、部门。 |
 
-## 6. 自动生成的 GraphQL
+## 7. 自动生成的 GraphQL
 
 新增模型后，框架会自动生成：
 
@@ -456,7 +502,7 @@ query {
 
 如果聚合参数报错，请打开 `/api/gql` 的 schema 文档查看 `AggrField` 当前字段名，以运行时 schema 为准。
 
-## 7. 新增 GraphQL 自定义 Query
+## 8. 新增 GraphQL 自定义 Query
 
 自动 CRUD 解决普通增删改查。复杂统计、复杂业务查询，写到：
 
@@ -507,7 +553,7 @@ query {
 }
 ```
 
-## 8. 新增 GraphQL 自定义 Mutation
+## 9. 新增 GraphQL 自定义 Mutation
 
 业务动作、审核、批量处理等不适合直接暴露成通用 `updateXxx` 的操作，写自定义 Mutation。
 
@@ -566,7 +612,7 @@ mutation {
 - 有业务含义的动作，例如审核、发布、撤回、批处理，推荐写自定义 Mutation。
 - 默认模板没有开启 GraphQL Subscription。实时通信建议使用框架内置 WebSocket。
 
-## 9. 新增 REST API
+## 10. 新增 REST API
 
 REST API 适合：
 
@@ -640,7 +686,7 @@ public sealed class CreateDecorationEndpoint
 
 框架已经注册了 FastEndpoints，业务项目被 WebAPI 引用后，Endpoint 会自动发现。
 
-## 10. 新增 Logic
+## 11. 新增 Logic
 
 Logic 用来处理模型事件，写在：
 
@@ -695,7 +741,7 @@ public sealed class DecorationLogic : BaseLogic<Decoration>
 
 模板里的 `Extensions.cs` 已经调用 `AddLimeMetaModule` 和 `UseLimeMetaModule`，新增 Logic 后不需要写反射注册。
 
-## 11. 新增业务服务
+## 12. 新增业务服务
 
 服务类写在：
 
@@ -727,7 +773,7 @@ services.AddScoped<DecorationAuditService>();
 
 然后在 Endpoint、GraphQL 扩展或 Logic 中通过构造函数注入。
 
-## 12. 新增业务配置
+## 13. 新增业务配置
 
 配置类写在：
 
@@ -775,7 +821,7 @@ public sealed class DecorationAuditService(IOptions<DecorationOptions> options)
 }
 ```
 
-## 13. 文件上传下载
+## 14. 文件上传下载
 
 框架内置文件接口：
 
@@ -818,7 +864,7 @@ LimeMeta:
 - LimeMeta 不保存 123 云盘账号密码。
 - Linux 上要确保运行用户能执行 `pan123`，也能读写 `TempPath`。
 
-## 14. WebSocket 开发
+## 15. WebSocket 开发
 
 WebSocket 只有一个入口，默认：
 
@@ -872,7 +918,7 @@ public sealed class NoticeWs
 - 审核结果推送。
 - 长任务进度。
 
-## 15. 种子数据
+## 16. 种子数据
 
 种子文件放在：
 
@@ -903,7 +949,7 @@ LimeMeta:
 
 种子数据会按框架的数据加载逻辑写入数据库。涉及用户时，密码不要直接写明文业务密码，优先使用框架默认密码配置或专门的密码逻辑。
 
-## 16. 发布部署
+## 17. 发布部署
 
 发布：
 
@@ -940,7 +986,7 @@ http://127.0.0.1:6675
 
 如果使用 WebSocket，反代需要支持 Upgrade 头。
 
-## 17. 升级 LimeMeta 框架
+## 18. 升级 LimeMeta 框架
 
 修改：
 
@@ -969,7 +1015,7 @@ dotnet nuget locals all --clear
 dotnet restore
 ```
 
-## 18. 常见问题
+## 19. 常见问题
 
 ### 端口改了不生效
 
@@ -990,6 +1036,31 @@ LimeMetaService.WebAPI/appsettings.Development.yml
 GRANT USAGE, CREATE ON SCHEMA public TO your_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO your_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO your_user;
+```
+
+### MySQL 怎么配置
+
+MySQL 配置示例：
+
+```yaml
+LimeMeta:
+  DataType: "MySql"
+  ConnectionString: "Server=127.0.0.1;Port=3306;Database=app;Uid=app_user;Pwd=your_password;Charset=utf8mb4;"
+```
+
+MySQL 需要先创建数据库，并给用户建表权限：
+
+```sql
+CREATE DATABASE app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'app_user'@'%' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON app.* TO 'app_user'@'%';
+FLUSH PRIVILEGES;
+```
+
+如果启动时提示 MySQL Provider 相关错误，检查 `LimeMetaService.WebAPI.csproj` 是否引用：
+
+```xml
+<PackageReference Include="FreeSql.Provider.MySqlConnector" Version="3.5.309" />
 ```
 
 ### GitHub Packages restore 失败

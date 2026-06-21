@@ -471,11 +471,53 @@ LimeMeta:
 
 - `Urls`：应用监听地址和端口。发布环境没有 VS 的 `launchSettings.json`，所以生产端口看这里。
 - `ConnectionString`：数据库连接字符串。
-- `DataType`：当前主要使用 `PostgreSQL`。
+- `DataType`：FreeSql 数据库类型，常用 `PostgreSQL` 或 `MySql`。
 - `AutoSyncSchema`：启动时是否同步表结构。开发环境可以开，生产环境建议谨慎。
 - `LoadSeedOnStartup`：启动时是否加载种子数据。
 - `FileStore.Provider`：`Local` 或 `Pan123Cli`。
 - `WebSocket.Path`：WebSocket 统一入口。
+
+## 数据库选择
+
+LimeMeta 底层使用 FreeSql，不是只能使用 PostgreSQL。当前框架对 PostgreSQL 做了更多优化，MySQL 也可以用于普通业务模型、自动建表、GraphQL、Logic、文件、WebSocket 等常规能力。
+
+PostgreSQL 推荐配置：
+
+```yaml
+LimeMeta:
+  DataType: "PostgreSQL"
+  ConnectionString: "Host=127.0.0.1;Port=5432;Database=app;Username=postgres;Password=postgres"
+```
+
+MySQL 推荐配置：
+
+```yaml
+LimeMeta:
+  DataType: "MySql"
+  ConnectionString: "Server=127.0.0.1;Port=3306;Database=app;Uid=root;Pwd=your_password;Charset=utf8mb4;"
+```
+
+数据库 Provider：
+
+- 框架调试 WebAPI 和项目模板已经同时引用 `FreeSql.Provider.PostgreSQL` 和 `FreeSql.Provider.MySqlConnector`。
+- 如果业务项目删除了某个 Provider 包，对应数据库就不能使用。
+- MySQL、MariaDB、Percona、Aurora、TiDB 等 MySQL 兼容数据库优先使用 `FreeSql.Provider.MySqlConnector`。
+
+兼容差异：
+
+| 能力 | PostgreSQL | MySQL |
+| --- | --- | --- |
+| 普通模型自动建表 | 支持 | 支持 |
+| 自动 GraphQL 查询和修改 | 支持 | 支持 |
+| Logic 事件 | 支持 | 支持 |
+| 用户、角色、权限、部门 | 支持 | 支持 |
+| 文件上传下载、123 云盘、WebSocket | 支持 | 支持 |
+| 普通 `[Indexed]` 索引 | 支持 | 支持 |
+| `JsonElement` 字段保存 | 支持 | 基础支持，建议按项目测试 |
+| `JsonElement` GIN 索引 | 支持 | 不启用 |
+| Geometry 空间字段 | 优先支持 | 暂不承诺完整支持 |
+
+注意：从 PostgreSQL 切换到 MySQL 不是无痛迁移。通常需要新建 MySQL 数据库，让框架重新建表，再做数据迁移。
 
 ## 文件存储
 
@@ -556,6 +598,27 @@ GRANT USAGE, CREATE ON SCHEMA public TO your_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO your_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO your_user;
 ```
+
+### MySQL 怎么配置
+
+MySQL 连接字符串示例：
+
+```yaml
+LimeMeta:
+  DataType: "MySql"
+  ConnectionString: "Server=127.0.0.1;Port=3306;Database=app;Uid=app_user;Pwd=your_password;Charset=utf8mb4;"
+```
+
+MySQL 需要先创建数据库，并给用户建表权限：
+
+```sql
+CREATE DATABASE app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'app_user'@'%' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON app.* TO 'app_user'@'%';
+FLUSH PRIVILEGES;
+```
+
+如果提示找不到 MySQL Provider，检查 WebAPI 项目是否引用了 `FreeSql.Provider.MySqlConnector`。
 
 ### publish 里没有配置文件
 
