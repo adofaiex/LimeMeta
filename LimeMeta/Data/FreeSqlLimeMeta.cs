@@ -137,7 +137,15 @@ public class FreeSqlLimeMeta : BaseLimeMeta
     /// ExecSql
     /// </summary>
     /// <param name="sql"></param>
-    public override void ExecSql(string sql) => FreeSql.Ado.ExecuteNonQuery(sql);
+    public override void ExecSql(string sql)
+    {
+        if (string.IsNullOrWhiteSpace(sql))
+        {
+            return;
+        }
+
+        FreeSql.Ado.ExecuteNonQuery(sql);
+    }
 
     /// <summary>
     /// UpdateSchema
