@@ -6,6 +6,13 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <PackageId>LimeMeta</PackageId>
+    <Authors>memsys-lizi</Authors>
+    <Company>memsys-lizi</Company>
+    <Description>LimeMeta core backend framework: model-driven schema sync, logic events, REST endpoints, authentication, file storage, and WebSocket support.</Description>
+    <PackageTags>limemeta;backend;webapi;freesql;fastendpoints;websocket</PackageTags>
+    <RepositoryUrl>https://github.com/memsys-lizi/LimeMeta</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,6 +31,10 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

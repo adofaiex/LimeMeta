@@ -6,6 +6,13 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <PackageId>LimeMeta.GraphQL</PackageId>
+    <Authors>memsys-lizi</Authors>
+    <Company>memsys-lizi</Company>
+    <Description>LimeMeta GraphQL integration: automatic query and mutation generation for LimeMeta models.</Description>
+    <PackageTags>limemeta;graphql;hotchocolate;backend</PackageTags>
+    <RepositoryUrl>https://github.com/memsys-lizi/LimeMeta</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +33,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LimeMeta\LimeMeta.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,47 @@
+Urls: "http://127.0.0.1:6675"
+
+LimeMeta:
+  ConnectionString: "Host=localhost;Port=5432;Database=limemeta_service;Username=postgres;Password=postgres"
+  DataType: "PostgreSQL"
+  FileStorePath: "/FileStore"
+  FileStoreCount: 8192
+  FileStore:
+    Provider: "Local"
+    Local:
+      Path: "/FileStore"
+      Count: 8192
+    Pan123Cli:
+      Command: "pan123"
+      ParentFileId: 0
+      UseDirectLink: true
+      TempPath: "./TempUpload"
+      Overwrite: false
+  AdminPerm: "管理员"
+  GuestPerm: "游客"
+  AdminUserName: "admin"
+  AdminUserPassword: "change-me-admin-password"
+  DefaultUserPassword: "change-me-user-password"
+  AutoSyncSchema: true
+  LoadSeedOnStartup: true
+  WebSocket:
+    Path: "/api/ws"
+    MaxMessageSize: 1048576
+
+Serilog:
+  MinimumLevel:
+    Default: Information
+    Override:
+      Microsoft: Information
+      Microsoft.AspNetCore: Information
+  WriteTo:
+    - Name: Console
+      Args:
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"
+    - Name: File
+      Args:
+        path: "Logs/error-.log"
+        restrictedToMinimumLevel: Error
+        rollingInterval: Day
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+
+AllowedHosts: "*"

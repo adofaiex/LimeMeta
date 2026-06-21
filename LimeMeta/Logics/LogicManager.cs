@@ -48,7 +48,7 @@ public class LogicManager : ILogicManager
     /// ModelMapper
     /// </summary>
     /// <value></value>
-    public IMapper ModelMapper { get; }
+    public IMapper ModelMapper { get; private set; } = null!;
 
     /// <summary>
     /// LogicManager
@@ -56,32 +56,26 @@ public class LogicManager : ILogicManager
     /// <param name="loggerFactory"></param>
     /// <param name="scopeFactory"></param>
     /// <param name="serviceProvider"></param>
-    public LogicManager(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory, IServiceProvider serviceProvider)
+    /// <param name="moduleAssemblies"></param>
+    public LogicManager(
+        ILoggerFactory loggerFactory,
+        IServiceScopeFactory scopeFactory,
+        IServiceProvider serviceProvider,
+        IEnumerable<LimeMetaModuleAssembly> moduleAssemblies)
     {
         Logger = loggerFactory.CreateLogger(GetType());
         ScopeFactory = scopeFactory;
+        var scanAssemblies = GetScanAssemblies(moduleAssemblies);
 
         // 获取所有模型类型（避免对第三方程序集全量 GetTypes，部分依赖组合会触发 ReflectionTypeLoadException）
-        _modelTypes = [.. AppDomain.CurrentDomain.GetAssemblies()
+        _modelTypes = [.. scanAssemblies
             .SelectMany(GetLoadableTypes)
             .Where(t => t.GetCustomAttribute<TableAttribute>() != null && t.IsSubclassOf(typeof(BaseObject)))];
 
-        var mapperConfig = new MapperConfiguration(cfg =>
-        {
-            foreach (var modelType in _modelTypes)
-            {
-                if (!modelType.IsSubclassOf(typeof(BaseObject))) continue;
-
-                var dtoType = GetModelDtoType(modelType);
-                cfg.CreateMap(modelType, dtoType);
-                cfg.CreateMap(dtoType, modelType);
-            }
-        }, loggerFactory);
-        mapperConfig.CompileMappings();
-        ModelMapper = mapperConfig.CreateMapper()!;
+        RebuildModelMapper(loggerFactory);
 
         // 获取所有逻辑类型        
-        var logicTypes = AppDomain.CurrentDomain.GetAssemblies()
+        var logicTypes = scanAssemblies
             .SelectMany(GetLoadableTypes)
             .Where(t => t.IsSubclassOf(typeof(BaseLogic)) && !t.IsAbstract);
 
@@ -99,6 +93,45 @@ public class LogicManager : ILogicManager
             var args = new CreatedEventArgs(this);
             logic.InvokeCreated(args);
         }
+    }
+
+    /// <summary>
+    /// 注册业务程序集中的模型和逻辑。
+    /// </summary>
+    /// <param name="assembly">业务程序集。</param>
+    /// <param name="serviceProvider">服务提供者。</param>
+    public void RegisterAssembly(Assembly assembly, IServiceProvider serviceProvider)
+    {
+        ArgumentNullException.ThrowIfNull(assembly);
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var modelChanged = false;
+        foreach (var modelType in GetLoadableTypes(assembly)
+            .Where(t => t.GetCustomAttribute<TableAttribute>() != null && t.IsSubclassOf(typeof(BaseObject))))
+        {
+            if (_modelTypes.Contains(modelType)) continue;
+
+            _modelTypes.Add(modelType);
+            modelChanged = true;
+        }
+
+        if (modelChanged)
+        {
+            RebuildModelMapper(loggerFactory);
+        }
+
+        foreach (var logicType in GetLoadableTypes(assembly)
+            .Where(t => t.IsSubclassOf(typeof(BaseLogic)) && !t.IsAbstract))
+        {
+            if (_logics.Any(logic => logic.GetType() == logicType)) continue;
+
+            var logic = (BaseLogic)ActivatorUtilities.CreateInstance(serviceProvider, logicType, loggerFactory, ScopeFactory);
+            _logics.Add(logic);
+            logic.InvokeCreated(new CreatedEventArgs(this));
+        }
+
+        AssignModelLogics();
     }
 
     /// <summary>
@@ -123,6 +156,27 @@ public class LogicManager : ILogicManager
             _modelLogics[modelType] = modelLogics;
             Logger.LogInformation("模型逻辑：{modelType}\n{logics}", modelType.Name, string.Join("\n", modelLogics.Select(l => $"{l.Order} - {l.GetType().Name}")));
         }
+    }
+
+    /// <summary>
+    /// 重建模型映射器。
+    /// </summary>
+    /// <param name="loggerFactory">日志工厂。</param>
+    private void RebuildModelMapper(ILoggerFactory loggerFactory)
+    {
+        var mapperConfig = new MapperConfiguration(cfg =>
+        {
+            foreach (var modelType in _modelTypes)
+            {
+                if (!modelType.IsSubclassOf(typeof(BaseObject))) continue;
+
+                var dtoType = GetModelDtoType(modelType);
+                cfg.CreateMap(modelType, dtoType);
+                cfg.CreateMap(dtoType, modelType);
+            }
+        }, loggerFactory);
+        mapperConfig.CompileMappings();
+        ModelMapper = mapperConfig.CreateMapper()!;
     }
 
     /// <summary>
@@ -305,6 +359,19 @@ public class LogicManager : ILogicManager
         {
             return [];
         }
+    }
+
+    /// <summary>
+    /// 获取需要扫描的程序集。
+    /// </summary>
+    /// <param name="moduleAssemblies">业务模块程序集。</param>
+    /// <returns>程序集列表。</returns>
+    private static Assembly[] GetScanAssemblies(IEnumerable<LimeMetaModuleAssembly> moduleAssemblies)
+    {
+        return [.. AppDomain.CurrentDomain.GetAssemblies()
+            .Concat(moduleAssemblies.Select(module => module.Assembly))
+            .Where(assembly => !assembly.IsDynamic)
+            .Distinct()];
     }
 
     /// <summary>

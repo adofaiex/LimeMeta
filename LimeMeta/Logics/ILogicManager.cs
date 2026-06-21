@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using AutoMapper;
 using LimeMeta.Models;
@@ -27,6 +28,13 @@ public interface ILogicManager
     /// </summary>
     /// <value></value>
     IMapper ModelMapper { get; }
+
+    /// <summary>
+    /// 注册业务程序集中的模型和逻辑。
+    /// </summary>
+    /// <param name="assembly">业务程序集。</param>
+    /// <param name="serviceProvider">服务提供者。</param>
+    void RegisterAssembly(Assembly assembly, IServiceProvider serviceProvider);
 
     /// <summary>
     /// RaiseBeforeSelectEvent

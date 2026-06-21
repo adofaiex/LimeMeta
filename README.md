@@ -1,130 +1,340 @@
 # LimeMeta
 
-LimeMeta 是一个基于模型驱动的 .NET 后端框架。它把实体模型、数据库表结构、GraphQL 查询、通用增删改、业务事件和种子数据加载组合在一起，适合快速搭建可长期维护的业务后端。
+LimeMeta 是一个模型驱动的 .NET 后端框架。它把数据库模型、自动建表、GraphQL 自动查询和修改、REST API、Logic 事件、认证、文件存储、WebSocket、种子数据加载组合在一起，适合拿来快速搭业务后端，也适合作为长期维护项目的基础框架。
 
-## 核心能力
-
-- 模型自动建表：可配置启动时扫描所有带 `[Table]` 且继承 `BaseObject` 的模型，并通过 FreeSql 同步表结构。
-- GraphQL 自动查询：每个模型会自动生成同名查询字段，支持分页、过滤、排序、导航属性加载、聚合统计和空间类型。
-- GraphQL 自动变更：每个模型会自动生成 `insertXxx`、`updateXxx`、`deleteXxx`。
-- Logic 事件机制：查询、新增、更新、删除前后都能挂业务逻辑，也支持 Logic 创建完成后的初始化事件。
-- JWT 认证：支持 Bearer Token，也支持 AppKey 换取用户身份。
-- WebSocket：提供统一 `/api/ws` 入口，支持按消息类型分发到业务方法。
-- 用户、角色、权限、部门、消息基础模型：内置 RBAC 和消息相关表结构，支持按部门继承查询角色和权限。
-- 文件上传下载：内置 `/api/file/upload` 和 `/api/file/download`。
-- 种子数据：可配置启动时加载 `LimeMeta.WebAPI/Seed/*.yaml`。
-
-## 项目结构
+这个仓库现在分成三类内容：
 
 ```text
 LimeMeta/
-├─ LimeMeta/              # 核心框架：模型、数据访问、Logic、FastEndpoints 文件接口
-├─ LimeMeta.GraphQL/      # GraphQL 查询、Mutation 自动注册
-├─ LimeMeta.WebAPI/       # Web 启动项目、配置、种子数据
-├─ LimeMeta.sln           # 解决方案
-├─ run.bat                # Windows 本地启动
-└─ rel.bat                # NuGet 打包脚本
+  LimeMeta/                  核心框架库，发布为 NuGet 包 LimeMeta
+  LimeMeta.GraphQL/          GraphQL 扩展库，发布为 NuGet 包 LimeMeta.GraphQL
+  LimeMeta.WebAPI/           框架开发调试用启动项目，不作为业务模板源码
+  templates/LimeMeta.Service PM 风格业务项目模板
+  README.md                  框架维护、发布、使用说明
 ```
 
-## 生成新项目
+业务项目不应该复制框架源码。正确方式是：通过模板创建业务项目，业务项目只引用 `LimeMeta` 和 `LimeMeta.GraphQL` 包。以后框架更新，业务项目升级包版本即可。
 
-LimeMeta 可以作为 `.NET` 项目模板使用。框架本身叫 LimeMeta，但基于它创建业务项目时，不需要继续沿用这个名字。
+## 核心能力
 
-在本机安装模板：
+- 模型自动建表：模型带 `[Table]` 且继承 `BaseObject` 后，可由 FreeSql 同步数据库结构。
+- GraphQL 自动查询：模型会自动生成查询字段，支持分页、过滤、排序、导航属性和聚合。
+- GraphQL 自动修改：模型会自动生成新增、修改、删除 Mutation。
+- REST API：基于 FastEndpoints，适合登录、上传、下载、回调等手写接口。
+- Logic 事件：支持查询、新增、修改、删除前后执行业务逻辑。
+- 业务模块注册：业务项目可以通过 `AddLimeMetaModule` / `UseLimeMetaModule` 明确注册自己的模型和 Logic。
+- JWT 认证：支持 Bearer Token，也支持 AppKey 识别用户。
+- 文件服务：内置上传下载接口，支持本地存储和 123 云盘 CLI 存储。
+- WebSocket：HTTP 和 WebSocket 共用同一个端口，统一入口默认为 `/api/ws`，按消息类型分发。
+- 种子数据：启动时可自动加载 `Seed` 目录中的初始化数据。
+- 基础模型：内置用户、角色、权限、部门、文件、消息、AppKey 等基础模型。
 
-```bash
+## PM 风格业务项目结构
+
+LimeMeta 的模板参考了 PM 项目的组织方式。一个业务项目生成后大概是这样：
+
+```text
+YourProject/
+  YourProject.sln
+  NuGet.config
+  README.md
+  YourProject/
+    YourProject.csproj
+    Extensions.cs
+    Models/
+    Logics/
+    TypeExtensions/
+    Services/
+    Configuration/
+    Common/
+  YourProject.WebAPI/
+    YourProject.WebAPI.csproj
+    Program.cs
+    appsettings.yml
+    appsettings.Development.yml
+    Properties/
+      launchSettings.json
+    Seed/
+      BeforeUpdateSchema.sql
+      AfterUpdateSchema.sql
+      system.yml
+```
+
+目录含义：
+
+- `Models/`：数据库实体、DTO、业务模型。
+- `Logics/`：模型事件逻辑，例如插入前校验、修改后同步、删除前拦截。
+- `TypeExtensions/`：GraphQL 自定义 Query 和 Mutation。
+- `Services/`：业务服务、第三方平台客户端、复杂业务编排。
+- `Configuration/`：配置文件对应的强类型配置。
+- `Common/`：业务常量、工具类、共享小组件。
+- `Extensions.cs`：业务模块入口，统一注册服务、配置、GraphQL 扩展和 Logic。
+- `YourProject.WebAPI/`：启动项目，只负责宿主、配置、种子数据和发布。
+
+## GitHub Packages
+
+LimeMeta 默认发布到 GitHub Packages：
+
+```xml
+<add key="github-limemeta" value="https://nuget.pkg.github.com/memsys-lizi/index.json" />
+```
+
+第一次在机器上使用私有包源时，需要添加认证：
+
+```powershell
+dotnet nuget add source https://nuget.pkg.github.com/memsys-lizi/index.json `
+  --name github-limemeta `
+  --username memsys-lizi `
+  --password <你的 GitHub PAT> `
+  --store-password-in-clear-text
+```
+
+GitHub PAT 至少需要读取私有包的权限。不要把 Token 写进仓库。
+
+## 打包和发布框架
+
+只打包：
+
+```powershell
+cd C:\Users\lizi\Documents\Doc\.NET\LimeMeta
+.\pack.bat
+```
+
+发布到 GitHub Packages：
+
+```powershell
+$env:GITHUB_TOKEN="<你的 GitHub PAT>"
+.\push-github-packages.bat
+```
+
+说明：
+
+- `LimeMeta` 会打成 `LimeMeta.x.x.x.nupkg`。
+- `LimeMeta.GraphQL` 会打成 `LimeMeta.GraphQL.x.x.x.nupkg`。
+- `LimeMeta.WebAPI` 设置了 `IsPackable=false`，不会被发布成包。
+- 版本号由 `Directory.Build.props` 按当前时间生成，例如 `2026.621.1320`。
+
+## 安装模板
+
+从当前仓库安装模板：
+
+```powershell
 dotnet new install C:\Users\lizi\Documents\Doc\.NET\LimeMeta
 ```
 
-安装后可以生成新的后端项目：
+如果模板修改过，先卸载再安装：
 
-```bash
-dotnet new limemeta -n BeatmapHub -o C:\Users\lizi\Documents\Doc\.NET\BeatmapHub
-```
-
-其中：
-
-- `limemeta` 是模板短名称。
-- `BeatmapHub` 是新项目名称，可以换成自己的业务项目名。
-- `-o` 是输出目录。
-
-生成后，模板会把项目中的 `LimeMeta` 替换为新项目名，例如：
-
-```text
-BeatmapHub.sln
-BeatmapHub/
-BeatmapHub.GraphQL/
-BeatmapHub.WebAPI/
-```
-
-如果后续修改了 LimeMeta 模板，需要重新安装模板：
-
-```bash
+```powershell
 dotnet new uninstall C:\Users\lizi\Documents\Doc\.NET\LimeMeta
 dotnet new install C:\Users\lizi\Documents\Doc\.NET\LimeMeta
 ```
 
-## 内置模块
+创建新业务项目：
 
-核心模块：
+```powershell
+dotnet new limemeta -n LimeVoice -o C:\Users\lizi\Documents\Doc\.NET\LimeVoice
+```
 
-- 用户：`User`
-- 角色：`Role`
-- 权限：`Perm`
-- 用户角色：`UserRole`
-- 部门：`Dept`
-- 部门用户：`DeptUser`
-- 部门角色：`DeptRole`
-- AppKey：`AppKey`
-- 文件信息：`FileInfo`
+指定框架包版本：
 
-接口模块：
+```powershell
+dotnet new limemeta -n LimeVoice -o C:\Users\lizi\Documents\Doc\.NET\LimeVoice --limeMetaVersion 2026.621.1320
+```
 
-- GraphQL：`/api/gql`
-- WebSocket：`/api/ws`
-- 文件上传：`POST /api/file/upload`
-- 文件下载：`GET /api/file/download?id=文件ID`
+默认 `--limeMetaVersion` 是 `*`，会还原包源中最新的 LimeMeta 包。正式项目建议固定版本，升级时手动改版本号。
 
-示例项目接口：
+## 业务项目怎么开发
 
-- HTTP 健康检查示例：`GET /api/health`，代码在 `LimeMeta.WebAPI/Endpoints/HealthEndpoint.cs`。
-- WebSocket 健康检查示例：消息类型 `dev.health`，代码在 `LimeMeta.WebAPI/WebSockets/DevTestWs.cs`。
+### 新增模型
 
-文件存储支持本地目录和 123 云盘 CLI 两种服务，当前服务由 `LimeMeta:FileStore:Provider` 决定，并在 `file_info` 表中记录文件元数据。
+模型放在业务项目的 `Models/`。
+
+```csharp
+namespace LimeVoice.Models;
+
+using FreeSql.DataAnnotations;
+using LimeMeta.Models;
+
+[Table(Name = "beatmap")]
+public class Beatmap : BaseAudit
+{
+    [Column(Name = "title", StringLength = 200)]
+    public string Title { get; set; } = "";
+
+    [Column(Name = "artist", StringLength = 200)]
+    public string Artist { get; set; } = "";
+
+    [Column(Name = "status")]
+    public string Status { get; set; } = "Pending";
+}
+
+public class BeatmapDto : BaseAuditDto
+{
+    public string Title { get; set; } = "";
+
+    public string Artist { get; set; } = "";
+
+    public string Status { get; set; } = "Pending";
+}
+```
+
+规则：
+
+- 表模型继承 `BaseObject`、`BaseAudit` 或 `BaseParentChildren`。
+- 模型要写 `[Table]`。
+- 字段建议写 `[Column]`，明确数据库列名。
+- 每个模型都要有同命名空间 DTO，例如 `Beatmap` 对应 `BeatmapDto`。
+- `AutoSyncSchema: true` 时，启动会自动同步表结构。
+
+### 新增 Logic
+
+Logic 放在 `Logics/`。
+
+```csharp
+namespace LimeVoice.Logics;
+
+using LimeMeta.Logics;
+using LimeVoice.Models;
+using Microsoft.Extensions.Logging;
+
+public sealed class BeatmapLogic : BaseLogic<Beatmap>
+{
+    public BeatmapLogic(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory)
+        : base(loggerFactory, scopeFactory)
+    {
+        BeforeInsert += OnBeforeInsert;
+    }
+
+    private void OnBeforeInsert(object? sender, BeforeInsertEventArgs<Beatmap> args)
+    {
+        foreach (var item in args.Objects)
+        {
+            item.Status = string.IsNullOrWhiteSpace(item.Status) ? "Pending" : item.Status;
+        }
+    }
+}
+```
+
+模板里的 `Extensions.cs` 已经注册了当前业务程序集，新增的 Logic 会被框架发现。
+
+### 新增 REST API
+
+REST API 可以放在业务项目的 `Services/` 配套，也可以单独建 `Endpoints/` 文件夹。推荐业务接口放在业务项目，不放在 `WebAPI` 启动项目。
+
+```csharp
+namespace LimeVoice.Endpoints;
+
+using FastEndpoints;
+
+public sealed class PingEndpoint : EndpointWithoutRequest<object>
+{
+    public override void Configure()
+    {
+        Get("/api/ping");
+        AllowAnonymous();
+    }
+
+    public override Task HandleAsync(CancellationToken ct)
+    {
+        return SendAsync(new { ok = true }, cancellation: ct);
+    }
+}
+```
+
+`LimeMeta` 已经在框架里注册了 FastEndpoints，业务项目只要被启动项目引用，Endpoint 会被发现。
+
+### 新增 GraphQL 扩展
+
+自动 CRUD 不需要手写。只有复杂查询、统计、业务 Mutation 才需要放到 `TypeExtensions/`。
+
+```csharp
+namespace LimeVoice.TypeExtensions;
+
+using HotChocolate.Types;
+using LimeMeta.Data;
+using LimeVoice.Models;
+
+[ExtendObjectType("Query")]
+public sealed class QueryExtensions
+{
+    public Task<long> pendingBeatmapCount([Service] ILimeMeta meta)
+    {
+        return meta.Query<Beatmap>().Where(x => x.Status == "Pending").CountAsync();
+    }
+}
+```
+
+然后在业务项目 `Extensions.cs` 里注册：
+
+```csharp
+gqlBuilder.AddTypeExtension<QueryExtensions>();
+```
+
+Mutation 同理：
+
+```csharp
+[ExtendObjectType("Mutation")]
+public sealed class MutationTypeExtension
+{
+}
+```
+
+### 新增 WebSocket 消息
+
+WebSocket 共用 HTTP 端口，不需要单独开端口。默认地址是：
+
+```text
+ws://127.0.0.1:6675/api/ws
+```
+
+业务消息处理类可以放在 `Services/` 或单独建 `WebSockets/`。
+
+```csharp
+namespace LimeVoice.WebSockets;
+
+using LimeMeta.WebSockets;
+
+[WsController]
+public sealed class NoticeWs
+{
+    [WsMessage("notice.ping")]
+    public object Ping(LimeMetaWebSocketContext context)
+    {
+        return new { ok = true, connectionId = context.Connection.Id };
+    }
+}
+```
+
+客户端发消息：
+
+```json
+{
+  "type": "notice.ping",
+  "data": {}
+}
+```
 
 ## 配置文件
 
-LimeMeta 使用 YAML 作为主配置格式。配置加载顺序在 `LimeMeta.WebAPI/Program.cs` 中定义：
+主配置是 `YourProject.WebAPI/appsettings.yml`，开发环境覆盖配置是 `appsettings.Development.yml`。
 
-1. `appsettings.yml`
-2. `appsettings.{Environment}.yml`
-3. 环境变量
-4. 命令行参数
-
-后加载的配置会覆盖先加载的配置。
-
-### 主配置文件
-
-主配置文件是：
-
-```text
-LimeMeta.WebAPI/appsettings.yml
-```
-
-生产部署主要改这个文件。完整示例：
+常用配置：
 
 ```yaml
-Urls: "http://127.0.0.1:8082"
+Urls: "http://127.0.0.1:6675"
 
 LimeMeta:
-  ConnectionString: "Host=127.0.0.1;Port=5432;Database=limemeta;Username=limemeta;Password=change-me"
+  ConnectionString: "Host=localhost;Port=5432;Database=app;Username=postgres;Password=postgres"
   DataType: "PostgreSQL"
-  FileStorePath: "/www/wwwroot/limemeta/FileStore"
-  FileStoreCount: 8192
+  AutoSyncSchema: true
+  LoadSeedOnStartup: true
+  AdminUserName: "admin"
+  AdminUserPassword: "change-me-admin-password"
+  DefaultUserPassword: "change-me-user-password"
   FileStore:
     Provider: "Local"
     Local:
-      Path: "/www/wwwroot/limemeta/FileStore"
+      Path: "./FileStore"
       Count: 8192
     Pan123Cli:
       Command: "pan123"
@@ -132,198 +342,22 @@ LimeMeta:
       UseDirectLink: true
       TempPath: "./TempUpload"
       Overwrite: false
-  AdminPerm: "管理员"
-  GuestPerm: "游客"
-  AdminUserName: "admin"
-  AdminUserPassword: "change-me-admin-password"
-  DefaultUserPassword: "change-me-user-password"
-  AutoSyncSchema: false
-  LoadSeedOnStartup: false
   WebSocket:
     Path: "/api/ws"
     MaxMessageSize: 1048576
-
-Serilog:
-  MinimumLevel:
-    Default: Information
-    Override:
-      Microsoft: Information
-      Microsoft.AspNetCore: Information
-  WriteTo:
-    - Name: Console
-      Args:
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"
-    - Name: File
-      Args:
-        path: "Logs/error-.log"
-        restrictedToMinimumLevel: Error
-        rollingInterval: Day
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
-
-AllowedHosts: "*"
 ```
 
-### 主配置含义
+说明：
 
-`Urls`
+- `Urls`：应用监听地址和端口。发布环境没有 VS 的 `launchSettings.json`，所以生产端口看这里。
+- `ConnectionString`：数据库连接字符串。
+- `DataType`：当前主要使用 `PostgreSQL`。
+- `AutoSyncSchema`：启动时是否同步表结构。开发环境可以开，生产环境建议谨慎。
+- `LoadSeedOnStartup`：启动时是否加载种子数据。
+- `FileStore.Provider`：`Local` 或 `Pan123Cli`。
+- `WebSocket.Path`：WebSocket 统一入口。
 
-服务监听地址。线上建议使用：
-
-```yaml
-Urls: "http://127.0.0.1:8082"
-```
-
-这样服务只监听服务器本机端口，再由 Nginx 或宝塔反向代理到公网域名。
-
-如果需要直接暴露端口，可以写：
-
-```yaml
-Urls: "http://0.0.0.0:8082"
-```
-
-开发环境也可以写：
-
-```yaml
-Urls: "http://*:8082"
-```
-
-`LimeMeta:ConnectionString`
-
-数据库连接字符串。当前项目默认安装的是 PostgreSQL Provider，所以开箱使用 PostgreSQL。
-
-PostgreSQL 示例：
-
-```yaml
-ConnectionString: "Host=127.0.0.1;Port=5432;Database=limemeta;Username=limemeta;Password=your-password"
-```
-
-`LimeMeta:DataType`
-
-FreeSql 数据库类型。当前默认：
-
-```yaml
-DataType: "PostgreSQL"
-```
-
-如果要使用 MySQL，需要先在 `LimeMeta.WebAPI.csproj` 添加 MySQL Provider：
-
-```xml
-<PackageReference Include="FreeSql.Provider.MySql" Version="3.5.309" />
-```
-
-然后配置：
-
-```yaml
-ConnectionString: "Server=127.0.0.1;Port=3306;Database=limemeta;Uid=root;Pwd=your-password;Charset=utf8mb4;"
-DataType: "MySql"
-```
-
-换数据库后需要实际验证建表、JSON 字段和索引行为，不能只改连接串就默认完全兼容。
-
-### PostgreSQL 权限说明
-
-LimeMeta 启动时会根据模型自动建表，所以连接数据库的用户不能只是“能登录、能连接数据库”，还必须能在目标 schema 中创建表。
-
-如果使用 PostgreSQL，常见连接串如下：
-
-```yaml
-ConnectionString: "Host=127.0.0.1;Port=5432;Database=limemeta;Username=limemeta;Password=your-password"
-```
-
-其中 `Username=limemeta` 这个用户至少需要：
-
-- 目标数据库的连接权限。
-- `public` schema 的 `USAGE` 权限。
-- `public` schema 的 `CREATE` 权限。
-
-只执行下面这种数据库级授权是不够的：
-
-```sql
-GRANT ALL PRIVILEGES ON DATABASE limemeta TO limemeta;
-```
-
-因为 PostgreSQL 里数据库、schema、表是分层授权的。数据库级权限不等于 schema 建表权限。
-
-如果启动时报错：
-
-```text
-42501: permission denied for schema public
-```
-
-说明应用用户没有 `public` schema 的建表权限。进入数据库后执行：
-
-```sql
-\c limemeta
-
-GRANT USAGE, CREATE ON SCHEMA public TO limemeta;
-```
-
-测试环境也可以直接把 `public` schema 的所有者改成应用用户：
-
-```sql
-\c limemeta
-
-ALTER SCHEMA public OWNER TO limemeta;
-```
-
-如果已经创建过一些表、序列和函数，还可以补充授权：
-
-```sql
-\c limemeta
-
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO limemeta;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO limemeta;
-GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO limemeta;
-
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-GRANT ALL PRIVILEGES ON TABLES TO limemeta;
-
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-GRANT ALL PRIVILEGES ON SEQUENCES TO limemeta;
-
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-GRANT ALL PRIVILEGES ON FUNCTIONS TO limemeta;
-```
-
-在 PostgreSQL 15 及以后版本中，默认权限比早期版本更收紧。很多面板创建数据库和用户时，只会授予数据库级权限，不一定会把 `public` schema 的建表权限也给应用用户。LimeMeta 这种会自动建表的框架，需要额外确认 schema 权限。
-
-`LimeMeta:FileStorePath`
-
-上传文件保存根目录。
-
-Linux 推荐使用绝对路径：
-
-```yaml
-FileStorePath: "/www/wwwroot/limemeta/FileStore"
-```
-
-如果写相对路径：
-
-```yaml
-FileStorePath: "./FileStore"
-```
-
-它会相对于程序运行目录保存。宝塔中通常就是项目运行路径。
-
-上传后的实际文件路径格式：
-
-```text
-FileStorePath/存储编号/原文件名_GUID.扩展名
-```
-
-`LimeMeta:FileStoreCount`
-
-每个文件存储子目录最多放多少个文件。默认：
-
-```yaml
-FileStoreCount: 8192
-```
-
-当一个子目录文件数量达到这个值后，会进入下一个编号目录。
-
-`LimeMeta:FileStore`
-
-文件存储服务配置。旧配置 `FileStorePath` 和 `FileStoreCount` 仍然兼容；如果同时配置了 `FileStore:Local`，本地存储优先使用 `FileStore:Local`。
+## 文件存储
 
 本地存储：
 
@@ -332,11 +366,11 @@ LimeMeta:
   FileStore:
     Provider: "Local"
     Local:
-      Path: "/www/wwwroot/limemeta/FileStore"
+      Path: "./FileStore"
       Count: 8192
 ```
 
-123 云盘存储：
+123 云盘 CLI：
 
 ```yaml
 LimeMeta:
@@ -350,1036 +384,73 @@ LimeMeta:
       Overwrite: false
 ```
 
-字段说明：
+服务器需要提前安装并登录配置好 123 云盘 CLI。LimeMeta 只负责调用 CLI，不在配置文件里保存云盘账号密码。
 
-- `Provider`：当前使用的存储服务，支持 `Local` 和 `Pan123Cli`。
-- `Local:Path`：本地文件根目录，为空时使用旧配置 `FileStorePath`。
-- `Local:Count`：每个本地编号目录保存的最大文件数，为空时使用旧配置 `FileStoreCount`。
-- `Pan123Cli:Command`：`pan123` 命令名称或绝对路径。
-- `Pan123Cli:ParentFileId`：上传到 123 云盘的父目录 ID。
-- `Pan123Cli:UseDirectLink`：下载时是否使用 123 云盘直链。为 `true` 时，`GET /api/file/download?id=文件ID` 会返回 302 跳转到直链。
-- `Pan123Cli:TempPath`：临时目录。HTTP 上传流会先写入临时文件，再交给 `pan123 upload`；不使用直链下载时也会下载到这个目录。
-- `Pan123Cli:Overwrite`：上传同名文件时是否传递 `--overwrite`。
+## 运行和部署
 
-123 云盘服务依赖服务器已经安装并登录配置好 `pan123`。框架调用的命令如下：
+本地运行：
+
+```powershell
+cd YourProject\YourProject.WebAPI
+dotnet run
+```
+
+发布：
+
+```powershell
+dotnet publish YourProject.WebAPI\YourProject.WebAPI.csproj -c Release -o publish
+```
+
+Linux 运行：
 
 ```bash
-pan123 --json upload 本地临时文件 --parent 父目录ID --name 文件名
-pan123 --json direct-link url 文件ID
-pan123 --json download 文件ID --out 临时目录
+cd /www/wwwroot/YourProject/publish
+dotnet YourProject.WebAPI.dll
 ```
 
-当前 `123PanCLi` 没有删除命令，因此删除 `file_info` 记录时不会删除云盘上的真实文件。
+宝塔部署时：
 
-`LimeMeta:AdminPerm`
+- 项目名称：自定义。
+- 运行路径：`/www/wwwroot/YourProject/publish`。
+- 启动命令：`dotnet YourProject.WebAPI.dll`。
+- 项目端口：填写 `appsettings.yml` 里的端口，例如 `6675`。
+- Net 版本：选择服务器安装的 .NET 版本。
+- 生产端口优先写在 `appsettings.yml` 的 `Urls`。
 
-管理员权限名称。启动时如果数据库中不存在这个权限，框架会自动创建。
-
-```yaml
-AdminPerm: "管理员"
-```
-
-`LimeMeta:GuestPerm`
-
-游客权限名称，目前保留为配置项。默认值：
-
-```yaml
-GuestPerm: "游客"
-```
-
-`LimeMeta:AdminUserName`
-
-管理员登录用户名。启动时如果数据库中不存在这个用户，框架会自动创建。
-
-```yaml
-AdminUserName: "admin"
-```
-
-`LimeMeta:AdminUserPassword`
-
-管理员初始密码。只在管理员用户第一次自动创建时生效。
-
-```yaml
-AdminUserPassword: "change-me-admin-password"
-```
-
-`LimeMeta:DefaultUserPassword`
-
-普通种子用户或自动新增用户没有填写密码时，使用这个默认密码。
-
-```yaml
-DefaultUserPassword: "change-me-user-password"
-```
-
-`LimeMeta:AutoSyncSchema`
-
-启动时是否自动同步数据库表结构。
-
-```yaml
-AutoSyncSchema: true
-```
-
-开发环境建议开启，新增模型后重启即可自动建表。生产环境建议谨慎开启：第一次部署或确认模型变更后可以打开执行一次，稳定运行后建议关闭。
-
-`LimeMeta:LoadSeedOnStartup`
-
-启动时是否自动加载种子数据。
-
-```yaml
-LoadSeedOnStartup: true
-```
-
-开发环境建议开启，方便初始化管理员、角色和权限。生产环境如果不希望每次启动都检查种子文件，可以关闭。
-
-`LimeMeta:WebSocket`
-
-WebSocket 统一入口配置。
-
-```yaml
-WebSocket:
-  Path: "/api/ws"
-  MaxMessageSize: 1048576
-```
-
-- `Path`：WebSocket 统一入口地址。HTTP 端口是多少，WebSocket 就走同一个端口，不需要额外开端口。
-- `MaxMessageSize`：单条消息最大字节数。
-
-如果服务监听地址是：
+如果用 Nginx 反代，反代到：
 
 ```text
 http://127.0.0.1:6675
 ```
 
-WebSocket 地址就是：
+WebSocket 也走同一个端口和同一个站点反代，需要允许 Upgrade 头。
 
-```text
-ws://127.0.0.1:6675/api/ws
-```
+## 常见问题
 
-`Serilog`
+### PostgreSQL 提示 permission denied for schema public
 
-日志配置。当前配置了：
-
-- 控制台输出：方便直接查看运行日志。
-- 文件输出：错误日志写入 `Logs/error-.log`，按天滚动。
-
-部署时如果运行目录是 `/www/wwwroot/limemeta`，日志目录就是：
-
-```text
-/www/wwwroot/limemeta/Logs
-```
-
-`AllowedHosts`
-
-ASP.NET Core Host 过滤配置。默认：
-
-```yaml
-AllowedHosts: "*"
-```
-
-表示允许所有 Host。需要更严格时可以改成指定域名。
-
-### 开发环境配置
-
-开发环境配置文件：
-
-```text
-LimeMeta.WebAPI/appsettings.Development.yml
-```
-
-当环境是 `Development` 时，会覆盖 `appsettings.yml` 中的同名配置。
-
-本地开发一般放本机数据库、本机文件目录：
-
-```yaml
-Urls: "http://*:8082"
-
-LimeMeta:
-  ConnectionString: "Host=localhost;Port=5432;Database=limemeta_dev;Username=postgres;Password=postgres"
-  DataType: "PostgreSQL"
-  FileStorePath: "./FileStore"
-  FileStoreCount: 8192
-  FileStore:
-    Provider: "Local"
-    Local:
-      Path: "./FileStore"
-      Count: 8192
-    Pan123Cli:
-      Command: "pan123"
-      ParentFileId: 0
-      UseDirectLink: true
-      TempPath: "./TempUpload"
-      Overwrite: false
-  AdminPerm: "管理员"
-  GuestPerm: "游客"
-  AdminUserName: "admin"
-  AdminUserPassword: "change-me-admin-password"
-  DefaultUserPassword: "change-me-user-password"
-  AutoSyncSchema: true
-  LoadSeedOnStartup: true
-  WebSocket:
-    Path: "/api/ws"
-    MaxMessageSize: 1048576
-```
-
-### IDE 调试配置
-
-Visual Studio、Rider、VS Code 或 `dotnet run` 通常会读取：
-
-```text
-LimeMeta.WebAPI/Properties/launchSettings.json
-```
-
-它只用于本地开发调试。当前项目不在 `launchSettings.json` 中配置端口，开发端口统一由 `appsettings.Development.yml` 的 `Urls` 控制。发布到 Linux 后，不要依赖这个文件。
-
-当前配置：
-
-```json
-{
-  "profiles": {
-    "http": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": false,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    }
-  }
-}
-```
-
-## 本地运行
-
-先确认本机 PostgreSQL 可用，并修改：
-
-```text
-LimeMeta.WebAPI/appsettings.Development.yml
-```
-
-然后在项目根目录执行：
-
-```bash
-dotnet run --project LimeMeta.WebAPI/LimeMeta.WebAPI.csproj
-```
-
-Windows 可以直接执行：
-
-```bat
-run.bat
-```
-
-访问：
-
-```text
-http://localhost:8082/api/health
-```
-
-GraphQL 地址：
-
-```text
-http://localhost:8082/api/gql
-```
-
-## 构建和发布
-
-构建解决方案：
-
-```bash
-dotnet build LimeMeta.sln
-```
-
-发布 WebAPI：
-
-```bash
-dotnet publish LimeMeta.WebAPI/LimeMeta.WebAPI.csproj -c Release -o publish
-```
-
-发布后产物在：
-
-```text
-publish/
-```
-
-部署到 Linux 时，上传 `publish` 目录中的所有文件。发布产物中会包含：
-
-```text
-appsettings.yml
-appsettings.Development.yml
-Seed/
-LimeMeta.WebAPI.dll
-```
-
-线上部署时主要修改 `publish/appsettings.yml`，也就是上传到服务器后的 `appsettings.yml`。
-
-如果服务器没有安装 .NET Runtime，可以发布自包含版本：
-
-```bash
-dotnet publish LimeMeta.WebAPI/LimeMeta.WebAPI.csproj -c Release -r linux-x64 --self-contained true -o publish
-```
-
-自包含发布体积更大，但服务器不需要安装 .NET Runtime。
-
-## Linux 部署
-
-### 方式一：普通 Linux + systemd
-
-服务器需要安装与项目版本匹配的 ASP.NET Core Runtime。当前项目是 `net10.0`。
-
-检查运行环境：
-
-```bash
-dotnet --info
-```
-
-创建部署目录：
-
-```bash
-sudo mkdir -p /opt/limemeta
-```
-
-上传 `publish` 中的所有文件到：
-
-```text
-/opt/limemeta
-```
-
-编辑生产配置：
-
-```bash
-sudo nano /opt/limemeta/appsettings.yml
-```
-
-推荐生产配置：
-
-```yaml
-Urls: "http://127.0.0.1:8082"
-
-LimeMeta:
-  ConnectionString: "Host=127.0.0.1;Port=5432;Database=limemeta;Username=limemeta;Password=your-password"
-  DataType: "PostgreSQL"
-  FileStorePath: "/data/limemeta/files"
-  FileStoreCount: 8192
-  FileStore:
-    Provider: "Local"
-    Local:
-      Path: "/data/limemeta/files"
-      Count: 8192
-    Pan123Cli:
-      Command: "pan123"
-      ParentFileId: 0
-      UseDirectLink: true
-      TempPath: "/data/limemeta/temp-upload"
-      Overwrite: false
-  AdminPerm: "管理员"
-  GuestPerm: "游客"
-  AdminUserName: "admin"
-  AdminUserPassword: "change-me-admin-password"
-  DefaultUserPassword: "change-me-user-password"
-  AutoSyncSchema: false
-  LoadSeedOnStartup: false
-
-Serilog:
-  MinimumLevel:
-    Default: Information
-    Override:
-      Microsoft: Information
-      Microsoft.AspNetCore: Information
-  WriteTo:
-    - Name: Console
-      Args:
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"
-    - Name: File
-      Args:
-        path: "Logs/error-.log"
-        restrictedToMinimumLevel: Error
-        rollingInterval: Day
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
-
-AllowedHosts: "*"
-```
-
-创建上传目录和日志目录：
-
-```bash
-sudo mkdir -p /data/limemeta/files
-sudo mkdir -p /data/limemeta/temp-upload
-sudo mkdir -p /opt/limemeta/Logs
-```
-
-如果使用 `www-data` 作为运行用户：
-
-```bash
-sudo chown -R www-data:www-data /data/limemeta
-sudo chown -R www-data:www-data /opt/limemeta
-```
-
-临时运行测试：
-
-```bash
-cd /opt/limemeta
-dotnet LimeMeta.WebAPI.dll
-```
-
-看到服务启动后，本机测试：
-
-```bash
-curl http://127.0.0.1:8082/api/health
-```
-
-创建 systemd 服务：
-
-```bash
-sudo nano /etc/systemd/system/limemeta.service
-```
-
-写入：
-
-```ini
-[Unit]
-Description=LimeMeta WebAPI
-After=network.target
-
-[Service]
-WorkingDirectory=/opt/limemeta
-ExecStart=/usr/bin/dotnet /opt/limemeta/LimeMeta.WebAPI.dll
-Restart=always
-RestartSec=5
-User=www-data
-Environment=ASPNETCORE_ENVIRONMENT=Production
-
-[Install]
-WantedBy=multi-user.target
-```
-
-启动服务：
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable limemeta
-sudo systemctl start limemeta
-```
-
-查看状态：
-
-```bash
-sudo systemctl status limemeta
-```
-
-查看日志：
-
-```bash
-sudo journalctl -u limemeta -f
-```
-
-Nginx 反向代理示例：
-
-```nginx
-server {
-    listen 80;
-    server_name api.example.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:8082;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-### 方式二：宝塔 .NET 项目
-
-本地发布：
-
-```bash
-dotnet publish LimeMeta.WebAPI/LimeMeta.WebAPI.csproj -c Release -o publish
-```
-
-上传 `publish` 中的所有文件到：
-
-```text
-/www/wwwroot/limemeta
-```
-
-修改服务器上的：
-
-```text
-/www/wwwroot/limemeta/appsettings.yml
-```
-
-推荐配置：
-
-```yaml
-Urls: "http://127.0.0.1:8082"
-
-LimeMeta:
-  ConnectionString: "Host=127.0.0.1;Port=5432;Database=limemeta;Username=limemeta;Password=your-password"
-  DataType: "PostgreSQL"
-  FileStorePath: "/www/wwwroot/limemeta/FileStore"
-  FileStoreCount: 8192
-  FileStore:
-    Provider: "Local"
-    Local:
-      Path: "/www/wwwroot/limemeta/FileStore"
-      Count: 8192
-    Pan123Cli:
-      Command: "pan123"
-      ParentFileId: 0
-      UseDirectLink: true
-      TempPath: "/www/wwwroot/limemeta/TempUpload"
-      Overwrite: false
-  AdminPerm: "管理员"
-  GuestPerm: "游客"
-  AdminUserName: "admin"
-  AdminUserPassword: "change-me-admin-password"
-  DefaultUserPassword: "change-me-user-password"
-  AutoSyncSchema: false
-  LoadSeedOnStartup: false
-
-Serilog:
-  MinimumLevel:
-    Default: Information
-    Override:
-      Microsoft: Information
-      Microsoft.AspNetCore: Information
-  WriteTo:
-    - Name: Console
-      Args:
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"
-    - Name: File
-      Args:
-        path: "Logs/error-.log"
-        restrictedToMinimumLevel: Error
-        rollingInterval: Day
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
-
-AllowedHosts: "*"
-```
-
-创建目录并授权：
-
-```bash
-mkdir -p /www/wwwroot/limemeta/FileStore
-mkdir -p /www/wwwroot/limemeta/TempUpload
-mkdir -p /www/wwwroot/limemeta/Logs
-chown -R www:www /www/wwwroot/limemeta
-```
-
-宝塔添加 `.Net项目` 时填写：
-
-```text
-项目名称：LimeMeta
-运行路径：/www/wwwroot/limemeta
-启动命令：dotnet LimeMeta.WebAPI.dll
-项目端口：8082
-.Net版本：选择服务器已安装的 .NET 10 / ASP.NET Core Runtime 10
-开机启动：建议勾选
-启动用户：www
-项目备注：LimeMeta 后端服务
-```
-
-因为端口已经写在 `appsettings.yml` 的 `Urls` 中，所以启动命令不需要带 `--urls`。
-
-宝塔网站反向代理：
-
-```text
-目标 URL：http://127.0.0.1:8082
-```
-
-如果使用域名 `api.example.com`，最终访问：
-
-```text
-https://api.example.com/api/gql
-```
-
-如果不做反向代理，且想直接访问服务器端口，需要把 `Urls` 改成：
-
-```yaml
-Urls: "http://0.0.0.0:8082"
-```
-
-并在宝塔安全中放行 `8082`。更推荐使用反向代理，不直接暴露后端端口。
-
-### 宝塔 PostgreSQL 注意事项
-
-宝塔面板中新建 PostgreSQL 数据库和用户后，应用用户可能只拥有数据库级权限，不一定拥有 `public` schema 的建表权限。LimeMeta 启动时会自动同步表结构，如果权限不足，会在启动时出现：
-
-```text
-42501: permission denied for schema public
-```
-
-这不是 LimeMeta 的建表逻辑错误，而是数据库用户权限不够。进入宝塔终端后可以用 PostgreSQL 管理员进入目标库：
-
-```bash
-/www/server/pgsql/bin/psql -U postgres -d limemeta
-```
-
-如果服务器要求切换系统用户，可以使用：
-
-```bash
-sudo -u postgres /www/server/pgsql/bin/psql -d limemeta
-```
-
-然后执行：
+宝塔新建 PostgreSQL 数据库时，用户可能只有数据库权限，没有 `public` schema 建表权限。需要用管理员账号执行：
 
 ```sql
-GRANT USAGE, CREATE ON SCHEMA public TO limemeta;
+GRANT USAGE, CREATE ON SCHEMA public TO your_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO your_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO your_user;
 ```
 
-测试环境也可以执行：
+### publish 里没有配置文件
 
-```sql
-ALTER SCHEMA public OWNER TO limemeta;
+检查 `WebAPI.csproj` 是否有：
+
+```xml
+<Content Include="appsettings*.yml" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+<Content Include="Seed\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
 ```
 
-宝塔 PostgreSQL 如果要允许远程连接，需要同时满足：
+### VS 调试端口和生产端口谁生效
 
-- `postgresql.conf` 中 `listen_addresses` 允许外部地址，例如 `listen_addresses = '*'`。
-- `pg_hba.conf` 中有匹配数据库、用户、来源 IP 的 `host` 规则。
-- 云服务器安全组和宝塔安全都放行 PostgreSQL 端口，默认是 `5432`。
+模板里的 `launchSettings.json` 不写端口。开发和生产都优先看 `appsettings*.yml` 的 `Urls`。
 
-注意：`listen_addresses` 不能只 reload 生效，修改后必须重启 PostgreSQL。重启后可以用下面命令确认监听状态：
+### GitHub Packages 还原失败
 
-```bash
-ss -lntp | grep 5432
-```
+一般是没有配置包源认证，或者 PAT 没有私有包读取权限。重新执行 `dotnet nuget add source`，确认 `NuGet.config` 中有 `github-limemeta`。
 
-如果只看到：
-
-```text
-127.0.0.1:5432
-```
-
-说明它仍然只监听本机。正确的远程监听通常会看到：
-
-```text
-0.0.0.0:5432
-```
-
-### PostgreSQL 管理工具
-
-常用 PostgreSQL 管理工具：
-
-- pgAdmin：PostgreSQL 官方图形化管理工具，功能完整，适合日常管理、查表、执行 SQL。
-- DBeaver：通用数据库客户端，支持 PostgreSQL、MySQL、SQLite、SQL Server 等，适合同时管理多种数据库。
-- DataGrip：JetBrains 的数据库 IDE，SQL 编写和结构浏览体验很好，适合长期开发使用。
-- Navicat Premium：商业数据库管理工具，界面友好，适合习惯图形化操作的团队。
-- TablePlus：轻量客户端，启动快，适合简单查看和执行 SQL。
-- psql：PostgreSQL 自带命令行工具，服务器排错时最可靠。
-
-## 新增业务模型
-
-新增模型时，推荐放在业务模块的 `Models` 目录。一个模型至少包含实体和 DTO：
-
-```csharp
-using FreeSql.DataAnnotations;
-using LimeMeta.Attributes;
-using LimeMeta.Models;
-
-namespace LimeMeta.Models;
-
-[Table(Name = "project")]
-public class Project : BaseAudit
-{
-    [Column(Name = "name"), Indexed]
-    public required string Name { get; set; }
-
-    [Column(Name = "code"), Indexed]
-    public string? Code { get; set; }
-}
-
-public class ProjectDto : BaseDto
-{
-    public required string Name { get; set; }
-
-    public string? Code { get; set; }
-}
-```
-
-约定：
-
-- 实体必须继承 `BaseObject` 或它的子类。
-- 实体必须有 `[Table(Name = "...")]`。
-- DTO 名称必须是 `实体名 + Dto`，例如 `Project` 对应 `ProjectDto`。
-- DTO 必须和实体在同一个程序集内，否则自动 Mutation 找不到 DTO。
-
-完成后如果 `LimeMeta:AutoSyncSchema` 为 `true`，启动服务时框架会自动同步表结构，并生成：
-
-```text
-Project
-insertProject
-updateProject
-deleteProject
-```
-
-## 字段暴露规则
-
-实体字段决定数据库结构，DTO 决定自动新增接口可传哪些字段。
-
-敏感字段不要放进 DTO。例如密码、密钥、Token、内部状态：
-
-```csharp
-public class ProjectDto : BaseDto
-{
-    public required string Name { get; set; }
-}
-```
-
-如果字段不能被查询暴露，需要结合 GraphQL 类型配置或专门的输出 DTO 处理。不要只依赖前端不查这个字段。
-
-当前自动 `updateXxx` 接收 JSON，因此敏感字段还需要在 Logic 中兜底拦截：
-
-```csharp
-public sealed class ProjectLogic : BaseLogic<Project>
-{
-    public ProjectLogic(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory)
-        : base(loggerFactory, scopeFactory)
-    {
-        BeforeUpdate += OnBeforeUpdate;
-    }
-
-    private void OnBeforeUpdate(object? sender, BeforeUpdateEventArgs<Project> e)
-    {
-        foreach (var (oldObj, newObj) in e.Objs)
-        {
-            if (oldObj.Code != newObj.Code)
-            {
-                throw new Exception("不允许通过通用更新接口修改内部编码");
-            }
-        }
-    }
-}
-```
-
-密码、密钥这类字段建议只通过专门接口修改，不走自动 CRUD。
-
-## 新增业务逻辑
-
-Logic 用来处理校验、默认值、级联操作、权限过滤、外部系统通知等业务规则。
-
-```csharp
-public sealed class ProjectLogic : BaseLogic<Project>
-{
-    public ProjectLogic(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory)
-        : base(loggerFactory, scopeFactory)
-    {
-        BeforeInsert += OnBeforeInsert;
-        BeforeDelete += OnBeforeDelete;
-    }
-
-    private void OnBeforeInsert(object? sender, BeforeInsertEventArgs<Project> e)
-    {
-        foreach (var obj in e.Objs)
-        {
-            if (string.IsNullOrWhiteSpace(obj.Name))
-            {
-                throw new Exception("项目名称不能为空");
-            }
-        }
-    }
-
-    private void OnBeforeDelete(object? sender, BeforeDeleteEventArgs<Project> e)
-    {
-        // 删除前做关联检查或级联处理
-    }
-}
-```
-
-Logic 会被框架自动扫描。执行顺序由 `Order` 控制，数值越小越先执行。
-
-## 新增 GraphQL 接口
-
-普通 CRUD 不需要手写接口。需要特殊动作时，可以扩展 Query 或 Mutation。
-
-```csharp
-using HotChocolate.Types;
-using LimeMeta.Data;
-using LimeMeta.GraphQL;
-
-namespace LimeMeta.ProjectModule;
-
-[ExtendObjectType(typeof(Mutation))]
-public class ProjectMutationExtensions
-{
-    public bool ArchiveProject(Guid id, [Service] ILimeMeta meta)
-    {
-        var project = meta.Query<Project>().FirstOrDefault(x => x.Id == id);
-        if (project == null)
-        {
-            throw new GraphQLException("项目不存在");
-        }
-
-        // 修改业务状态
-        meta.Update(new[] { project });
-        return true;
-    }
-}
-```
-
-如果新扩展类型放在独立项目中，需要在 GraphQL 注册阶段调用 `AddTypeExtension<T>()`。
-
-## 新增 REST 接口
-
-REST 接口使用 FastEndpoints：
-
-```csharp
-using FastEndpoints;
-
-public class PingEndpoint : EndpointWithoutRequest<string>
-{
-    public override void Configure()
-    {
-        Get("/api/ping");
-        AllowAnonymous();
-    }
-
-    public override Task HandleAsync(CancellationToken ct)
-    {
-        return Send.OkAsync("pong", ct);
-    }
-}
-```
-
-REST 接口中需要访问数据库时，优先使用 `ILimeMeta`，不要直接绕过框架操作数据库，否则会跳过 Logic 事件。
-
-## 新增 WebSocket 消息
-
-LimeMeta 使用一个统一 WebSocket 入口：
-
-```text
-/api/ws
-```
-
-业务功能通过消息里的 `type` 分发，不需要为每个业务再开一个 WebSocket 地址。
-
-客户端发送格式：
-
-```json
-{
-  "id": "1",
-  "type": "score.audit.submit",
-  "data": {
-    "scoreId": "00000000-0000-0000-0000-000000000000",
-    "passed": true
-  }
-}
-```
-
-服务端响应格式：
-
-```json
-{
-  "id": "1",
-  "type": "score.audit.submit.result",
-  "success": true,
-  "data": {}
-}
-```
-
-新增业务消息时，写一个 WebSocket 控制器即可：
-
-```csharp
-using LimeMeta.Data;
-using LimeMeta.WebSockets;
-
-[WsController]
-public class ScoreAuditWs
-{
-    private readonly ILimeMeta _meta;
-
-    public ScoreAuditWs(ILimeMeta meta)
-    {
-        _meta = meta;
-    }
-
-    [WsMessage("score.audit.submit")]
-    public Task<ScoreAuditResult> Submit(
-        ScoreAuditSubmitRequest req,
-        LimeMetaWebSocketContext ctx,
-        CancellationToken ct)
-    {
-        var userId = ctx.UserId;
-
-        return Task.FromResult(new ScoreAuditResult
-        {
-            Success = true
-        });
-    }
-}
-
-public class ScoreAuditSubmitRequest
-{
-    public Guid ScoreId { get; set; }
-
-    public bool Passed { get; set; }
-}
-
-public class ScoreAuditResult
-{
-    public bool Success { get; set; }
-}
-```
-
-框架会自动扫描 `[WsController]` 和 `[WsMessage]`，收到对应 `type` 后自动反序列化 `data`、创建控制器、调用方法，并把返回值发回客户端。
-
-项目中已经提供了一个可直接运行的 WebSocket 示例：
-
-```text
-LimeMeta.WebAPI/WebSockets/DevTestWs.cs
-```
-
-客户端发送：
-
-```json
-{
-  "id": "1",
-  "type": "dev.health",
-  "data": {}
-}
-```
-
-响应类型：
-
-```text
-dev.health.result
-```
-
-可以用浏览器控制台测试：
-
-```javascript
-const ws = new WebSocket("ws://127.0.0.1:6675/api/ws");
-
-ws.onopen = () => {
-  ws.send(JSON.stringify({
-    id: "health-1",
-    type: "dev.health",
-    data: {}
-  }));
-};
-
-ws.onmessage = event => {
-  console.log(JSON.parse(event.data));
-};
-
-ws.onerror = error => {
-  console.error(error);
-};
-```
-
-正常会收到类似响应：
-
-```json
-{
-  "id": "health-1",
-  "type": "dev.health.result",
-  "success": true,
-  "data": {
-    "status": "ok",
-    "connectionId": "连接ID",
-    "userId": null,
-    "time": "2026-05-31T00:00:00+00:00"
-  }
-}
-```
-
-如果部署在 HTTPS 域名下，地址要改成 `wss`：
-
-```javascript
-const ws = new WebSocket("wss://api.example.com/api/ws");
-```
-
-在业务代码中也可以注入连接管理器主动推送：
-
-```csharp
-public class NoticeService
-{
-    private readonly LimeMetaWebSocketConnectionManager _connections;
-
-    public NoticeService(LimeMetaWebSocketConnectionManager connections)
-    {
-        _connections = connections;
-    }
-
-    public Task SendAuditNotice(Guid userId, Guid scoreId)
-    {
-        return _connections.SendToUserAsync(userId, "score.audit.notice", new
-        {
-            ScoreId = scoreId
-        });
-    }
-}
-```
-
-## 种子数据
-
-种子文件放在：
-
-```text
-LimeMeta.WebAPI/Seed
-```
-
-文件名必须和模型类名一致，例如：
-
-```text
-Project.yaml
-```
-
-如果 `LimeMeta:LoadSeedOnStartup` 为 `true`，启动时框架会读取种子文件，并根据文件修改时间和对象 `Ver` 判断是否需要写入或更新。
-
-YAML 支持注释，使用 `#` 开头即可。当前种子文件已经写了字段说明和示例。
-
-当前默认种子策略：
-
-- `User.yaml`：默认空。管理员用户由框架根据 `LimeMeta:AdminUserName` 和 `LimeMeta:AdminUserPassword` 自动创建。
-- `Role.yaml`：默认只保留“游客”角色。管理员角色由框架根据 `LimeMeta:AdminPerm` 自动创建。
-- `Perm.yaml`：默认空。管理员权限由框架根据 `LimeMeta:AdminPerm` 自动创建。
-- `UserRole.yaml`：默认空。管理员用户和管理员角色的关系由框架自动创建。
-- `RolePerm.yaml`：默认空。管理员角色和管理员权限的关系由框架自动创建。
-- `Dept.yaml`：默认空。不需要组织架构时不用配置。
-- `DeptUser.yaml`：默认空。不需要组织架构时不用配置。
-
-用户密码规则：
-
-- 管理员用户第一次创建时，密码来源于 `LimeMeta:AdminUserPassword`。
-- 种子用户没有写 `password` 时，密码来源于 `LimeMeta:DefaultUserPassword`。
-- 写入数据库时不会保存明文，而是保存密码文本的 MD5 值。
-- 当前登录接口内部使用 `UserLogic.VerifyPassword` 校验，前端通常应先调用 `crypt` Mutation 生成登录所需的加密值，再调用 `login`。
-
-## 数据访问
-
-常用方式：
-
-```csharp
-var query = meta.Query<Project>().Where(x => x.Name.Contains("A"));
-var page = meta.Select(query, new PageModel { Index = 1, Size = 20 }, userId: userId);
-```
-
-注意：
-
-- `meta.Query<T>()` 只是查询入口，不触发查询前后 Logic。
-- `meta.Select(...)` 会触发 `BeforeSelect` 和 `AfterSelect`。
-- `meta.Insert(...)`、`meta.Update(...)`、`meta.Delete(...)` 会触发对应 Logic。
-
-## 内置依赖
-
-主要 NuGet 包：
-
-- FreeSql：ORM 和表结构同步。
-- HotChocolate：GraphQL 服务。
-- FastEndpoints：REST Endpoint。
-- Serilog：日志。
-- YamlDotNet 与 NetEscapades.Configuration.Yaml：YAML 解析和配置。
-- AutoMapper：DTO 到实体的映射。
-
-AutoMapper 的新版本存在授权要求，商业项目使用前需要确认许可证。也可以替换为手写映射、Mapperly 或其他符合授权要求的映射方案。
-
-## 开发约定
-
-- 一个业务模块保持清晰目录结构：`Models`、`Logics`、`Endpoints`、`GraphQL`。
-- 普通表优先通过模型生成 CRUD。
-- 复杂业务动作写专用 Mutation 或 Endpoint。
-- 敏感字段必须同时处理查询暴露、DTO 入参、更新拦截。
-- 业务规则放在 Logic，不要散落在前端或多个接口里。
-- 配置和密钥不要提交真实值。

@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "LimeMeta",
+  "classifications": [
+    "Web",
+    "API",
+    "GraphQL",
+    "Backend"
+  ],
+  "identity": "LimeMeta.Service.Template",
+  "name": "LimeMeta Service",
+  "shortName": "limemeta",
+  "sourceName": "LimeMetaService",
+  "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "symbols": {
+    "limeMetaVersion": {
+      "type": "parameter",
+      "datatype": "text",
+      "defaultValue": "*",
+      "replaces": "__LIMEMETA_VERSION__",
+      "description": "LimeMeta NuGet package version. Use * for the newest package, or pass a fixed version for production."
+    }
+  },
+  "primaryOutputs": [
+    {
+      "path": "LimeMetaService.sln"
+    },
+    {
+      "path": "LimeMetaService/LimeMetaService.csproj"
+    },
+    {
+      "path": "LimeMetaService.WebAPI/LimeMetaService.WebAPI.csproj"
+    }
+  ],
+  "sources": [
+    {
+      "source": "./",
+      "target": "./",
+      "exclude": [
+        ".template.config/**",
+        "**/[Bb]in/**",
+        "**/[Oo]bj/**",
+        "*.user",
+        "*.suo"
+      ]
+    }
+  ]
+}
