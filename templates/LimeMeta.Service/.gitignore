@@ -1,0 +1,40 @@
+# Build outputs
+bin/
+obj/
+out/
+publish/
+.publish/
+.buildcheck/
+artifacts/
+
+# .NET generated files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+TestResults/
+coverage/
+coverage.*/
+*.coverage
+*.coveragexml
+
+# IDE local state
+.vs/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.DotSettings.user
+
+# Logs
+Logs/
+logs/
+*.log
+
+# Local runtime files
+FileStore/
+TempUpload/
+
+# OS files
+.DS_Store
+Thumbs.db

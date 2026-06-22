@@ -940,6 +940,12 @@ system.yml
 - `AfterUpdateSchema.sql`：同步表结构后执行。
 - `system.yml`：初始化数据。空数据可以写 `[]`。
 
+注意：
+
+- `BeforeUpdateSchema.sql` 和 `AfterUpdateSchema.sql` 不要做成真正的空文件。
+- 没有 SQL 要执行时，保留模板里的注释即可。
+- MySQL Provider 遇到空 SQL 命令时可能报 `CommandText must be specified`。
+
 是否启动加载由配置控制：
 
 ```yaml
@@ -951,32 +957,53 @@ LimeMeta:
 
 ## 17. 发布部署
 
-发布：
+推荐直接使用模板自带脚本发布：
 
 ```powershell
-dotnet publish LimeMetaService.WebAPI\LimeMetaService.WebAPI.csproj -c Release -o publish
+.\build-release.bat
+```
+
+脚本会依次执行：
+
+- `dotnet restore`
+- `dotnet build --configuration Release`
+- `dotnet publish`
+- 压缩发布目录为 zip
+
+发布产物在：
+
+```text
+.publish/LimeMetaService.WebAPI/
+.publish/LimeMetaService.WebAPI.zip
+```
+
+也可以手动发布：
+
+```powershell
+dotnet publish LimeMetaService.WebAPI\LimeMetaService.WebAPI.csproj -c Release -o .publish\LimeMetaService.WebAPI /p:UseAppHost=false
 ```
 
 发布产物在：
 
 ```text
-publish/
+.publish/LimeMetaService.WebAPI/
 ```
 
 Linux 运行：
 
 ```bash
-cd /www/wwwroot/LimeMetaService/publish
+cd /www/wwwroot/LimeMetaService
 dotnet LimeMetaService.WebAPI.dll
 ```
 
 宝塔添加 .NET 项目时：
 
 - 项目名称：自定义。
-- 运行路径：`/www/wwwroot/LimeMetaService/publish`。
+- 运行路径：包含 `LimeMetaService.WebAPI.dll` 的目录，例如 `/www/wwwroot/LimeMetaService`。
 - 启动命令：`dotnet LimeMetaService.WebAPI.dll`。
 - 项目端口：填写 `appsettings.yml` 里 `Urls` 的端口，例如 `6675`。
-- 启动用户：要有配置文件、日志目录、文件目录的读写权限。
+- 是否放行端口：通常不勾，后端只监听 `127.0.0.1`，由 Nginx 反代访问。
+- 启动用户：要有配置文件、日志目录、文件目录的读写权限；如果使用 `Pan123Cli`，这个用户还必须能执行 `pan123` 并拥有 123 云盘登录态。
 
 Nginx 反代到：
 
@@ -985,6 +1012,41 @@ http://127.0.0.1:6675
 ```
 
 如果使用 WebSocket，反代需要支持 Upgrade 头。
+
+同域前端常用 Nginx 配置：
+
+```nginx
+location ^~ /api/ws {
+    proxy_pass http://127.0.0.1:6675/api/ws;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 300s;
+    proxy_send_timeout 300s;
+}
+
+location ^~ /api/ {
+    proxy_pass http://127.0.0.1:6675/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_connect_timeout 60s;
+    proxy_send_timeout 300s;
+    proxy_read_timeout 300s;
+}
+
+location / {
+    try_files $uri $uri/ /index.html;
+}
+```
+
+前端如果固定请求同域 `/api`，线上不需要再单独暴露一个后端域名。
 
 ## 18. 升级 LimeMeta 框架
 
@@ -1095,3 +1157,107 @@ dotnet nuget add source https://nuget.pkg.github.com/memsys-lizi/index.json `
 <Content Include="appsettings*.yml" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
 <Content Include="Seed\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
 ```
+
+### MySQL 启动时报 CommandText must be specified
+
+通常是 `Seed/BeforeUpdateSchema.sql` 或 `Seed/AfterUpdateSchema.sql` 是空文件，框架加载后把空字符串交给数据库执行。
+
+处理方式：
+
+- 保留模板里的注释占位。
+- 或者在不需要种子 SQL 时关闭对应加载逻辑。
+- 不要把 SQL 种子文件清成 0 字节。
+
+### 123 云盘上传时报找不到 pan123
+
+典型日志：
+
+```text
+An error occurred trying to start process 'pan123'
+```
+
+原因是运行 WebAPI 的用户找不到 `pan123` 命令，或者这个用户没有 123 云盘 CLI 登录态。
+
+排查：
+
+```bash
+which pan123
+pan123 whoami
+```
+
+宝塔 .NET 项目里如果启动用户是 `www`，就要确认 `www` 用户能执行 `pan123`。如果 `pan123` 是 root 安装并登录的，可以先用 root 运行项目验证链路，之后再按服务器权限规划迁移到专门的运行用户。
+
+如果不想依赖 PATH，可以在配置里写绝对路径：
+
+```yaml
+LimeMeta:
+  FileStore:
+    Provider: "Pan123Cli"
+    Pan123Cli:
+      Command: "/usr/local/bin/pan123"
+```
+
+### 123 云盘文件显示成本地地址
+
+检查配置：
+
+```yaml
+LimeMeta:
+  FileStore:
+    Provider: "Pan123Cli"
+    Pan123Cli:
+      UseDirectLink: true
+```
+
+使用直链后，业务表里适合保存直链字段用于展示；需要“下载而不是浏览器预览”时，仍建议通过业务后端接口返回 `Content-Disposition: attachment`。
+
+### 浏览器点下载变成打开图片预览
+
+浏览器访问图片直链时会默认预览。下载按钮不要直接打开图片 URL，应该请求后端下载接口，由后端设置附件响应头。
+
+Nginx 反代下载接口时，要保证超时时间和上传大小足够：
+
+```nginx
+client_max_body_size 200m;
+proxy_read_timeout 300s;
+proxy_send_timeout 300s;
+```
+
+### 宝塔 .NET 项目启动后前端仍请求失败
+
+按顺序查：
+
+1. 宝塔 .NET 项目状态是否运行中。
+2. 服务器本机是否能访问：
+
+```bash
+curl http://127.0.0.1:6675/api/user/me
+```
+
+3. Nginx 是否有 `/api/` 反代：
+
+```nginx
+location ^~ /api/ {
+    proxy_pass http://127.0.0.1:6675/api/;
+}
+```
+
+4. 前端是否请求同域 `/api`，不要同时混用独立后端域名和同域反代。
+
+### Linux 部署后端口到底要不要放行
+
+如果 Nginx 和 WebAPI 在同一台服务器，推荐：
+
+```yaml
+Urls: "http://127.0.0.1:6675"
+```
+
+宝塔 .NET 项目不勾“放行端口”，外部只开放 80/443。浏览器访问域名，Nginx 再把 `/api/` 转给本机后端。
+
+只有后端要被其它服务器直接访问时，才考虑：
+
+```yaml
+Urls: "http://*:6675"
+```
+
+并配合防火墙和安全组放行端口。

@@ -1,1 +1,2 @@
-
+-- SQL executed before LimeMeta synchronizes database schema.
+-- Keep this file non-empty. Some database providers reject empty SQL commands.

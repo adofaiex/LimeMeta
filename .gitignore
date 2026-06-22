@@ -3,6 +3,9 @@ bin/
 obj/
 out/
 publish/
+.publish/
+.buildcheck/
+.template-smoke/
 
 # Visual Studio
 .vs/

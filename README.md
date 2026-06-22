@@ -204,6 +204,14 @@ dotnet restore
 dotnet build
 ```
 
+模板生成的业务项目自带发布脚本：
+
+```powershell
+.\build-release.bat
+```
+
+它会还原、Release 构建、发布 WebAPI，并把发布目录压缩到 `.publish/项目名.WebAPI.zip`，适合上传到宝塔或普通 Linux 服务器。
+
 ### 升级业务项目里的 LimeMeta
 
 业务项目升级框架时，不需要复制源码，也不需要重新创建项目。只改业务项目 `.csproj` 里的包版本。
