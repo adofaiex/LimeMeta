@@ -8,7 +8,7 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
     <PackageId>LimeMeta.GraphQL</PackageId>
     <Title>LimeMeta GraphQL 扩展</Title>
-    <Description>为 LimeMeta 模型自动生成查询、聚合和安全 Mutation 的 HotChocolate GraphQL 扩展。</Description>
+    <Description>为 adofaiex 内部 LimeMeta 模型自动生成查询、聚合和安全 Mutation 的 HotChocolate GraphQL 扩展。</Description>
     <PackageTags>limemeta;graphql;hotchocolate;backend</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

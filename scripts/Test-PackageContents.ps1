@@ -14,8 +14,10 @@ $expectedPackages = @(
 )
 $forbiddenPatterns = @(
     "ghp_[A-Za-z0-9]+",
-    "github\.com/.+/index\.json",
-    "nuget\.pkg\.github\.com",
+    "github_pat_[A-Za-z0-9_]+",
+    "nuget\.pkg\.github\.com/memsys-lizi",
+    "<packageSourceCredentials",
+    "ClearTextPassword",
     "Main\.txt",
     "[A-Z]:\\Users\\",
     "/home/[^/]+/"
@@ -31,7 +33,7 @@ foreach ($fileName in $expectedPackages) {
     New-Item -ItemType Directory -Path $extractRoot | Out-Null
     try {
         Expand-Archive -LiteralPath $packagePath -DestinationPath $extractRoot
-        $entries = Get-ChildItem -LiteralPath $extractRoot -Recurse -File
+        $entries = Get-ChildItem -LiteralPath $extractRoot -Recurse -File -Force
         $relativeEntries = $entries | ForEach-Object {
             [System.IO.Path]::GetRelativePath($extractRoot, $_.FullName).Replace("\", "/")
         }
@@ -66,14 +68,14 @@ foreach ($fileName in $expectedPackages) {
         }
         [xml]$metadataDocument = Get-Content -LiteralPath $nuspec.FullName -Raw
         $metadata = $metadataDocument.package.metadata
-        if ($metadata.license.type -ne "expression" -or $metadata.license.InnerText -ne "Apache-2.0") {
+        if ($metadata.license.type -ne "file" -or $metadata.license.InnerText -ne "LICENSE") {
             throw "$fileName 的许可证元数据不正确。"
         }
         if ($metadata.icon -ne "limemeta-icon.png" -or [string]::IsNullOrWhiteSpace($metadata.readme)) {
             throw "$fileName 缺少图标或 README 元数据。"
         }
         if ($metadata.repository.type -ne "git" -or
-            $metadata.repository.url -ne "https://github.com/memsys-lizi/LimeMeta" -or
+            $metadata.repository.url -ne "https://github.com/adofaiex/LimeMeta" -or
             [string]::IsNullOrWhiteSpace($metadata.repository.commit)) {
             throw "$fileName 缺少正确的 Git 仓库与提交元数据。"
         }
@@ -91,7 +93,7 @@ foreach ($fileName in $expectedPackages) {
             if ($metadata.packageTypes.packageType.name -ne "Template") {
                 throw "模板包缺少 Template 包类型。"
             }
-            $templateJson = Get-ChildItem -LiteralPath $extractRoot -Recurse -Filter "template.json" |
+            $templateJson = Get-ChildItem -LiteralPath $extractRoot -Recurse -Filter "template.json" -Force |
                 Select-Object -First 1
             if (-not $templateJson) {
                 throw "模板包缺少 template.json。"
@@ -100,7 +102,7 @@ foreach ($fileName in $expectedPackages) {
             if ($templateText -notmatch '"defaultValue"\s*:\s*"' + [regex]::Escape($Version) + '"') {
                 throw "模板默认 LimeMeta 版本不是 $Version。"
             }
-            $developmentConfig = Get-ChildItem -LiteralPath $extractRoot -Recurse -Filter "appsettings.Development.yml" |
+            $developmentConfig = Get-ChildItem -LiteralPath $extractRoot -Recurse -Filter "appsettings.Development.yml" -Force |
                 Select-Object -First 1
             if (-not $developmentConfig -or
                 (Get-Content -LiteralPath $developmentConfig.FullName -Raw) -notmatch "DataType:\s*['`"]?MySql") {

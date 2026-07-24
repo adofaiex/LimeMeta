@@ -29,7 +29,7 @@ public sealed class TemplateContractTests
     }
 
     [Fact]
-    public void Template_DoesNotContainPrivateFeedOrUnusedSystemSeed()
+    public void Template_DocumentsOrganizationFeedWithoutEmbeddedCredentials()
     {
         var templateRoot = Path.Combine(RepositoryRoot, "templates", "LimeMeta.Service");
 
@@ -39,12 +39,17 @@ public sealed class TemplateContractTests
             "LimeMetaService.WebAPI",
             "Seed",
             "system.yml")));
-        Assert.DoesNotContain(
-            "nuget.pkg.github.com",
-            string.Join('\n', Directory.EnumerateFiles(templateRoot, "*", SearchOption.AllDirectories)
+        var templateText = string.Join(
+            '\n',
+            Directory.EnumerateFiles(templateRoot, "*", SearchOption.AllDirectories)
                 .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
                                !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
-                .Select(File.ReadAllText)));
+                .Select(File.ReadAllText));
+
+        Assert.Contains("https://nuget.pkg.github.com/adofaiex/index.json", templateText);
+        Assert.DoesNotContain("ClearTextPassword", templateText);
+        Assert.DoesNotContain("memsys-lizi", templateText);
+        Assert.DoesNotMatch(@"gh[pousr]_[A-Za-z0-9_]{20,}", templateText);
     }
 
     [Fact]

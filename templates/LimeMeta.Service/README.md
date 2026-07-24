@@ -6,7 +6,21 @@
 
 ## 先在 10 分钟内跑起来
 
-### 1. 准备 MySQL
+### 1. 配置组织 NuGet 源
+
+项目依赖 `adofaiex` 私有 GitHub Packages。每个开发者和 CI 环境都必须拥有仓库读取权限，并在还原前提供具有 `read:packages` 权限的 classic PAT：
+
+```powershell
+$env:GITHUB_USER = "你的 GitHub 用户名"
+$env:GITHUB_PACKAGES_TOKEN = "具有 read:packages 权限的 classic PAT"
+$env:NuGetPackageSourceCredentials_adofaiex = "Username=$env:GITHUB_USER;Password=$env:GITHUB_PACKAGES_TOKEN"
+
+dotnet nuget add source "https://nuget.pkg.github.com/adofaiex/index.json" --name adofaiex
+```
+
+源地址可以保存在当前用户的 NuGet 配置中，但凭据只应通过本机安全存储、环境变量或 CI Secret 提供。不要在业务项目中提交 PAT、明文密码或带凭据的 `NuGet.config`。
+
+### 2. 准备 MySQL
 
 ```sql
 CREATE DATABASE limemeta_service
@@ -24,7 +38,7 @@ LimeMeta:
 
 Development 文件里的管理员密码和 JWT 密钥只是本地示例。不要把它们用于测试、预发布或生产环境。
 
-### 2. 启动
+### 3. 启动
 
 ```powershell
 dotnet restore
@@ -45,7 +59,7 @@ dotnet run --project LimeMetaService.WebAPI
 http://127.0.0.1:6675/api/gql
 ```
 
-### 3. 登录
+### 4. 登录
 
 ```graphql
 mutation {

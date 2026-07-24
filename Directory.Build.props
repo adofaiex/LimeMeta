@@ -7,13 +7,13 @@
     <FileVersion>1.0.0.0</FileVersion>
     <InformationalVersion>$(Version)</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
-    <Authors>memsys-lizi</Authors>
-    <Company>memsys-lizi</Company>
-    <Copyright>Copyright © 2026 memsys-lizi</Copyright>
-    <PackageProjectUrl>https://github.com/memsys-lizi/LimeMeta</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/memsys-lizi/LimeMeta</RepositoryUrl>
+    <Authors>adofaiex</Authors>
+    <Company>adofaiex</Company>
+    <Copyright>Copyright © 2026 adofaiex. All rights reserved.</Copyright>
+    <PackageProjectUrl>https://github.com/adofaiex/LimeMeta</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/adofaiex/LimeMeta</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>limemeta-icon.png</PackageIcon>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>

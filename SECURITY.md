@@ -9,7 +9,7 @@
 
 ## 报告漏洞
 
-请使用 GitHub 仓库的 **Security → Report a vulnerability** 私密报告功能，不要创建公开 Issue。
+请使用仓库的私密漏洞报告功能，或联系组织 Owner。不要在普通 Issue、PR、Actions 日志或组织外部渠道披露漏洞。
 
 报告中请包含：
 

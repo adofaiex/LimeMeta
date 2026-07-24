@@ -34,11 +34,11 @@ $packages = @(
         SPDXID = $rootSpdxId
         name = "LimeMeta"
         versionInfo = $Version
-        downloadLocation = "https://www.nuget.org/packages/LimeMeta/$Version"
+        downloadLocation = "NOASSERTION"
         filesAnalyzed = $false
-        licenseConcluded = "Apache-2.0"
-        licenseDeclared = "Apache-2.0"
-        copyrightText = "Copyright 2026 memsys-lizi"
+        licenseConcluded = "LicenseRef-adofaiex-internal"
+        licenseDeclared = "LicenseRef-adofaiex-internal"
+        copyrightText = "Copyright 2026 adofaiex. All rights reserved."
     }
 )
 $relationships = @()
@@ -67,11 +67,18 @@ $document = [ordered]@{
     dataLicense = "CC0-1.0"
     SPDXID = "SPDXRef-DOCUMENT"
     name = "LimeMeta-$Version"
-    documentNamespace = "https://github.com/memsys-lizi/LimeMeta/sbom/$Commit"
+    documentNamespace = "https://github.com/adofaiex/LimeMeta/sbom/$Commit"
     creationInfo = [ordered]@{
         created = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
-        creators = @("Organization: memsys-lizi", "Tool: scripts/New-Sbom.ps1")
+        creators = @("Organization: adofaiex", "Tool: scripts/New-Sbom.ps1")
     }
+    hasExtractedLicensingInfos = @(
+        [ordered]@{
+            licenseId = "LicenseRef-adofaiex-internal"
+            extractedText = [System.IO.File]::ReadAllText((Join-Path $repositoryRoot "LICENSE"))
+            name = "LimeMeta Internal Use License"
+        }
+    )
     packages = $packages
     relationships = $relationships
 }

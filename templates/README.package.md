@@ -4,11 +4,20 @@ LimeMeta.Templates 用于创建 .NET 10 模型驱动后端项目。生成的项�
 
 ## 安装与创建
 
+此包发布在 `adofaiex` 的私有 GitHub Packages 中。安装前必须拥有组织仓库读取权限，并在当前终端提供具有 `read:packages` 权限的 classic PAT：
+
 ```powershell
+$env:GITHUB_USER = "你的 GitHub 用户名"
+$env:GITHUB_PACKAGES_TOKEN = "具有 read:packages 权限的 classic PAT"
+$env:NuGetPackageSourceCredentials_adofaiex = "Username=$env:GITHUB_USER;Password=$env:GITHUB_PACKAGES_TOKEN"
+
+dotnet nuget add source "https://nuget.pkg.github.com/adofaiex/index.json" --name adofaiex
 dotnet new install LimeMeta.Templates
 dotnet new limemeta -n MyService
 cd MyService
 ```
+
+不要把 PAT 或 `packageSourceCredentials` 写入项目仓库。
 
 创建指定框架版本的项目：
 
@@ -27,7 +36,7 @@ dotnet new limemeta -n MyService --limeMetaVersion 1.0.0
 - Logic、领域服务、GraphQL 扩展、FastEndpoints 和 WebSocket。
 - YAML Seed、文件存储、PostgreSQL 切换、生产配置和部署检查表。
 
-在线查看模板文档：[LimeMeta Service 开发指南](https://github.com/memsys-lizi/LimeMeta/blob/main/templates/LimeMeta.Service/README.md)。
+在线查看模板文档：[LimeMeta Service 开发指南](https://github.com/adofaiex/LimeMeta/blob/main/templates/LimeMeta.Service/README.md)。
 
 ## 更新或卸载模板
 

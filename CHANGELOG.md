@@ -13,7 +13,7 @@
 - Logic 生命周期、JWT、AppKey、文件存储与 WebSocket。
 - MySQL 默认项目模板和 PostgreSQL 支持。
 - 模板内完整中文开发手册，覆盖模型、GraphQL、用户权限、Logic、接口、配置与部署。
-- NuGet.org 三包发布、SourceLink、符号包和自动发布流程。
+- `adofaiex` 私有 GitHub Packages 三包发布、SourceLink、符号包和自动发布流程。
 
 ### Fixed
 

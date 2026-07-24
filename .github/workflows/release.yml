@@ -7,14 +7,12 @@ on:
 
 permissions:
   contents: write
-  id-token: write
-  attestations: write
+  packages: write
 
 jobs:
   publish:
-    name: 验证、发布并创建 Release
+    name: 验证、发布到组织并创建 Release
     runs-on: ubuntu-latest
-    environment: nuget.org
     services:
       mysql:
         image: mysql:8.4
@@ -108,22 +106,13 @@ jobs:
           Get-ChildItem .artifacts/packages -File | Get-FileHash -Algorithm SHA256 |
             ForEach-Object { "$($_.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($_.Path))" } |
             Set-Content .artifacts/SHA256SUMS -Encoding utf8NoBOM
-      - name: 生成构建来源证明
-        uses: actions/attest-build-provenance@96b4a1ef7235a096b17240c259729fdd70c83d45
-        with:
-          subject-path: .artifacts/packages/*
-      - name: 通过 NuGet.org OIDC 登录
-        id: nuget-login
-        uses: NuGet/login@ebc737b6fc418a6ca0073cf116ec8dc156d8b81e
-        with:
-          user: memsys-lizi
-      - name: 按依赖顺序发布
+      - name: 按依赖顺序发布到 GitHub Packages
         env:
-          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+          GITHUB_PACKAGES_TOKEN: ${{ github.token }}
         run: |
-          dotnet nuget push ".artifacts/packages/LimeMeta.${{ steps.version.outputs.version }}.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
-          dotnet nuget push ".artifacts/packages/LimeMeta.GraphQL.${{ steps.version.outputs.version }}.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
-          dotnet nuget push ".artifacts/packages/LimeMeta.Templates.${{ steps.version.outputs.version }}.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+          dotnet nuget push ".artifacts/packages/LimeMeta.${{ steps.version.outputs.version }}.nupkg" --api-key "$GITHUB_PACKAGES_TOKEN" --source https://nuget.pkg.github.com/adofaiex/index.json --skip-duplicate --no-symbols
+          dotnet nuget push ".artifacts/packages/LimeMeta.GraphQL.${{ steps.version.outputs.version }}.nupkg" --api-key "$GITHUB_PACKAGES_TOKEN" --source https://nuget.pkg.github.com/adofaiex/index.json --skip-duplicate --no-symbols
+          dotnet nuget push ".artifacts/packages/LimeMeta.Templates.${{ steps.version.outputs.version }}.nupkg" --api-key "$GITHUB_PACKAGES_TOKEN" --source https://nuget.pkg.github.com/adofaiex/index.json --skip-duplicate --no-symbols
       - name: 创建 GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
