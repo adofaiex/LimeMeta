@@ -114,7 +114,7 @@ jobs:
           subject-path: .artifacts/packages/*
       - name: 通过 NuGet.org OIDC 登录
         id: nuget-login
-        uses: NuGet/login@ebc737b6fc418a6ca0073cf116ec8dc156d8b81e
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841
         with:
           user: memsys-lizi
       - name: 按依赖顺序发布
