@@ -20,10 +20,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="templates\LimeMeta.Service\**\*"
-             Exclude="templates\LimeMeta.Service\**\bin\**;templates\LimeMeta.Service\**\obj\**" />
-    <Compile Remove="templates\**\*" />
-    <None Include="templates\README.package.md" Pack="true" PackagePath="README.md" />
+    <Content Include="templates/LimeMeta.Service/**/*"
+             Exclude="templates/LimeMeta.Service/**/bin/**;templates/LimeMeta.Service/**/obj/**;templates/LimeMeta.Service/.template.config/**;templates/LimeMeta.Service/.gitignore" />
+    <Content Include="templates/LimeMeta.Service/.template.config/template.json" />
+    <Content Include="templates/LimeMeta.Service/.gitignore" />
+    <Compile Remove="templates/**/*" />
+    <None Include="templates/README.package.md" Pack="true" PackagePath="README.md" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
