@@ -8,7 +8,7 @@ namespace LimeMeta.Files;
 /// <summary>
 /// 123 云盘 CLI 文件存储服务。
 /// </summary>
-public sealed class Pan123CliFileStorageProvider : IFileStorageProvider
+internal sealed class Pan123CliFileStorageProvider : IFileStorageProvider
 {
     /// <summary>
     /// ProviderName

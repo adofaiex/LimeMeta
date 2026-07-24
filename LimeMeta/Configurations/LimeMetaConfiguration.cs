@@ -10,7 +10,7 @@ public sealed class LimeMetaConfiguration
     /// <summary>
     /// FreeSql 连接字符串。
     /// </summary>
-    public string? ConnectionString { get; set; }
+    public string ConnectionString { get; set; } = string.Empty;
 
     /// <summary>
     /// FreeSql 数据库类型，默认为 Sqlite。
@@ -35,12 +35,7 @@ public sealed class LimeMetaConfiguration
     /// <summary>
     /// 管理员密码
     /// </summary>
-    public string AdminUserPassword { get; set; } = "change-me-admin-password";
-
-    /// <summary>
-    /// 默认用户密码
-    /// </summary>
-    public string DefaultUserPassword { get; set; } = "change-me-user-password";
+    public string AdminUserPassword { get; set; } = string.Empty;
 
     /// <summary>
     /// 启动时是否自动同步数据库表结构
@@ -53,14 +48,9 @@ public sealed class LimeMetaConfiguration
     public bool LoadSeedOnStartup { get; set; } = true;
 
     /// <summary>
-    /// 加密盐
-    /// </summary>
-    public string Salt { get; set; } = "$2a$12$v76VCF8eVvsTeLLTJ1Gu3O";
-
-    /// <summary>
     /// Jwt 签名密钥
     /// </summary>
-    public string JwtSignKey { get; set; } = "2dd58a6c19b7416e8aa7dbe72441ba1bdb93749b14364fadbeda259f8ec66640";
+    public string JwtSignKey { get; set; } = string.Empty;
 
     /// <summary>
     /// Jwt 过期时间
@@ -70,7 +60,7 @@ public sealed class LimeMetaConfiguration
     /// <summary>
     /// 文件存储路径
     /// </summary>
-    public string FileStorePath { get; set; } = "FileStore";
+    public string FileStorePath { get; set; } = "./FileStore";
 
     /// <summary>
     /// 文件存储数量

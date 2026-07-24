@@ -10,7 +10,7 @@ namespace LimeMeta.Endpoints;
 /// <summary>
 /// FileUploadEndpoint
 /// </summary>
-public class FileUploadEndpoint : Endpoint<FileUploadRequest, FileUploadResponse>
+internal sealed class FileUploadEndpoint : Endpoint<FileUploadRequest, FileUploadResponse>
 {
     /// <summary>
     /// Configure
@@ -77,7 +77,7 @@ public class FileUploadEndpoint : Endpoint<FileUploadRequest, FileUploadResponse
 /// <summary>
 /// FileUploadRequest
 /// </summary>
-public class FileUploadRequest
+internal sealed class FileUploadRequest
 {
     /// <summary>
     /// Files
@@ -88,7 +88,7 @@ public class FileUploadRequest
 /// <summary>
 /// FileUploadResponse
 /// </summary>
-public class FileUploadResponse
+internal sealed class FileUploadResponse
 {
     /// <summary>
     /// Files
@@ -99,7 +99,7 @@ public class FileUploadResponse
 /// <summary>
 /// FileUploadResponseItem
 /// </summary>
-public class FileUploadResponseItem
+internal sealed class FileUploadResponseItem
 {
     /// <summary>
     /// Id

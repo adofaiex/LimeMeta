@@ -21,7 +21,7 @@ public interface IFileStorageProviderResolver
 /// <summary>
 /// 文件存储服务解析器。
 /// </summary>
-public sealed class FileStorageProviderResolver : IFileStorageProviderResolver
+internal sealed class FileStorageProviderResolver : IFileStorageProviderResolver
 {
     private readonly Dictionary<string, IFileStorageProvider> _providers;
     private readonly string _currentProvider;

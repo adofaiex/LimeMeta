@@ -1,8 +1,8 @@
-Urls: "http://*:6675"
+Urls: "http://127.0.0.1:6675"
 
 LimeMeta:
-  ConnectionString: "Host=localhost;Port=5432;Database=limemeta_service_dev;Username=postgres;Password=postgres"
-  DataType: "PostgreSQL"
+  ConnectionString: "Server=127.0.0.1;Port=3306;Database=limemeta_service;Uid=root;Pwd=change-me;Charset=utf8mb4;"
+  DataType: "MySql"
   FileStorePath: "./FileStore"
   FileStoreCount: 8192
   FileStore:
@@ -20,9 +20,28 @@ LimeMeta:
   GuestPerm: "游客"
   AdminUserName: "admin"
   AdminUserPassword: "change-me-admin-password"
-  DefaultUserPassword: "change-me-user-password"
+  JwtSignKey: "development-only-jwt-key-change-before-production-1234567890"
   AutoSyncSchema: true
   LoadSeedOnStartup: true
   WebSocket:
     Path: "/api/ws"
     MaxMessageSize: 1048576
+
+Serilog:
+  MinimumLevel:
+    Default: Information
+    Override:
+      Microsoft: Information
+      Microsoft.AspNetCore: Information
+  WriteTo:
+    - Name: Console
+      Args:
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"
+    - Name: File
+      Args:
+        path: "Logs/error-.log"
+        restrictedToMinimumLevel: Error
+        rollingInterval: Day
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+
+AllowedHosts: "*"

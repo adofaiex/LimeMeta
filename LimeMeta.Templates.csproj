@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IsPackable>true</IsPackable>
+    <PackageId>LimeMeta.Templates</PackageId>
+    <Title>LimeMeta 项目模板</Title>
+    <Description>用于创建 LimeMeta MySQL 后端服务的 dotnet new 项目模板。</Description>
+    <PackageTags>limemeta;dotnet-new;templates;webapi;graphql;mysql</PackageTags>
+    <PackageType>Template</PackageType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <IncludeSymbols>false</IncludeSymbols>
+    <EnablePackageValidation>false</EnablePackageValidation>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="templates\LimeMeta.Service\**\*"
+             Exclude="templates\LimeMeta.Service\**\bin\**;templates\LimeMeta.Service\**\obj\**" />
+    <Compile Remove="templates\**\*" />
+    <None Include="templates\README.package.md" Pack="true" PackagePath="README.md" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

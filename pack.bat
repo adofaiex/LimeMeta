@@ -10,5 +10,8 @@ if errorlevel 1 exit /b %errorlevel%
 dotnet pack LimeMeta.GraphQL\LimeMeta.GraphQL.csproj --configuration Release --output .nuget
 if errorlevel 1 exit /b %errorlevel%
 
+dotnet pack LimeMeta.Templates.csproj --configuration Release --output .nuget
+if errorlevel 1 exit /b %errorlevel%
+
 echo.
 echo Packages are ready in .nuget

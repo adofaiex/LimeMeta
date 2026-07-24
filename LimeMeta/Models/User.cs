@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FreeSql.DataAnnotations;
 using LimeMeta.Attributes;
+using System.Text.Json.Serialization;
 
 namespace LimeMeta.Models;
 
@@ -18,7 +19,7 @@ public class User : BaseAudit
     /// </summary>
     [Column(Name = "name"), Indexed]
     public required string Name { get; set; }
-    
+
     /// <summary>
     /// 用户名
     /// </summary>
@@ -29,7 +30,8 @@ public class User : BaseAudit
     /// 密码
     /// </summary>
     [Column(Name = "pwd"), Indexed]
-    public required string Password { get; set; }
+    [JsonIgnore]
+    public required string PasswordHash { get; set; }
 
     /// <summary>
     /// 手机
@@ -58,7 +60,7 @@ public class UserDto : BaseDto
     /// <summary>
     /// 名称
     /// </summary>
-    public required string Name { get; set; } 
+    public required string Name { get; set; }
 
     /// <summary>
     /// 用户名

@@ -46,5 +46,5 @@ public abstract class BaseAudit : BaseObject, IAuditObject
     /// 修改者
     /// </summary>
     [Navigate(nameof(ModifierId))]
-    public User? Modifier { get; set; }    
+    public User? Modifier { get; set; }
 }

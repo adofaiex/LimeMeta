@@ -25,6 +25,7 @@ public static class Extensions
             .ModifyOptions(opt => opt.UseXmlDocumentation = true)
             .ModifyCostOptions(opt => opt.EnforceCostLimits = false)
             .AddQueryType<QueryType>()
+            .AddType<UserType>()
             .AddProjections()
             .AddFiltering()
             .AddSorting()

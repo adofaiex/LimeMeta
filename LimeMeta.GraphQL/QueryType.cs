@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LimeMeta.Models;
 using LimeMeta.Logics;
 using LimeMeta.Data;
+using LimeMeta.Authorization;
 using HotChocolate.Types;
 using HotChocolate.Data;
 using HotChocolate.Execution.Processing;
@@ -27,7 +28,7 @@ namespace LimeMeta.GraphQL;
 /// <summary>
 /// QueryType
 /// </summary>
-public class QueryType : ObjectType<Query>
+internal sealed class QueryType : ObjectType<Query>
 {
     public const string WhereName = "where";
     public const string OrderName = "order";
@@ -94,6 +95,8 @@ public class QueryType : ObjectType<Query>
                     var userId = Guid.Parse(cliam.Value);
 
                     var meta = ctx.Service<ILimeMeta>();
+                    ctx.Service<ILimeMetaAuthorizationService>()
+                        .EnsureAuthorized(meta, userId, typeof(T), LimeMetaOperation.Query);
                     var q = meta.Query<T>().AsQueryable();
 
                     // where
@@ -142,6 +145,8 @@ public class QueryType : ObjectType<Query>
                 var userId = Guid.Parse(cliam.Value);
 
                 var meta = ctx.Service<ILimeMeta>();
+                ctx.Service<ILimeMetaAuthorizationService>()
+                    .EnsureAuthorized(meta, userId, typeof(T), LimeMetaOperation.Aggregate);
                 var q = meta.Query<T>();
 
                 var where = Where<T>(ctx);

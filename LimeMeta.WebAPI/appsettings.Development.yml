@@ -20,7 +20,7 @@ LimeMeta:
   GuestPerm: "游客"
   AdminUserName: "admin"
   AdminUserPassword: "change-me-admin-password"
-  DefaultUserPassword: "change-me-user-password"
+  JwtSignKey: "development-only-jwt-key-change-before-production-1234567890"
   AutoSyncSchema: true
   LoadSeedOnStartup: true
   WebSocket:

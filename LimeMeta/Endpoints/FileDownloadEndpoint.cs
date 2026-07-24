@@ -10,7 +10,7 @@ namespace LimeMeta.Endpoints;
 /// <summary>
 /// FileDownloadEndpoint
 /// </summary>
-public class FileDownloadEndpoint : Endpoint<FileDownloadRequest>
+internal sealed class FileDownloadEndpoint : Endpoint<FileDownloadRequest>
 {
     /// <summary>
     /// Configure
@@ -72,7 +72,7 @@ public class FileDownloadEndpoint : Endpoint<FileDownloadRequest>
 /// <summary>
 /// FileDownloadRequest
 /// </summary>
-public class FileDownloadRequest
+internal sealed class FileDownloadRequest
 {
     /// <summary>
     /// Id

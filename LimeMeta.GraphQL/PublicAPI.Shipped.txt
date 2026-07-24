@@ -1,0 +1,4 @@
+#nullable enable
+LimeMeta.GraphQL.Extensions
+static LimeMeta.GraphQL.Extensions.AddLimeMetaGraphQL(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> HotChocolate.Execution.Configuration.IRequestExecutorBuilder!
+static LimeMeta.GraphQL.Extensions.UseLimeMetaGraphQL(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! app) -> Microsoft.AspNetCore.Routing.IEndpointRouteBuilder!

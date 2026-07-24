@@ -164,7 +164,7 @@ public interface ILimeMeta
     /// <param name="enableLogic"></param>
     /// <param name="context"></param>
     /// <returns></returns>
-    int Delete<T>(Expression<Func<T, bool>> exp, Guid? userId = null, bool enableLogic = true, object? context = null) where T : BaseObject;    
+    int Delete<T>(Expression<Func<T, bool>> exp, Guid? userId = null, bool enableLogic = true, object? context = null) where T : BaseObject;
 
     /// <summary>
     /// Select

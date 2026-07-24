@@ -6,17 +6,20 @@ using FastEndpoints.Swagger;
 using FreeSql;
 using FreeSql.DataAnnotations;
 using LimeMeta.Attributes;
+using LimeMeta.Authorization;
 using LimeMeta.Configurations;
 using LimeMeta.Data;
 using LimeMeta.Files;
 using LimeMeta.Logics;
 using LimeMeta.Models;
+using LimeMeta.Security;
 using LimeMeta.TypeHandlers;
 using LimeMeta.WebSockets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -41,21 +44,37 @@ public static class Extensions
     /// </summary>
     /// <param name="services">DI 服务集合。</param>
     /// <param name="configuration">应用配置（支持 YAML）。</param>
-    /// <param name="env"></param>
+    /// <param name="env">宿主环境。</param>
     /// <returns>返回服务集合以便链式调用。</returns>
     public static IServiceCollection AddLimeMeta(this IServiceCollection services, IConfiguration configuration, IHostEnvironment env)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        var config = configuration.GetSection("LimeMeta").Get<LimeMetaConfiguration>()!;
-        services.Configure<LimeMetaConfiguration>(configuration.GetSection("LimeMeta"));
+        var section = configuration.GetSection("LimeMeta");
+        var config = section.Get<LimeMetaConfiguration>() ?? new LimeMetaConfiguration();
+        var configValidator = new LimeMetaConfigurationValidator(env);
+        var validation = configValidator.Validate(Options.DefaultName, config);
+        if (validation.Failed)
+        {
+            throw new OptionsValidationException(
+                Options.DefaultName,
+                typeof(LimeMetaConfiguration),
+                validation.Failures);
+        }
+
+        services.AddOptions<LimeMetaConfiguration>()
+            .Bind(section)
+            .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<LimeMetaConfiguration>>(configValidator);
         services.AddSingleton(config);
 
         // 添加 FreeSql
-        services.AddFreeSql();
+        services.AddFreeSql(env);
         services.AddSingleton<ILogicManager, LogicManager>();
         services.AddScoped<ILimeMeta, FreeSqlLimeMeta>();
+        services.TryAddSingleton<ILimeMetaPasswordHasher, BcryptLimeMetaPasswordHasher>();
+        services.TryAddScoped<ILimeMetaAuthorizationService, DefaultLimeMetaAuthorizationService>();
         services.AddScoped<LocalFileStorageProvider>();
         services.AddScoped<Pan123CliRunner>();
         services.AddScoped<Pan123CliFileStorageProvider>();
@@ -63,44 +82,13 @@ public static class Extensions
         services.AddScoped<IFileStorageProvider>(sp => sp.GetRequiredService<Pan123CliFileStorageProvider>());
         services.AddScoped<IFileStorageProviderResolver, FileStorageProviderResolver>();
 
-        // 添加 Jwt（支持 Authorization: Bearer 与 URL 查询参数 access_token，与 login 返回的 JWT 一致）
+        // 添加 JWT；普通 HTTP 仅接受 Authorization/AppKey 请求头，WebSocket 专用路径可接受 access_token。
+        var webSocketPath = configuration.GetValue<string>("LimeMeta:WebSocket:Path") ?? "/api/ws";
         services.AddAuthenticationJwtBearer(s => s.SigningKey = config.JwtSignKey, opt =>
         {
             opt.Events = new JwtBearerEvents
             {
-                OnMessageReceived = context =>
-                {
-                    var auth = context.Request.Headers.Authorization.ToString();
-                    if (string.IsNullOrEmpty(auth) ||
-                        !auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var accessToken = context.Request.Query["access_token"].FirstOrDefault();
-                        if (!string.IsNullOrEmpty(accessToken))
-                        {
-                            context.Token = accessToken;
-                        }
-                        else
-                        {
-                            StringValues appKey;
-
-                            if (context.Request.Headers.TryGetValue("x-limemeta-app-key", out appKey) || context.Request.Query.TryGetValue("app_key", out appKey))
-                            {
-                                using var sp = services.BuildServiceProvider();
-                                var meta = sp.GetRequiredService<ILimeMeta>();
-                                var obj = meta.Query<AppKey>().Include(r => r.User).FirstOrDefault(r => r.Key == appKey);
-                                if (obj?.User != null)
-                                {
-                                    if (obj.Expired < 0 || obj.Expired >= DateTimeOffset.Now.ToUnixTimeMilliseconds())
-                                    {
-                                        context.Token = UserLogic.GenerateJwt(config, obj.User);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    return Task.CompletedTask;
-                }
+                OnMessageReceived = context => HandleAuthenticationMessage(context, config, webSocketPath)
             };
         });
         services.AddAuthorization();
@@ -115,15 +103,53 @@ public static class Extensions
         return services;
     }
 
+    internal static Task HandleAuthenticationMessage(
+        MessageReceivedContext context,
+        LimeMetaConfiguration config,
+        string webSocketPath)
+    {
+        var auth = context.Request.Headers.Authorization.ToString();
+        if (!string.IsNullOrEmpty(auth) &&
+            auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            return Task.CompletedTask;
+        }
+
+        var isWebSocketRequest =
+            context.Request.Path.Equals(webSocketPath, StringComparison.OrdinalIgnoreCase);
+        var accessToken = isWebSocketRequest
+            ? context.Request.Query["access_token"].FirstOrDefault()
+            : null;
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            context.Token = accessToken;
+            return Task.CompletedTask;
+        }
+
+        if (context.Request.Headers.TryGetValue("x-limemeta-app-key", out StringValues appKey))
+        {
+            var meta = context.Request.HttpContext.RequestServices.GetRequiredService<ILimeMeta>();
+            var obj = meta.Query<AppKey>().Include(item => item.User).FirstOrDefault(item => item.Key == appKey);
+            if (obj?.User != null &&
+                (obj.Expired < 0 || obj.Expired >= DateTimeOffset.Now.ToUnixTimeMilliseconds()))
+            {
+                context.Token = UserLogic.GenerateJwt(config, obj.User);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
     /// <summary>
     /// 从 appsettings 中读取 FreeSql 连接信息并注册 <see cref="IFreeSql"/>。
     /// 优先读取 <c>ConnectionStrings:FreeSql</c>，其次 <c>LimeMeta:ConnectionString</c>；
     /// 数据库类型读取 <c>LimeMeta:DataType</c>（默认为 SqlServer）。
     /// </summary>
     /// <param name="services">DI 服务集合。</param>
+    /// <param name="env">宿主环境。</param>
     /// <returns>返回服务集合以便链式调用。</returns>
     /// <exception cref="InvalidOperationException">未提供连接字符串时抛出。</exception>
-    private static IServiceCollection AddFreeSql(this IServiceCollection services)
+    private static IServiceCollection AddFreeSql(this IServiceCollection services, IHostEnvironment env)
     {
         FreeSql.Internal.Utils.IsStrict = false;
         FreeSql.Internal.Utils.TypeHandlers.TryAdd(typeof(JsonElement), new JsonElementTypeHandler());
@@ -152,9 +178,9 @@ public static class Extensions
             }
 
             var logger = sp.GetService<ILogger<FreeSqlBuilder>>();
-            if (logger != null)
+            if (logger != null && env.IsDevelopment())
             {
-                builder.UseMonitorCommand(cmd => logger.LogInformation("SQL: {sql}\n", cmd.CommandText)).UseNoneCommandParameter(true);
+                builder.UseMonitorCommand(cmd => logger.LogDebug("SQL: {sql}", cmd.CommandText));
             }
 
             var fsql = builder.Build();

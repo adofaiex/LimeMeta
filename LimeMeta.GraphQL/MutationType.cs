@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using LimeMeta.Data;
+using LimeMeta.Authorization;
 using LimeMeta.Logics;
 using LimeMeta.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +15,7 @@ namespace LimeMeta.GraphQL;
 /// <summary>
 /// MutationType
 /// </summary>
-public class MutationType : ObjectType<Mutation>
+internal sealed class MutationType : ObjectType<Mutation>
 {
     /// <summary>
     /// LogicManager
@@ -46,7 +47,7 @@ public class MutationType : ObjectType<Mutation>
     protected override void Configure(IObjectTypeDescriptor<Mutation> desc)
     {
         desc.Authorize();
-        
+
         var mi = GetType().GetMethod(nameof(RegisterModel))!;
 
         var models = LogicManager.ModelTypes;
@@ -73,7 +74,7 @@ public class MutationType : ObjectType<Mutation>
     {
         var type = typeof(T);
 
-        if (type != typeof(Perm))
+        if (type != typeof(Perm) && type != typeof(User))
         {
             Insert<T, TDto>(desc, logicManager, logger);
             Update<T>(desc, logicManager, logger);
@@ -105,12 +106,14 @@ public class MutationType : ObjectType<Mutation>
                 var userId = Guid.Parse(cliam.Value);
 
                 var meta = ctx.Service<ILimeMeta>();
+                var authorization = ctx.Service<ILimeMetaAuthorizationService>();
 
                 var newObjs = new List<T>();
                 var objs = ctx.ArgumentValue<List<TDto>>("objs");
 
                 try
                 {
+                    authorization.EnsureAuthorized(meta, userId, type, LimeMetaOperation.Insert);
                     foreach (var dto in objs)
                     {
                         var obj = logicManager.ModelMapper.Map<TDto, T>(dto);
@@ -149,6 +152,7 @@ public class MutationType : ObjectType<Mutation>
             {
                 var objs = ctx.ArgumentValue<List<JsonElement>>("objs");
                 var meta = ctx.Service<ILimeMeta>();
+                var authorization = ctx.Service<ILimeMetaAuthorizationService>();
 
                 var cliam = ctx.GetUser()!.Claims.First(r => r.Type == UserLogic.ClaimUserId);
                 var userId = Guid.Parse(cliam.Value);
@@ -156,6 +160,7 @@ public class MutationType : ObjectType<Mutation>
                 int total = 0;
                 try
                 {
+                    authorization.EnsureAuthorized(meta, userId, type, LimeMetaOperation.Update);
                     total = meta.Update<T>(objs.Select(r => JObject.Parse(r.ToString())), userId, true, ctx);
                 }
                 catch (Exception ex)
@@ -192,9 +197,11 @@ public class MutationType : ObjectType<Mutation>
 
                 var total = 0;
                 var meta = ctx.Service<ILimeMeta>();
+                var authorization = ctx.Service<ILimeMetaAuthorizationService>();
 
                 try
                 {
+                    authorization.EnsureAuthorized(meta, userId, type, LimeMetaOperation.Delete);
                     total = meta.Delete<T>(r => ids.Contains(r.Id), userId, true, ctx);
                 }
                 catch (Exception ex)

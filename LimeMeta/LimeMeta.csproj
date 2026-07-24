@@ -5,13 +5,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
+    <NoWarn>$(NoWarn);1591;RS0026</NoWarn>
     <PackageId>LimeMeta</PackageId>
-    <Authors>memsys-lizi</Authors>
-    <Company>memsys-lizi</Company>
-    <Description>LimeMeta core backend framework: model-driven schema sync, logic events, REST endpoints, authentication, file storage, and WebSocket support.</Description>
+    <Title>LimeMeta 后端框架</Title>
+    <Description>模型驱动的 .NET 后端框架，提供数据库结构同步、Logic 生命周期、认证、REST、文件存储与 WebSocket。</Description>
     <PackageTags>limemeta;backend;webapi;freesql;fastendpoints;websocket</PackageTags>
-    <RepositoryUrl>https://github.com/memsys-lizi/LimeMeta</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
@@ -27,6 +25,14 @@
     <PackageReference Include="FastEndpoints" Version="8.1.0" />
     <PackageReference Include="FastEndpoints.Security" Version="8.1.0" />
     <PackageReference Include="FastEndpoints.Swagger" Version="8.1.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -34,7 +40,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <InternalsVisibleTo Include="LimeMeta.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

@@ -20,9 +20,9 @@
     "limeMetaVersion": {
       "type": "parameter",
       "datatype": "text",
-      "defaultValue": "*",
+      "defaultValue": "1.0.0",
       "replaces": "__LIMEMETA_VERSION__",
-      "description": "LimeMeta NuGet package version. Use * for the newest package, or pass a fixed version for production."
+      "description": "LimeMeta NuGet package version. The template defaults to the matching stable framework version."
     }
   },
   "primaryOutputs": [

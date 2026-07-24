@@ -4,6 +4,7 @@ using LimeMeta.Attributes;
 using LimeMeta.Configurations;
 using LimeMeta.Data;
 using LimeMeta.Models;
+using LimeMeta.Security;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -34,24 +35,9 @@ public sealed class UserLogic : BaseLogic<User>
     /// <param name="scopeFactory"></param>
     public UserLogic(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory) : base(loggerFactory, scopeFactory)
     {
-        AfterSelect += OnAfterSelect;
-
         BeforeInsert += OnBeforeInsert;
         AfterInsert += OnAfterInsert;
         BeforeDelete += OnBeforeDelete;
-    }
-
-    /// <summary>
-    /// OnAfterSelect
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void OnAfterSelect(object? sender, AfterSelectEventArgs<User> e)
-    {
-        foreach (var user in e.Objs)
-        {
-            user.Password = "*";
-        }
     }
 
     /// <summary>
@@ -61,9 +47,6 @@ public sealed class UserLogic : BaseLogic<User>
     /// <param name="args"></param>
     private void OnBeforeInsert(object? sender, BeforeInsertEventArgs<User> args)
     {
-        using var sc = args.LimeMeta.ScopeFactory.CreateScope();
-        var config = sc.ServiceProvider.GetRequiredService<LimeMetaConfiguration>();
-
         foreach (var user in args.Objs)
         {
             if (string.IsNullOrEmpty(user.Username))
@@ -77,9 +60,9 @@ public sealed class UserLogic : BaseLogic<User>
                 throw new Exception($"[{user.Username}]用户已存在");
             }
 
-            if (string.IsNullOrEmpty(user.Password))
+            if (string.IsNullOrWhiteSpace(user.PasswordHash))
             {
-                user.Password = config.DefaultUserPassword.GetMD5();
+                throw new Exception("用户密码哈希不能为空，请通过专用用户接口创建用户。");
             }
         }
     }
@@ -133,44 +116,24 @@ public sealed class UserLogic : BaseLogic<User>
     }
 
     /// <summary>
-    /// CryptPassword
-    /// </summary>
-    /// <param name="txt"></param>
-    /// <param name="salt"></param>
-    /// <returns></returns>
-    public static string Salt(string txt, string salt)
-    {
-        var hash = BCrypt.Net.BCrypt.HashPassword(txt, salt);
-        return hash[salt.Length..];
-    }
-
-    /// <summary>
-    /// VerifyPassword
-    /// </summary>
-    /// <param name="pwd"></param>
-    /// <param name="hash"></param>
-    /// <param name="salt"></param>
-    /// <returns></returns>
-    public static bool VerifyPassword(string pwd, string hash, string salt) => BCrypt.Net.BCrypt.Verify(pwd, $"{salt}{hash}");
-
-    /// <summary>
     /// ResetPassword
     /// </summary>
     /// <param name="meta"></param>
+    /// <param name="passwordHasher"></param>
     /// <param name="authUserId"></param>
     /// <param name="userId"></param>
+    /// <param name="newPassword"></param>
     /// <returns></returns>
-    public static string ResetPassword(ILimeMeta meta, Guid authUserId, Guid userId)
+    public static bool ResetPassword(
+        ILimeMeta meta,
+        ILimeMetaPasswordHasher passwordHasher,
+        Guid authUserId,
+        Guid userId,
+        string newPassword)
     {
-        using var sc = meta.ScopeFactory.CreateScope();
-        var config = sc.ServiceProvider.GetRequiredService<LimeMetaConfiguration>();
-
-        var perms = GetPerms(meta, authUserId);
-        var isAdmin = perms.Any(r => r.Name == config.AdminPerm);
-
-        if (!isAdmin)
+        if (!IsAdmin(meta, authUserId))
         {
-            throw new Exception("权限不足");
+            throw new UnauthorizedAccessException("只有管理员可以重置其他用户的密码。");
         }
 
         var user = meta.Query<User>().FirstOrDefault(r => r.Id == userId);
@@ -179,53 +142,41 @@ public sealed class UserLogic : BaseLogic<User>
             throw new Exception($"[{userId}]用户不存在");
         }
 
-        user.Password = user.Username.GetMD5();
-        meta.Update(new[] { user }, null, authUserId);
-
-        return user.Username;
+        user.PasswordHash = passwordHasher.HashPassword(newPassword);
+        meta.Update(new[] { user }, [nameof(User.PasswordHash)], authUserId);
+        return true;
     }
 
     /// <summary>
     /// ChangePassword
     /// </summary>
     /// <param name="meta"></param>
+    /// <param name="passwordHasher"></param>
     /// <param name="authUserId"></param>
-    /// <param name="userId"></param>
-    /// <param name="oldSalt"></param>
-    /// <param name="newHash"></param>
+    /// <param name="currentPassword"></param>
+    /// <param name="newPassword"></param>
     /// <returns></returns>
-    public static string ChangePassword(ILimeMeta meta, Guid authUserId, Guid userId, string oldSalt, string newHash)
+    public static bool ChangePassword(
+        ILimeMeta meta,
+        ILimeMetaPasswordHasher passwordHasher,
+        Guid authUserId,
+        string currentPassword,
+        string newPassword)
     {
-        using var sc = meta.ScopeFactory.CreateScope();
-        var config = sc.ServiceProvider.GetRequiredService<LimeMetaConfiguration>();
-
-        var isAdmin = IsAdmin(meta, authUserId);
-
-        if (!isAdmin && authUserId != userId)
-        {
-            throw new Exception("权限不足");
-        }
-
-        if (string.IsNullOrEmpty(newHash) || string.IsNullOrEmpty(oldSalt))
-        {
-            throw new Exception("密码不能为空");
-        }
-
-        var user = meta.Query<User>().Where(r => r.Id == userId).First();
+        var user = meta.Query<User>().Where(r => r.Id == authUserId).First();
         if (user == null)
         {
-            throw new Exception($"[{userId}]用户不存在");
+            throw new Exception($"[{authUserId}]用户不存在");
         }
 
-        if (!VerifyPassword(user.Password, oldSalt, config.Salt))
+        if (!passwordHasher.VerifyPassword(currentPassword, user.PasswordHash))
         {
-            throw new Exception($"密码验证失败");
+            throw new UnauthorizedAccessException("当前密码不正确。");
         }
 
-        user.Password = newHash;
-        meta.Update(new[] { user }, null, authUserId);
-
-        return Salt(newHash, config.Salt);
+        user.PasswordHash = passwordHasher.HashPassword(newPassword);
+        meta.Update(new[] { user }, [nameof(User.PasswordHash)], authUserId);
+        return true;
     }
 
     /// <summary>
@@ -276,19 +227,28 @@ public sealed class UserLogic : BaseLogic<User>
     /// Login
     /// </summary>
     /// <param name="meta"></param>
+    /// <param name="passwordHasher"></param>
     /// <param name="username"></param>
     /// <param name="password"></param>
     /// <param name="context"></param>
     /// <returns></returns>
-    public static LoginResult Login(ILimeMeta meta, string username, string password, object? context = null)
+    public static LoginResult Login(
+        ILimeMeta meta,
+        ILimeMetaPasswordHasher passwordHasher,
+        string username,
+        string password,
+        object? context = null)
     {
+        var resp = new LoginResult();
         if (BeforeLogin != null)
         {
             var args = new BeforeLoginEventArgs(meta, username, password, context);
             BeforeLogin.Invoke(null, args);
+            if (args.Cancel)
+            {
+                return resp;
+            }
         }
-
-        var resp = new LoginResult();
 
         var user = meta.Query<User>().FirstOrDefault(r => r.Username == username);
         if (user == null) return resp;
@@ -296,7 +256,7 @@ public sealed class UserLogic : BaseLogic<User>
         using var sc = meta.ScopeFactory.CreateScope();
         var config = sc.ServiceProvider.GetRequiredService<LimeMetaConfiguration>();
 
-        if (!VerifyPassword(user.Password!, password!, config.Salt)) return resp;
+        if (!passwordHasher.VerifyPassword(password, user.PasswordHash)) return resp;
 
         resp.Name = user.Name;
         resp.Token = GenerateJwt(config, user);
@@ -335,7 +295,6 @@ public sealed class UserLogic : BaseLogic<User>
     /// <returns></returns>
     public static string GenerateJwt(LimeMetaConfiguration config, User user, DateTime? expires = null, IEnumerable<Claim>? claims = null)
     {
-        var key = Encoding.UTF8.GetBytes(config.JwtSignKey);
         if (expires == null)
         {
             expires = DateTime.Now.AddMilliseconds(config.JwtExpires);

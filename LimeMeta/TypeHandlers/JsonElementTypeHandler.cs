@@ -11,7 +11,7 @@ namespace LimeMeta.TypeHandlers;
 /// <summary>
 /// JsonElementTypeHandler
 /// </summary>
-public class JsonElementTypeHandler : TypeHandler<JsonElement>
+internal sealed class JsonElementTypeHandler : TypeHandler<JsonElement>
 {
     public override JsonElement Deserialize(object value)
     {

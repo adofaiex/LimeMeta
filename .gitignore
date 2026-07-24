@@ -6,6 +6,9 @@ publish/
 .publish/
 .buildcheck/
 .template-smoke/
+.artifacts/
+.nuget/
+.tools/
 
 # Visual Studio
 .vs/
@@ -27,6 +30,7 @@ packages/
 
 # Coverage and test artifacts
 TestResult*/
+TestResults/
 *.coverage
 *.coveragexml
 coverage/

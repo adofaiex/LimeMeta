@@ -8,7 +8,7 @@ namespace LimeMeta.Files;
 /// <summary>
 /// 本地文件存储服务。
 /// </summary>
-public sealed class LocalFileStorageProvider : IFileStorageProvider
+internal sealed class LocalFileStorageProvider : IFileStorageProvider
 {
     /// <summary>
     /// ProviderName

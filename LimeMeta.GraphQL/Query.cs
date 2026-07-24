@@ -12,7 +12,7 @@ namespace LimeMeta.GraphQL;
 /// <summary>
 /// Query
 /// </summary>
-public class Query
+internal sealed class Query
 {
     private readonly ILogicManager _logicManager;
 

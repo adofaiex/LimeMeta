@@ -10,7 +10,7 @@ namespace LimeMeta.Files;
 /// <summary>
 /// pan123 CLI 调用器。
 /// </summary>
-public sealed class Pan123CliRunner
+internal sealed class Pan123CliRunner
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly LimeMetaConfiguration _config;

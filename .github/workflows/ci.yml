@@ -1,0 +1,147 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: 安装 .NET 10
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 10.0.x
+      - name: 还原
+        run: dotnet restore LimeMeta.sln
+      - name: 检查格式
+        if: runner.os == 'Linux'
+        run: dotnet format LimeMeta.sln --verify-no-changes --no-restore
+      - name: 构建（警告视为错误）
+        run: dotnet build LimeMeta.sln -c Release --no-restore -warnaserror
+      - name: 测试
+        run: dotnet test LimeMeta.sln -c Release --no-build --no-restore
+      - name: 检查已知漏洞
+        run: dotnet list LimeMeta.sln package --vulnerable --include-transitive
+
+  licenses:
+    name: 依赖许可证
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore LimeMeta.sln
+      - name: 安装许可证检查器
+        run: dotnet tool install --tool-path .tools dotnet-project-licenses --version 2.7.1
+      - name: 拒绝强 Copyleft 依赖
+        env:
+          DOTNET_ROLL_FORWARD: Major
+        run: >-
+          ./.tools/dotnet-project-licenses
+          --input LimeMeta.sln
+          --include-transitive
+          --use-project-assets-json
+          --forbidden-license-types eng/forbidden-licenses.json
+          --print false
+
+  secret-history:
+    name: 全历史秘密扫描
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - name: 扫描当前文件与完整 Git 历史
+        shell: pwsh
+        run: ./scripts/Test-Secrets.ps1
+
+  package-smoke:
+    name: NuGet 与模板验收
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore LimeMeta.sln
+      - run: dotnet pack LimeMeta/LimeMeta.csproj -c Release --no-restore -o .artifacts/packages
+      - run: dotnet pack LimeMeta.GraphQL/LimeMeta.GraphQL.csproj -c Release --no-restore -o .artifacts/packages
+      - run: dotnet pack LimeMeta.Templates.csproj -c Release --no-restore -o .artifacts/packages
+      - name: 审计包内容
+        shell: pwsh
+        run: ./scripts/Test-PackageContents.ps1 -PackageDirectory .artifacts/packages
+      - name: 安装模板并构建生成项目
+        shell: pwsh
+        run: ./scripts/Test-TemplatePackage.ps1 -PackageDirectory .artifacts/packages
+      - name: 保存验收包
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nuget-packages
+          path: .artifacts/packages/*
+          if-no-files-found: error
+
+  database-smoke:
+    name: MySQL 与 PostgreSQL
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: local-ci-password
+          MYSQL_DATABASE: limemeta_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -plocal-ci-password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: local-ci-password
+          POSTGRES_DB: limemeta_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d limemeta_ci"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore LimeMeta.sln
+      - run: dotnet build LimeMeta.sln -c Release --no-restore
+      - name: MySQL 冒烟测试
+        shell: pwsh
+        run: >-
+          ./scripts/Test-DatabaseSmoke.ps1
+          -DataType MySql
+          -ConnectionString 'Server=127.0.0.1;Port=3306;Database=limemeta_ci;Uid=root;Pwd=local-ci-password;Charset=utf8mb4;SslMode=None;'
+          -Port 5180
+      - name: PostgreSQL 冒烟测试
+        shell: pwsh
+        run: >-
+          ./scripts/Test-DatabaseSmoke.ps1
+          -DataType PostgreSQL
+          -ConnectionString 'Host=127.0.0.1;Port=5432;Database=limemeta_ci;Username=postgres;Password=local-ci-password;'
+          -Port 5181

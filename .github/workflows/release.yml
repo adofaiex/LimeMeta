@@ -1,0 +1,137 @@
+name: 发布
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  publish:
+    name: 验证、发布并创建 Release
+    runs-on: ubuntu-latest
+    environment: nuget.org
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: local-ci-password
+          MYSQL_DATABASE: limemeta_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -plocal-ci-password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: local-ci-password
+          POSTGRES_DB: limemeta_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d limemeta_ci"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - name: 检出完整历史
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - name: 安装 .NET 10
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 10.0.x
+      - name: 验证标签、main 与版本
+        shell: pwsh
+        run: ./scripts/Test-ReleaseVersion.ps1 -Tag '${{ github.ref_name }}' -Commit '${{ github.sha }}'
+      - name: 计算版本
+        id: version
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.Substring(1)
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+      - name: 还原
+        run: dotnet restore LimeMeta.sln
+      - name: 格式、构建与测试
+        run: |
+          dotnet format LimeMeta.sln --verify-no-changes --no-restore
+          dotnet build LimeMeta.sln -c Release --no-restore -warnaserror
+          dotnet test LimeMeta.sln -c Release --no-build --no-restore
+          dotnet list LimeMeta.sln package --vulnerable --include-transitive
+      - name: 全历史秘密扫描
+        shell: pwsh
+        run: ./scripts/Test-Secrets.ps1
+      - name: 依赖许可证检查
+        env:
+          DOTNET_ROLL_FORWARD: Major
+        run: |
+          dotnet tool install --tool-path .tools dotnet-project-licenses --version 2.7.1
+          ./.tools/dotnet-project-licenses --input LimeMeta.sln --include-transitive --use-project-assets-json --forbidden-license-types eng/forbidden-licenses.json --print false
+      - name: MySQL 冒烟测试
+        shell: pwsh
+        run: >-
+          ./scripts/Test-DatabaseSmoke.ps1
+          -DataType MySql
+          -ConnectionString 'Server=127.0.0.1;Port=3306;Database=limemeta_ci;Uid=root;Pwd=local-ci-password;Charset=utf8mb4;SslMode=None;'
+          -Port 5180
+      - name: PostgreSQL 冒烟测试
+        shell: pwsh
+        run: >-
+          ./scripts/Test-DatabaseSmoke.ps1
+          -DataType PostgreSQL
+          -ConnectionString 'Host=127.0.0.1;Port=5432;Database=limemeta_ci;Username=postgres;Password=local-ci-password;'
+          -Port 5181
+      - name: 只构建一次发布包
+        env:
+          CI: "true"
+        run: |
+          dotnet pack LimeMeta/LimeMeta.csproj -c Release --no-restore --no-build -o .artifacts/packages -p:PackageVersion=${{ steps.version.outputs.version }} -p:RepositoryCommit=${{ github.sha }}
+          dotnet pack LimeMeta.GraphQL/LimeMeta.GraphQL.csproj -c Release --no-restore --no-build -o .artifacts/packages -p:PackageVersion=${{ steps.version.outputs.version }} -p:RepositoryCommit=${{ github.sha }}
+          dotnet pack LimeMeta.Templates.csproj -c Release --no-restore --no-build -o .artifacts/packages -p:PackageVersion=${{ steps.version.outputs.version }} -p:RepositoryCommit=${{ github.sha }}
+      - name: 审计包与模板
+        shell: pwsh
+        run: |
+          ./scripts/Test-PackageContents.ps1 -PackageDirectory .artifacts/packages -Version '${{ steps.version.outputs.version }}'
+          ./scripts/Test-TemplatePackage.ps1 -PackageDirectory .artifacts/packages -Version '${{ steps.version.outputs.version }}'
+      - name: 生成 SBOM 与 SHA-256
+        shell: pwsh
+        run: |
+          ./scripts/New-Sbom.ps1 -OutputPath .artifacts/LimeMeta-${{ steps.version.outputs.version }}.spdx.json -Version '${{ steps.version.outputs.version }}' -Commit '${{ github.sha }}'
+          Get-ChildItem .artifacts/packages -File | Get-FileHash -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($_.Path))" } |
+            Set-Content .artifacts/SHA256SUMS -Encoding utf8NoBOM
+      - name: 生成构建来源证明
+        uses: actions/attest-build-provenance@96b4a1ef7235a096b17240c259729fdd70c83d45
+        with:
+          subject-path: .artifacts/packages/*
+      - name: 通过 NuGet.org OIDC 登录
+        id: nuget-login
+        uses: NuGet/login@ebc737b6fc418a6ca0073cf116ec8dc156d8b81e
+        with:
+          user: memsys-lizi
+      - name: 按依赖顺序发布
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push ".artifacts/packages/LimeMeta.${{ steps.version.outputs.version }}.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+          dotnet nuget push ".artifacts/packages/LimeMeta.GraphQL.${{ steps.version.outputs.version }}.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+          dotnet nuget push ".artifacts/packages/LimeMeta.Templates.${{ steps.version.outputs.version }}.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+      - name: 创建 GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "${{ github.ref_name }}"
+          .artifacts/packages/*
+          .artifacts/SHA256SUMS
+          .artifacts/LimeMeta-${{ steps.version.outputs.version }}.spdx.json
+          --verify-tag
+          --title "LimeMeta ${{ steps.version.outputs.version }}"
+          --generate-notes

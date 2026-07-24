@@ -1,0 +1,723 @@
+#nullable enable
+abstract LimeMeta.Data.BaseLimeMeta.Aggr<T>(FreeSql.ISelect<T!>! query, System.Collections.Generic.IEnumerable<LimeMeta.Data.AggrField!>! fields, System.Collections.Generic.IEnumerable<string!>? groups = null, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> Newtonsoft.Json.Linq.JArray!
+abstract LimeMeta.Data.BaseLimeMeta.Delete<T>(System.Linq.Expressions.Expression<System.Func<T!, bool>!>! exp, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+abstract LimeMeta.Data.BaseLimeMeta.Delete<T>(System.Type! modelType, System.Linq.Expressions.Expression<System.Func<T!, bool>!>! exp, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+abstract LimeMeta.Data.BaseLimeMeta.ExecSql(string! sql) -> void
+abstract LimeMeta.Data.BaseLimeMeta.Insert<T>(System.Collections.Generic.List<T!>! objs, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+abstract LimeMeta.Data.BaseLimeMeta.Insert<T>(System.Type! modelType, System.Collections.Generic.List<T!>! objs, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+abstract LimeMeta.Data.BaseLimeMeta.InsertAsync<T>(System.Collections.Generic.List<T!>! objs, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> System.Threading.Tasks.Task<int>!
+abstract LimeMeta.Data.BaseLimeMeta.Query<T>() -> FreeSql.ISelect<T!>!
+abstract LimeMeta.Data.BaseLimeMeta.Query<T>(System.Type! modelType) -> FreeSql.ISelect<T!>!
+abstract LimeMeta.Data.BaseLimeMeta.Select<T>(FreeSql.ISelect<T!>! query, LimeMeta.Data.PageModel! page, System.Collections.Generic.IEnumerable<LimeMeta.Data.IncludeField!>? includes = null, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> LimeMeta.Data.PageResult<T!>!
+abstract LimeMeta.Data.BaseLimeMeta.Update<T>(System.Collections.Generic.List<T!>! objs, System.Collections.Generic.IEnumerable<string!>? fields = null, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+abstract LimeMeta.Data.BaseLimeMeta.Update<T>(System.Type! modelType, System.Collections.Generic.List<T!>! objs, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+abstract LimeMeta.Data.BaseLimeMeta.UpdateSchema() -> void
+abstract LimeMeta.Logics.BaseLogic.InvokeAfterDelete<T>(LimeMeta.Logics.AfterDeleteEventArgs<T!>! args) -> void
+abstract LimeMeta.Logics.BaseLogic.InvokeAfterInsert<T>(LimeMeta.Logics.AfterInsertEventArgs<T!>! args) -> void
+abstract LimeMeta.Logics.BaseLogic.InvokeAfterSelect<T>(LimeMeta.Logics.AfterSelectEventArgs<T!>! args) -> void
+abstract LimeMeta.Logics.BaseLogic.InvokeAfterUpdate<T>(LimeMeta.Logics.AfterUpdateEventArgs<T!>! args) -> void
+abstract LimeMeta.Logics.BaseLogic.InvokeBeforeDelete<T>(LimeMeta.Logics.BeforeDeleteEventArgs<T!>! args) -> void
+abstract LimeMeta.Logics.BaseLogic.InvokeBeforeInsert<T>(LimeMeta.Logics.BeforeInsertEventArgs<T!>! args) -> void
+abstract LimeMeta.Logics.BaseLogic.InvokeBeforeSelect<T>(LimeMeta.Logics.BeforeSelectEventArgs<T!>! args) -> void
+abstract LimeMeta.Logics.BaseLogic.InvokeBeforeUpdate<T>(LimeMeta.Logics.BeforeUpdateEventArgs<T!>! args) -> void
+abstract LimeMeta.Logics.BaseLogic.InvokeCreated(LimeMeta.Logics.CreatedEventArgs! args) -> void
+abstract LimeMeta.Logics.BaseLogic.LogicModelType.get -> System.Type!
+const LimeMeta.AuditAction.Delete = "delete" -> string!
+const LimeMeta.AuditAction.Insert = "insert" -> string!
+const LimeMeta.AuditAction.Update = "update" -> string!
+const LimeMeta.Data.BaseLimeMeta.AfterUpdateSchemaSqlFile = "AfterUpdateSchema.sql" -> string!
+const LimeMeta.Data.BaseLimeMeta.BeforeUpdateSchemaSqlFile = "BeforeUpdateSchema.sql" -> string!
+const LimeMeta.Data.BaseLimeMeta.SeedPath = "Seed" -> string!
+const LimeMeta.Logics.ParentChildrenLogic.NamePropertyName = "Name" -> string!
+const LimeMeta.Logics.ParentChildrenLogic.PathSeparator = "." -> string!
+const LimeMeta.Logics.UserLogic.ClaimUserId = "meta-user-id" -> string!
+const LimeMeta.RoleName.Admin = "管理员" -> string!
+const LimeMeta.RoleName.Guest = "游客" -> string!
+LimeMeta.Attributes.IndexedAttribute
+LimeMeta.Attributes.IndexedAttribute.IndexedAttribute() -> void
+LimeMeta.AuditAction
+LimeMeta.Authorization.ILimeMetaAuthorizationService
+LimeMeta.Authorization.ILimeMetaAuthorizationService.EnsureAuthorized(LimeMeta.Data.ILimeMeta! meta, System.Guid userId, System.Type! modelType, LimeMeta.Authorization.LimeMetaOperation operation) -> void
+LimeMeta.Authorization.LimeMetaOperation
+LimeMeta.Authorization.LimeMetaOperation.Aggregate = 1 -> LimeMeta.Authorization.LimeMetaOperation
+LimeMeta.Authorization.LimeMetaOperation.Delete = 4 -> LimeMeta.Authorization.LimeMetaOperation
+LimeMeta.Authorization.LimeMetaOperation.Insert = 2 -> LimeMeta.Authorization.LimeMetaOperation
+LimeMeta.Authorization.LimeMetaOperation.Query = 0 -> LimeMeta.Authorization.LimeMetaOperation
+LimeMeta.Authorization.LimeMetaOperation.Update = 3 -> LimeMeta.Authorization.LimeMetaOperation
+LimeMeta.Configurations.FileStoreConfiguration
+LimeMeta.Configurations.FileStoreConfiguration.FileStoreConfiguration() -> void
+LimeMeta.Configurations.FileStoreConfiguration.Local.get -> LimeMeta.Configurations.LocalFileStoreConfiguration!
+LimeMeta.Configurations.FileStoreConfiguration.Local.set -> void
+LimeMeta.Configurations.FileStoreConfiguration.Pan123Cli.get -> LimeMeta.Configurations.Pan123CliFileStoreConfiguration!
+LimeMeta.Configurations.FileStoreConfiguration.Pan123Cli.set -> void
+LimeMeta.Configurations.FileStoreConfiguration.Provider.get -> string!
+LimeMeta.Configurations.FileStoreConfiguration.Provider.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration
+LimeMeta.Configurations.LimeMetaConfiguration.AdminPerm.get -> string!
+LimeMeta.Configurations.LimeMetaConfiguration.AdminPerm.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration.AdminUserName.get -> string!
+LimeMeta.Configurations.LimeMetaConfiguration.AdminUserName.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration.AdminUserPassword.get -> string!
+LimeMeta.Configurations.LimeMetaConfiguration.AdminUserPassword.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration.AutoSyncSchema.get -> bool
+LimeMeta.Configurations.LimeMetaConfiguration.AutoSyncSchema.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration.ConnectionString.get -> string!
+LimeMeta.Configurations.LimeMetaConfiguration.ConnectionString.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration.DataType.get -> FreeSql.DataType
+LimeMeta.Configurations.LimeMetaConfiguration.DataType.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration.FileStore.get -> LimeMeta.Configurations.FileStoreConfiguration!
+LimeMeta.Configurations.LimeMetaConfiguration.FileStore.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration.FileStoreCount.get -> int
+LimeMeta.Configurations.LimeMetaConfiguration.FileStoreCount.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration.FileStorePath.get -> string!
+LimeMeta.Configurations.LimeMetaConfiguration.FileStorePath.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration.GuestPerm.get -> string!
+LimeMeta.Configurations.LimeMetaConfiguration.GuestPerm.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration.JwtExpires.get -> long
+LimeMeta.Configurations.LimeMetaConfiguration.JwtExpires.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration.JwtSignKey.get -> string!
+LimeMeta.Configurations.LimeMetaConfiguration.JwtSignKey.set -> void
+LimeMeta.Configurations.LimeMetaConfiguration.LimeMetaConfiguration() -> void
+LimeMeta.Configurations.LimeMetaConfiguration.LoadSeedOnStartup.get -> bool
+LimeMeta.Configurations.LimeMetaConfiguration.LoadSeedOnStartup.set -> void
+LimeMeta.Configurations.LocalFileStoreConfiguration
+LimeMeta.Configurations.LocalFileStoreConfiguration.Count.get -> int?
+LimeMeta.Configurations.LocalFileStoreConfiguration.Count.set -> void
+LimeMeta.Configurations.LocalFileStoreConfiguration.LocalFileStoreConfiguration() -> void
+LimeMeta.Configurations.LocalFileStoreConfiguration.Path.get -> string?
+LimeMeta.Configurations.LocalFileStoreConfiguration.Path.set -> void
+LimeMeta.Configurations.Pan123CliFileStoreConfiguration
+LimeMeta.Configurations.Pan123CliFileStoreConfiguration.Command.get -> string!
+LimeMeta.Configurations.Pan123CliFileStoreConfiguration.Command.set -> void
+LimeMeta.Configurations.Pan123CliFileStoreConfiguration.Overwrite.get -> bool
+LimeMeta.Configurations.Pan123CliFileStoreConfiguration.Overwrite.set -> void
+LimeMeta.Configurations.Pan123CliFileStoreConfiguration.Pan123CliFileStoreConfiguration() -> void
+LimeMeta.Configurations.Pan123CliFileStoreConfiguration.ParentFileId.get -> long
+LimeMeta.Configurations.Pan123CliFileStoreConfiguration.ParentFileId.set -> void
+LimeMeta.Configurations.Pan123CliFileStoreConfiguration.TempPath.get -> string!
+LimeMeta.Configurations.Pan123CliFileStoreConfiguration.TempPath.set -> void
+LimeMeta.Configurations.Pan123CliFileStoreConfiguration.UseDirectLink.get -> bool
+LimeMeta.Configurations.Pan123CliFileStoreConfiguration.UseDirectLink.set -> void
+LimeMeta.Data.AggrField
+LimeMeta.Data.AggrField.AggrField() -> void
+LimeMeta.Data.AggrField.Name.get -> string!
+LimeMeta.Data.AggrField.Name.set -> void
+LimeMeta.Data.AggrField.Type.get -> LimeMeta.Data.AggrType
+LimeMeta.Data.AggrField.Type.set -> void
+LimeMeta.Data.AggrType
+LimeMeta.Data.AggrType.Avg = 1 -> LimeMeta.Data.AggrType
+LimeMeta.Data.AggrType.Count = 0 -> LimeMeta.Data.AggrType
+LimeMeta.Data.AggrType.Max = 3 -> LimeMeta.Data.AggrType
+LimeMeta.Data.AggrType.Min = 2 -> LimeMeta.Data.AggrType
+LimeMeta.Data.AggrType.Sum = 4 -> LimeMeta.Data.AggrType
+LimeMeta.Data.BaseLimeMeta
+LimeMeta.Data.BaseLimeMeta.BaseLimeMeta(Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory, Microsoft.Extensions.DependencyInjection.IServiceScopeFactory! scopeFactory, LimeMeta.Logics.ILogicManager! logicManager, LimeMeta.Security.ILimeMetaPasswordHasher! passwordHasher) -> void
+LimeMeta.Data.BaseLimeMeta.GetSeedPath() -> string!
+LimeMeta.Data.BaseLimeMeta.InitUserRolePerm() -> System.Guid
+LimeMeta.Data.BaseLimeMeta.Insert<T>(System.Collections.Generic.IEnumerable<T!>! objs, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+LimeMeta.Data.BaseLimeMeta.LoadSeed() -> void
+LimeMeta.Data.BaseLimeMeta.LoadSeed<T>(System.Guid userId) -> void
+LimeMeta.Data.BaseLimeMeta.Logger.get -> Microsoft.Extensions.Logging.ILogger!
+LimeMeta.Data.BaseLimeMeta.LogicManager.get -> LimeMeta.Logics.ILogicManager!
+LimeMeta.Data.BaseLimeMeta.PasswordHasher.get -> LimeMeta.Security.ILimeMetaPasswordHasher!
+LimeMeta.Data.BaseLimeMeta.ScopeFactory.get -> Microsoft.Extensions.DependencyInjection.IServiceScopeFactory!
+LimeMeta.Data.BaseLimeMeta.Update<T>(System.Collections.Generic.IEnumerable<Newtonsoft.Json.Linq.JObject!>! objs, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+LimeMeta.Data.BaseLimeMeta.Update<T>(System.Collections.Generic.IEnumerable<T!>! objs, System.Collections.Generic.IEnumerable<string!>? fields = null, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+LimeMeta.Data.Extensions
+LimeMeta.Data.ILimeMeta
+LimeMeta.Data.ILimeMeta.Aggr<T>(FreeSql.ISelect<T!>! query, System.Collections.Generic.IEnumerable<LimeMeta.Data.AggrField!>! fields, System.Collections.Generic.IEnumerable<string!>? groups = null, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> Newtonsoft.Json.Linq.JArray!
+LimeMeta.Data.ILimeMeta.Delete<T>(System.Linq.Expressions.Expression<System.Func<T!, bool>!>! exp, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+LimeMeta.Data.ILimeMeta.Delete<T>(System.Type! modelType, System.Linq.Expressions.Expression<System.Func<T!, bool>!>! exp, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+LimeMeta.Data.ILimeMeta.Insert<T>(System.Collections.Generic.IEnumerable<T!>! objs, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+LimeMeta.Data.ILimeMeta.Insert<T>(System.Collections.Generic.List<T!>! objs, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+LimeMeta.Data.ILimeMeta.Insert<T>(System.Type! modelType, System.Collections.Generic.List<T!>! objs, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+LimeMeta.Data.ILimeMeta.InsertAsync<T>(System.Collections.Generic.List<T!>! objs, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> System.Threading.Tasks.Task<int>!
+LimeMeta.Data.ILimeMeta.LoadSeed() -> void
+LimeMeta.Data.ILimeMeta.Logger.get -> Microsoft.Extensions.Logging.ILogger!
+LimeMeta.Data.ILimeMeta.LogicManager.get -> LimeMeta.Logics.ILogicManager!
+LimeMeta.Data.ILimeMeta.Query<T>() -> FreeSql.ISelect<T!>!
+LimeMeta.Data.ILimeMeta.Query<T>(System.Type! modelType) -> FreeSql.ISelect<T!>!
+LimeMeta.Data.ILimeMeta.ScopeFactory.get -> Microsoft.Extensions.DependencyInjection.IServiceScopeFactory!
+LimeMeta.Data.ILimeMeta.Select<T>(FreeSql.ISelect<T!>! query, LimeMeta.Data.PageModel! page, System.Collections.Generic.IEnumerable<LimeMeta.Data.IncludeField!>? includes = null, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> LimeMeta.Data.PageResult<T!>!
+LimeMeta.Data.ILimeMeta.Update<T>(System.Collections.Generic.IEnumerable<Newtonsoft.Json.Linq.JObject!>! objs, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+LimeMeta.Data.ILimeMeta.Update<T>(System.Collections.Generic.IEnumerable<T!>! objs, System.Collections.Generic.IEnumerable<string!>? fields = null, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+LimeMeta.Data.ILimeMeta.Update<T>(System.Collections.Generic.List<T!>! objs, System.Collections.Generic.IEnumerable<string!>? fields = null, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+LimeMeta.Data.ILimeMeta.Update<T>(System.Type! modelType, System.Collections.Generic.List<T!>! objs, System.Guid? userId = null, bool enableLogic = true, object? context = null) -> int
+LimeMeta.Data.ILimeMeta.UpdateSchema() -> void
+LimeMeta.Data.IncludeField
+LimeMeta.Data.IncludeField.Childs.get -> System.Collections.Generic.List<LimeMeta.Data.IncludeField!>!
+LimeMeta.Data.IncludeField.Childs.set -> void
+LimeMeta.Data.IncludeField.IncludeField() -> void
+LimeMeta.Data.IncludeField.Name.get -> string!
+LimeMeta.Data.IncludeField.Name.set -> void
+LimeMeta.Data.IncludeField.Type.get -> LimeMeta.Data.IncludeFieldType
+LimeMeta.Data.IncludeField.Type.set -> void
+LimeMeta.Data.IncludeFieldType
+LimeMeta.Data.IncludeFieldType.List = 1 -> LimeMeta.Data.IncludeFieldType
+LimeMeta.Data.IncludeFieldType.Object = 0 -> LimeMeta.Data.IncludeFieldType
+LimeMeta.Data.PageModel
+LimeMeta.Data.PageModel.Index.get -> int
+LimeMeta.Data.PageModel.Index.set -> void
+LimeMeta.Data.PageModel.PageModel() -> void
+LimeMeta.Data.PageModel.Size.get -> int
+LimeMeta.Data.PageModel.Size.set -> void
+LimeMeta.Data.PageResult<T>
+LimeMeta.Data.PageResult<T>.Index.get -> int
+LimeMeta.Data.PageResult<T>.Index.set -> void
+LimeMeta.Data.PageResult<T>.Items.get -> System.Collections.Generic.IEnumerable<T>!
+LimeMeta.Data.PageResult<T>.Items.set -> void
+LimeMeta.Data.PageResult<T>.PageResult() -> void
+LimeMeta.Data.PageResult<T>.Size.get -> int
+LimeMeta.Data.PageResult<T>.Size.set -> void
+LimeMeta.Data.PageResult<T>.Total.get -> int
+LimeMeta.Data.PageResult<T>.Total.set -> void
+LimeMeta.Extensions
+LimeMeta.Files.FileStorageOpenResult
+LimeMeta.Files.FileStorageOpenResult.FilePath.get -> string?
+LimeMeta.Files.FileStorageOpenResult.FilePath.set -> void
+LimeMeta.Files.FileStorageOpenResult.FileStorageOpenResult() -> void
+LimeMeta.Files.FileStorageOpenResult.RedirectUrl.get -> string?
+LimeMeta.Files.FileStorageOpenResult.RedirectUrl.set -> void
+LimeMeta.Files.FileStorageSaveResult
+LimeMeta.Files.FileStorageSaveResult.FileStorageSaveResult() -> void
+LimeMeta.Files.FileStorageSaveResult.Hash.get -> string!
+LimeMeta.Files.FileStorageSaveResult.Hash.set -> void
+LimeMeta.Files.FileStorageSaveResult.Meta.get -> string?
+LimeMeta.Files.FileStorageSaveResult.Meta.set -> void
+LimeMeta.Files.FileStorageSaveResult.Provider.get -> string!
+LimeMeta.Files.FileStorageSaveResult.Provider.set -> void
+LimeMeta.Files.FileStorageSaveResult.ProviderId.get -> string?
+LimeMeta.Files.FileStorageSaveResult.ProviderId.set -> void
+LimeMeta.Files.FileStorageSaveResult.ProviderPath.get -> string?
+LimeMeta.Files.FileStorageSaveResult.ProviderPath.set -> void
+LimeMeta.Files.FileStorageSaveResult.Real.get -> string?
+LimeMeta.Files.FileStorageSaveResult.Real.set -> void
+LimeMeta.Files.FileStorageSaveResult.Size.get -> long
+LimeMeta.Files.FileStorageSaveResult.Size.set -> void
+LimeMeta.Files.FileStorageSaveResult.Store.get -> int
+LimeMeta.Files.FileStorageSaveResult.Store.set -> void
+LimeMeta.Files.FileStorageSaveResult.Url.get -> string?
+LimeMeta.Files.FileStorageSaveResult.Url.set -> void
+LimeMeta.Files.IFileStorageProvider
+LimeMeta.Files.IFileStorageProvider.DeleteAsync(LimeMeta.Models.FileInfo! info, System.Threading.CancellationToken ct) -> System.Threading.Tasks.Task!
+LimeMeta.Files.IFileStorageProvider.Name.get -> string!
+LimeMeta.Files.IFileStorageProvider.OpenAsync(LimeMeta.Models.FileInfo! info, System.Threading.CancellationToken ct) -> System.Threading.Tasks.Task<LimeMeta.Files.FileStorageOpenResult!>!
+LimeMeta.Files.IFileStorageProvider.SaveAsync(System.IO.Stream! stream, string! fileName, string? contentType, long size, System.Threading.CancellationToken ct) -> System.Threading.Tasks.Task<LimeMeta.Files.FileStorageSaveResult!>!
+LimeMeta.Files.IFileStorageProviderResolver
+LimeMeta.Files.IFileStorageProviderResolver.Current.get -> LimeMeta.Files.IFileStorageProvider!
+LimeMeta.Files.IFileStorageProviderResolver.Get(string? name) -> LimeMeta.Files.IFileStorageProvider!
+LimeMeta.Logics.AfterDeleteEventArgs<T>
+LimeMeta.Logics.AfterDeleteEventArgs<T>.AfterDeleteEventArgs(LimeMeta.Data.ILimeMeta! meta, System.Type! modelType, System.Collections.Generic.List<T!>! obj, System.Guid? userId, object? context) -> void
+LimeMeta.Logics.AfterDeleteEventArgs<T>.Objs.get -> System.Collections.Generic.List<T!>!
+LimeMeta.Logics.AfterInsertEventArgs<T>
+LimeMeta.Logics.AfterInsertEventArgs<T>.AfterInsertEventArgs(LimeMeta.Data.ILimeMeta! meta, System.Type! modelType, System.Collections.Generic.List<T!>! objs, System.Guid? userId, object? context) -> void
+LimeMeta.Logics.AfterInsertEventArgs<T>.Objs.get -> System.Collections.Generic.List<T!>!
+LimeMeta.Logics.AfterSelectEventArgs<T>
+LimeMeta.Logics.AfterSelectEventArgs<T>.AfterSelectEventArgs(LimeMeta.Data.ILimeMeta! meta, System.Type! modelType, System.Collections.Generic.List<T!>! objs, System.Guid? userId, object? context) -> void
+LimeMeta.Logics.AfterSelectEventArgs<T>.Objs.get -> System.Collections.Generic.List<T!>!
+LimeMeta.Logics.AfterUpdateEventArgs<T>
+LimeMeta.Logics.AfterUpdateEventArgs<T>.AfterUpdateEventArgs(LimeMeta.Data.ILimeMeta! meta, System.Type! modelType, System.Collections.Generic.Dictionary<T!, T!>! objs, System.Guid? userId, object? context) -> void
+LimeMeta.Logics.AfterUpdateEventArgs<T>.Objs.get -> System.Collections.Generic.Dictionary<T!, T!>!
+LimeMeta.Logics.BaseEventArgs
+LimeMeta.Logics.BaseEventArgs.BaseEventArgs(LimeMeta.Data.ILimeMeta! meta, System.Type! modelType, System.Guid? userId, object? context) -> void
+LimeMeta.Logics.BaseEventArgs.Context.get -> object?
+LimeMeta.Logics.BaseEventArgs.LimeMeta.get -> LimeMeta.Data.ILimeMeta!
+LimeMeta.Logics.BaseEventArgs.ModelType.get -> System.Type!
+LimeMeta.Logics.BaseEventArgs.UserId.get -> System.Guid?
+LimeMeta.Logics.BaseLogic
+LimeMeta.Logics.BaseLogic.BaseLogic(Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory, Microsoft.Extensions.DependencyInjection.IServiceScopeFactory! scopeFactory) -> void
+LimeMeta.Logics.BaseLogic.Logger.get -> Microsoft.Extensions.Logging.ILogger!
+LimeMeta.Logics.BaseLogic.Order.get -> float
+LimeMeta.Logics.BaseLogic.Order.set -> void
+LimeMeta.Logics.BaseLogic.ScopeFactory.get -> Microsoft.Extensions.DependencyInjection.IServiceScopeFactory!
+LimeMeta.Logics.BaseLogic<T>
+LimeMeta.Logics.BaseLogic<T>.AfterDelete -> System.EventHandler<LimeMeta.Logics.AfterDeleteEventArgs<T!>!>?
+LimeMeta.Logics.BaseLogic<T>.AfterInsert -> System.EventHandler<LimeMeta.Logics.AfterInsertEventArgs<T!>!>?
+LimeMeta.Logics.BaseLogic<T>.AfterSelect -> System.EventHandler<LimeMeta.Logics.AfterSelectEventArgs<T!>!>?
+LimeMeta.Logics.BaseLogic<T>.AfterUpdate -> System.EventHandler<LimeMeta.Logics.AfterUpdateEventArgs<T!>!>?
+LimeMeta.Logics.BaseLogic<T>.BaseLogic(Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory, Microsoft.Extensions.DependencyInjection.IServiceScopeFactory! scopeFactory) -> void
+LimeMeta.Logics.BaseLogic<T>.BeforeDelete -> System.EventHandler<LimeMeta.Logics.BeforeDeleteEventArgs<T!>!>?
+LimeMeta.Logics.BaseLogic<T>.BeforeInsert -> System.EventHandler<LimeMeta.Logics.BeforeInsertEventArgs<T!>!>?
+LimeMeta.Logics.BaseLogic<T>.BeforeSelect -> System.EventHandler<LimeMeta.Logics.BeforeSelectEventArgs<T!>!>?
+LimeMeta.Logics.BaseLogic<T>.BeforeUpdate -> System.EventHandler<LimeMeta.Logics.BeforeUpdateEventArgs<T!>!>?
+LimeMeta.Logics.BaseLogic<T>.Created -> System.EventHandler<LimeMeta.Logics.CreatedEventArgs!>?
+LimeMeta.Logics.BeforeDeleteEventArgs<T>
+LimeMeta.Logics.BeforeDeleteEventArgs<T>.BeforeDeleteEventArgs(LimeMeta.Data.ILimeMeta! meta, System.Type! modelType, System.Collections.Generic.List<T!>! objs, System.Guid? userId, object? context) -> void
+LimeMeta.Logics.BeforeDeleteEventArgs<T>.Objs.get -> System.Collections.Generic.List<T!>!
+LimeMeta.Logics.BeforeInsertEventArgs<T>
+LimeMeta.Logics.BeforeInsertEventArgs<T>.BeforeInsertEventArgs(LimeMeta.Data.ILimeMeta! meta, System.Type! modelType, System.Collections.Generic.List<T!>! objs, System.Guid? userId, object? context) -> void
+LimeMeta.Logics.BeforeInsertEventArgs<T>.Objs.get -> System.Collections.Generic.List<T!>!
+LimeMeta.Logics.BeforeSelectEventArgs<T>
+LimeMeta.Logics.BeforeSelectEventArgs<T>.BeforeSelectEventArgs(LimeMeta.Data.ILimeMeta! meta, System.Type! modelType, FreeSql.ISelect<T!>! q, System.Guid? userId, object? context) -> void
+LimeMeta.Logics.BeforeSelectEventArgs<T>.Query.get -> FreeSql.ISelect<T!>!
+LimeMeta.Logics.BeforeSelectEventArgs<T>.Query.set -> void
+LimeMeta.Logics.BeforeUpdateEventArgs<T>
+LimeMeta.Logics.BeforeUpdateEventArgs<T>.BeforeUpdateEventArgs(LimeMeta.Data.ILimeMeta! meta, System.Type! modelType, System.Collections.Generic.Dictionary<T!, T!>! objs, System.Guid? userId, object? context) -> void
+LimeMeta.Logics.BeforeUpdateEventArgs<T>.Objs.get -> System.Collections.Generic.Dictionary<T!, T!>!
+LimeMeta.Logics.CreatedEventArgs
+LimeMeta.Logics.CreatedEventArgs.CreatedEventArgs(LimeMeta.Logics.ILogicManager! logicManager) -> void
+LimeMeta.Logics.CreatedEventArgs.LogicManager.get -> LimeMeta.Logics.ILogicManager!
+LimeMeta.Logics.DeptLogic
+LimeMeta.Logics.DeptLogic.DeptLogic(Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory, Microsoft.Extensions.DependencyInjection.IServiceScopeFactory! scopeFactory) -> void
+LimeMeta.Logics.Extensions
+LimeMeta.Logics.FileInfoLogic
+LimeMeta.Logics.FileInfoLogic.FileInfoLogic(Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory, Microsoft.Extensions.DependencyInjection.IServiceScopeFactory! scopeFactory) -> void
+LimeMeta.Logics.ILogic
+LimeMeta.Logics.ILogic.LogicModelType.get -> System.Type!
+LimeMeta.Logics.ILogic.Order.get -> float
+LimeMeta.Logics.ILogicManager
+LimeMeta.Logics.ILogicManager.GetLogic<T>() -> T!
+LimeMeta.Logics.ILogicManager.GetModelDtoType(System.Type! modelType) -> System.Type!
+LimeMeta.Logics.ILogicManager.Logics.get -> System.Collections.Generic.IEnumerable<LimeMeta.Logics.BaseLogic!>!
+LimeMeta.Logics.ILogicManager.ModelMapper.get -> AutoMapper.IMapper!
+LimeMeta.Logics.ILogicManager.ModelTypes.get -> System.Collections.Generic.IEnumerable<System.Type!>!
+LimeMeta.Logics.ILogicManager.RaiseAfterDeleteEvent<T>(LimeMeta.Logics.AfterDeleteEventArgs<T!>! args) -> void
+LimeMeta.Logics.ILogicManager.RaiseAfterInsertEvent<T>(LimeMeta.Logics.AfterInsertEventArgs<T!>! args) -> void
+LimeMeta.Logics.ILogicManager.RaiseAfterSelectEvent<T>(LimeMeta.Logics.AfterSelectEventArgs<T!>! args) -> void
+LimeMeta.Logics.ILogicManager.RaiseAfterUpdateEvent<T>(LimeMeta.Logics.AfterUpdateEventArgs<T!>! args) -> void
+LimeMeta.Logics.ILogicManager.RaiseBeforeDeleteEvent<T>(LimeMeta.Logics.BeforeDeleteEventArgs<T!>! args) -> void
+LimeMeta.Logics.ILogicManager.RaiseBeforeInsertEvent<T>(LimeMeta.Logics.BeforeInsertEventArgs<T!>! args) -> void
+LimeMeta.Logics.ILogicManager.RaiseBeforeSelectEvent<T>(LimeMeta.Logics.BeforeSelectEventArgs<T!>! args) -> void
+LimeMeta.Logics.ILogicManager.RaiseBeforeUpdateEvent<T>(LimeMeta.Logics.BeforeUpdateEventArgs<T!>! args) -> void
+LimeMeta.Logics.ILogicManager.RegisterAssembly(System.Reflection.Assembly! assembly, System.IServiceProvider! serviceProvider) -> void
+LimeMeta.Logics.LimeMetaModuleAssembly
+LimeMeta.Logics.LimeMetaModuleAssembly.Assembly.get -> System.Reflection.Assembly!
+LimeMeta.Logics.LimeMetaModuleAssembly.LimeMetaModuleAssembly(System.Reflection.Assembly! assembly) -> void
+LimeMeta.Logics.LoginResult
+LimeMeta.Logics.LoginResult.LoginResult() -> void
+LimeMeta.Logics.LoginResult.Name.get -> string?
+LimeMeta.Logics.LoginResult.Name.set -> void
+LimeMeta.Logics.LoginResult.Token.get -> string?
+LimeMeta.Logics.LoginResult.Token.set -> void
+LimeMeta.Logics.ParentChildrenLogic
+LimeMeta.Logics.ParentChildrenLogic.ParentChildrenLogic(Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory, Microsoft.Extensions.DependencyInjection.IServiceScopeFactory! scopeFactory) -> void
+LimeMeta.Logics.UserLogic
+LimeMeta.Logics.UserLogic.AfterLoginEventArgs
+LimeMeta.Logics.UserLogic.AfterLoginEventArgs.AfterLoginEventArgs(LimeMeta.Data.ILimeMeta! meta, LimeMeta.Models.User! user, string! token, object? context = null) -> void
+LimeMeta.Logics.UserLogic.AfterLoginEventArgs.Context.get -> object?
+LimeMeta.Logics.UserLogic.AfterLoginEventArgs.LimeMeta.get -> LimeMeta.Data.ILimeMeta!
+LimeMeta.Logics.UserLogic.AfterLoginEventArgs.Token.get -> string!
+LimeMeta.Logics.UserLogic.AfterLoginEventArgs.User.get -> LimeMeta.Models.User!
+LimeMeta.Logics.UserLogic.BeforeLoginEventArgs
+LimeMeta.Logics.UserLogic.BeforeLoginEventArgs.BeforeLoginEventArgs(LimeMeta.Data.ILimeMeta! meta, string! userName, string! password, object? context = null) -> void
+LimeMeta.Logics.UserLogic.BeforeLoginEventArgs.Cancel.get -> bool
+LimeMeta.Logics.UserLogic.BeforeLoginEventArgs.Cancel.set -> void
+LimeMeta.Logics.UserLogic.BeforeLoginEventArgs.Context.get -> object?
+LimeMeta.Logics.UserLogic.BeforeLoginEventArgs.LimeMeta.get -> LimeMeta.Data.ILimeMeta!
+LimeMeta.Logics.UserLogic.BeforeLoginEventArgs.Password.get -> string!
+LimeMeta.Logics.UserLogic.BeforeLoginEventArgs.UserName.get -> string!
+LimeMeta.Logics.UserLogic.GeneratingJwtEventArgs
+LimeMeta.Logics.UserLogic.GeneratingJwtEventArgs.GeneratingJwtEventArgs(FastEndpoints.Security.JwtCreationOptions! opt) -> void
+LimeMeta.Logics.UserLogic.GeneratingJwtEventArgs.Options.get -> FastEndpoints.Security.JwtCreationOptions!
+LimeMeta.Logics.UserLogic.UserLogic(Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory, Microsoft.Extensions.DependencyInjection.IServiceScopeFactory! scopeFactory) -> void
+LimeMeta.Models.AppKey
+LimeMeta.Models.AppKey.AppKey() -> void
+LimeMeta.Models.AppKey.Expired.get -> long
+LimeMeta.Models.AppKey.Expired.set -> void
+LimeMeta.Models.AppKey.Key.get -> System.Guid
+LimeMeta.Models.AppKey.Key.set -> void
+LimeMeta.Models.AppKey.Name.get -> string!
+LimeMeta.Models.AppKey.Name.set -> void
+LimeMeta.Models.AppKey.User.get -> LimeMeta.Models.User?
+LimeMeta.Models.AppKey.User.set -> void
+LimeMeta.Models.AppKey.UserId.get -> System.Guid
+LimeMeta.Models.AppKey.UserId.set -> void
+LimeMeta.Models.AppKeyDto
+LimeMeta.Models.AppKeyDto.AppKeyDto() -> void
+LimeMeta.Models.AppKeyDto.Expired.get -> long
+LimeMeta.Models.AppKeyDto.Expired.set -> void
+LimeMeta.Models.AppKeyDto.Name.get -> string!
+LimeMeta.Models.AppKeyDto.Name.set -> void
+LimeMeta.Models.AppKeyDto.UserId.get -> System.Guid
+LimeMeta.Models.AppKeyDto.UserId.set -> void
+LimeMeta.Models.BaseAudit
+LimeMeta.Models.BaseAudit.BaseAudit() -> void
+LimeMeta.Models.BaseAudit.Created.get -> long
+LimeMeta.Models.BaseAudit.Created.set -> void
+LimeMeta.Models.BaseAudit.Creator.get -> LimeMeta.Models.User?
+LimeMeta.Models.BaseAudit.Creator.set -> void
+LimeMeta.Models.BaseAudit.CreatorId.get -> System.Guid?
+LimeMeta.Models.BaseAudit.CreatorId.set -> void
+LimeMeta.Models.BaseAudit.Modifier.get -> LimeMeta.Models.User?
+LimeMeta.Models.BaseAudit.Modifier.set -> void
+LimeMeta.Models.BaseAudit.ModifierId.get -> System.Guid?
+LimeMeta.Models.BaseAudit.ModifierId.set -> void
+LimeMeta.Models.BaseAudit.Updated.get -> long
+LimeMeta.Models.BaseAudit.Updated.set -> void
+LimeMeta.Models.BaseDto
+LimeMeta.Models.BaseDto.BaseDto() -> void
+LimeMeta.Models.BaseDto.Id.get -> System.Guid
+LimeMeta.Models.BaseDto.Id.set -> void
+LimeMeta.Models.BaseObject
+LimeMeta.Models.BaseObject.BaseObject() -> void
+LimeMeta.Models.BaseObject.Clone() -> object!
+LimeMeta.Models.BaseObject.Id.get -> System.Guid
+LimeMeta.Models.BaseObject.Id.set -> void
+LimeMeta.Models.BaseObject.Ver.get -> long
+LimeMeta.Models.BaseObject.Ver.set -> void
+LimeMeta.Models.BaseParentChildren<T>
+LimeMeta.Models.BaseParentChildren<T>.BaseParentChildren() -> void
+LimeMeta.Models.BaseParentChildren<T>.Children.get -> System.Collections.Generic.List<T!>!
+LimeMeta.Models.BaseParentChildren<T>.Children.set -> void
+LimeMeta.Models.BaseParentChildren<T>.NamePath.get -> string?
+LimeMeta.Models.BaseParentChildren<T>.NamePath.set -> void
+LimeMeta.Models.BaseParentChildren<T>.Parent.get -> T?
+LimeMeta.Models.BaseParentChildren<T>.Parent.set -> void
+LimeMeta.Models.BaseParentChildren<T>.ParentId.get -> System.Guid?
+LimeMeta.Models.BaseParentChildren<T>.ParentId.set -> void
+LimeMeta.Models.BaseParentChildren<T>.Path.get -> string?
+LimeMeta.Models.BaseParentChildren<T>.Path.set -> void
+LimeMeta.Models.BaseParentChildrenDto
+LimeMeta.Models.BaseParentChildrenDto.BaseParentChildrenDto() -> void
+LimeMeta.Models.BaseParentChildrenDto.ParentId.get -> System.Guid?
+LimeMeta.Models.BaseParentChildrenDto.ParentId.set -> void
+LimeMeta.Models.Dept
+LimeMeta.Models.Dept.Address.get -> string?
+LimeMeta.Models.Dept.Address.set -> void
+LimeMeta.Models.Dept.Alias.get -> string?
+LimeMeta.Models.Dept.Alias.set -> void
+LimeMeta.Models.Dept.Avatar.get -> string?
+LimeMeta.Models.Dept.Avatar.set -> void
+LimeMeta.Models.Dept.Dept() -> void
+LimeMeta.Models.Dept.Email.get -> string?
+LimeMeta.Models.Dept.Email.set -> void
+LimeMeta.Models.Dept.Name.get -> string?
+LimeMeta.Models.Dept.Name.set -> void
+LimeMeta.Models.Dept.Note.get -> string?
+LimeMeta.Models.Dept.Note.set -> void
+LimeMeta.Models.Dept.OrgType.get -> int?
+LimeMeta.Models.Dept.OrgType.set -> void
+LimeMeta.Models.Dept.Phone.get -> string?
+LimeMeta.Models.Dept.Phone.set -> void
+LimeMeta.Models.Dept.Roles.get -> System.Collections.Generic.List<LimeMeta.Models.Role!>!
+LimeMeta.Models.Dept.Roles.set -> void
+LimeMeta.Models.Dept.Sn.get -> int
+LimeMeta.Models.Dept.Sn.set -> void
+LimeMeta.Models.Dept.Users.get -> System.Collections.Generic.List<LimeMeta.Models.User!>!
+LimeMeta.Models.Dept.Users.set -> void
+LimeMeta.Models.DeptDto
+LimeMeta.Models.DeptDto.Address.get -> string?
+LimeMeta.Models.DeptDto.Address.set -> void
+LimeMeta.Models.DeptDto.Alias.get -> string?
+LimeMeta.Models.DeptDto.Alias.set -> void
+LimeMeta.Models.DeptDto.Avatar.get -> string?
+LimeMeta.Models.DeptDto.Avatar.set -> void
+LimeMeta.Models.DeptDto.DeptDto() -> void
+LimeMeta.Models.DeptDto.Email.get -> string?
+LimeMeta.Models.DeptDto.Email.set -> void
+LimeMeta.Models.DeptDto.Name.get -> string?
+LimeMeta.Models.DeptDto.Name.set -> void
+LimeMeta.Models.DeptDto.Note.get -> string?
+LimeMeta.Models.DeptDto.Note.set -> void
+LimeMeta.Models.DeptDto.OrgType.get -> int?
+LimeMeta.Models.DeptDto.OrgType.set -> void
+LimeMeta.Models.DeptDto.Phone.get -> string?
+LimeMeta.Models.DeptDto.Phone.set -> void
+LimeMeta.Models.DeptDto.Sn.get -> int
+LimeMeta.Models.DeptDto.Sn.set -> void
+LimeMeta.Models.DeptRole
+LimeMeta.Models.DeptRole.Dept.get -> LimeMeta.Models.Dept?
+LimeMeta.Models.DeptRole.Dept.set -> void
+LimeMeta.Models.DeptRole.DeptId.get -> System.Guid
+LimeMeta.Models.DeptRole.DeptId.set -> void
+LimeMeta.Models.DeptRole.DeptRole() -> void
+LimeMeta.Models.DeptRole.Role.get -> LimeMeta.Models.Role?
+LimeMeta.Models.DeptRole.Role.set -> void
+LimeMeta.Models.DeptRole.RoleId.get -> System.Guid
+LimeMeta.Models.DeptRole.RoleId.set -> void
+LimeMeta.Models.DeptRoleDto
+LimeMeta.Models.DeptRoleDto.DeptId.get -> System.Guid
+LimeMeta.Models.DeptRoleDto.DeptId.set -> void
+LimeMeta.Models.DeptRoleDto.DeptRoleDto() -> void
+LimeMeta.Models.DeptRoleDto.RoleId.get -> System.Guid
+LimeMeta.Models.DeptRoleDto.RoleId.set -> void
+LimeMeta.Models.DeptUser
+LimeMeta.Models.DeptUser.Dept.get -> LimeMeta.Models.Dept?
+LimeMeta.Models.DeptUser.Dept.set -> void
+LimeMeta.Models.DeptUser.DeptId.get -> System.Guid
+LimeMeta.Models.DeptUser.DeptId.set -> void
+LimeMeta.Models.DeptUser.DeptUser() -> void
+LimeMeta.Models.DeptUser.User.get -> LimeMeta.Models.User?
+LimeMeta.Models.DeptUser.User.set -> void
+LimeMeta.Models.DeptUser.UserId.get -> System.Guid
+LimeMeta.Models.DeptUser.UserId.set -> void
+LimeMeta.Models.DeptUserDto
+LimeMeta.Models.DeptUserDto.DeptId.get -> System.Guid
+LimeMeta.Models.DeptUserDto.DeptId.set -> void
+LimeMeta.Models.DeptUserDto.DeptUserDto() -> void
+LimeMeta.Models.DeptUserDto.UserId.get -> System.Guid
+LimeMeta.Models.DeptUserDto.UserId.set -> void
+LimeMeta.Models.FileInfo
+LimeMeta.Models.FileInfo.FileInfo() -> void
+LimeMeta.Models.FileInfo.Hash.get -> string!
+LimeMeta.Models.FileInfo.Hash.set -> void
+LimeMeta.Models.FileInfo.Meta.get -> string?
+LimeMeta.Models.FileInfo.Meta.set -> void
+LimeMeta.Models.FileInfo.Name.get -> string!
+LimeMeta.Models.FileInfo.Name.set -> void
+LimeMeta.Models.FileInfo.Provider.get -> string?
+LimeMeta.Models.FileInfo.Provider.set -> void
+LimeMeta.Models.FileInfo.ProviderId.get -> string?
+LimeMeta.Models.FileInfo.ProviderId.set -> void
+LimeMeta.Models.FileInfo.ProviderPath.get -> string?
+LimeMeta.Models.FileInfo.ProviderPath.set -> void
+LimeMeta.Models.FileInfo.Real.get -> string!
+LimeMeta.Models.FileInfo.Real.set -> void
+LimeMeta.Models.FileInfo.Size.get -> long
+LimeMeta.Models.FileInfo.Size.set -> void
+LimeMeta.Models.FileInfo.Store.get -> int
+LimeMeta.Models.FileInfo.Store.set -> void
+LimeMeta.Models.FileInfo.Type.get -> string?
+LimeMeta.Models.FileInfo.Type.set -> void
+LimeMeta.Models.FileInfo.Url.get -> string?
+LimeMeta.Models.FileInfo.Url.set -> void
+LimeMeta.Models.FileInfoDto
+LimeMeta.Models.FileInfoDto.FileInfoDto() -> void
+LimeMeta.Models.FileInfoDto.Name.get -> string!
+LimeMeta.Models.FileInfoDto.Name.set -> void
+LimeMeta.Models.FileInfoDto.Type.get -> string?
+LimeMeta.Models.FileInfoDto.Type.set -> void
+LimeMeta.Models.IAuditObject
+LimeMeta.Models.IAuditObject.Created.get -> long
+LimeMeta.Models.IAuditObject.Created.set -> void
+LimeMeta.Models.IAuditObject.CreatorId.get -> System.Guid?
+LimeMeta.Models.IAuditObject.CreatorId.set -> void
+LimeMeta.Models.IAuditObject.ModifierId.get -> System.Guid?
+LimeMeta.Models.IAuditObject.ModifierId.set -> void
+LimeMeta.Models.IAuditObject.Updated.get -> long
+LimeMeta.Models.IAuditObject.Updated.set -> void
+LimeMeta.Models.IBaseObject
+LimeMeta.Models.IBaseObject.Id.get -> System.Guid
+LimeMeta.Models.IBaseObject.Id.set -> void
+LimeMeta.Models.IBaseObject.Ver.get -> long
+LimeMeta.Models.IParentChildren
+LimeMeta.Models.IParentChildren.NamePath.get -> string?
+LimeMeta.Models.IParentChildren.NamePath.set -> void
+LimeMeta.Models.IParentChildren.ParentId.get -> System.Guid?
+LimeMeta.Models.IParentChildren.ParentId.set -> void
+LimeMeta.Models.IParentChildren.Path.get -> string?
+LimeMeta.Models.IParentChildren.Path.set -> void
+LimeMeta.Models.Message
+LimeMeta.Models.Message.Content.get -> string?
+LimeMeta.Models.Message.Content.set -> void
+LimeMeta.Models.Message.Message() -> void
+LimeMeta.Models.Message.Model.get -> string?
+LimeMeta.Models.Message.Model.set -> void
+LimeMeta.Models.Message.SourceId.get -> System.Guid?
+LimeMeta.Models.Message.SourceId.set -> void
+LimeMeta.Models.Message.Title.get -> string!
+LimeMeta.Models.Message.Title.set -> void
+LimeMeta.Models.Message.Users.get -> System.Collections.Generic.List<LimeMeta.Models.User!>!
+LimeMeta.Models.Message.Users.set -> void
+LimeMeta.Models.MessageDto
+LimeMeta.Models.MessageDto.Content.get -> string?
+LimeMeta.Models.MessageDto.Content.set -> void
+LimeMeta.Models.MessageDto.MessageDto() -> void
+LimeMeta.Models.MessageDto.Model.get -> string?
+LimeMeta.Models.MessageDto.Model.set -> void
+LimeMeta.Models.MessageDto.SourceId.get -> System.Guid?
+LimeMeta.Models.MessageDto.SourceId.set -> void
+LimeMeta.Models.MessageDto.Title.get -> string!
+LimeMeta.Models.MessageDto.Title.set -> void
+LimeMeta.Models.MessageUser
+LimeMeta.Models.MessageUser.Message.get -> LimeMeta.Models.Message?
+LimeMeta.Models.MessageUser.Message.set -> void
+LimeMeta.Models.MessageUser.MessageId.get -> System.Guid
+LimeMeta.Models.MessageUser.MessageId.set -> void
+LimeMeta.Models.MessageUser.MessageUser() -> void
+LimeMeta.Models.MessageUser.Read.get -> bool
+LimeMeta.Models.MessageUser.Read.set -> void
+LimeMeta.Models.MessageUser.User.get -> LimeMeta.Models.User?
+LimeMeta.Models.MessageUser.User.set -> void
+LimeMeta.Models.MessageUser.UserId.get -> System.Guid
+LimeMeta.Models.MessageUser.UserId.set -> void
+LimeMeta.Models.MessageUserDto
+LimeMeta.Models.MessageUserDto.MessageId.get -> System.Guid
+LimeMeta.Models.MessageUserDto.MessageId.set -> void
+LimeMeta.Models.MessageUserDto.MessageUserDto() -> void
+LimeMeta.Models.MessageUserDto.Read.get -> bool
+LimeMeta.Models.MessageUserDto.Read.set -> void
+LimeMeta.Models.MessageUserDto.UserId.get -> System.Guid
+LimeMeta.Models.MessageUserDto.UserId.set -> void
+LimeMeta.Models.Perm
+LimeMeta.Models.Perm.Name.get -> string!
+LimeMeta.Models.Perm.Name.set -> void
+LimeMeta.Models.Perm.Perm() -> void
+LimeMeta.Models.Perm.Sn.get -> int
+LimeMeta.Models.Perm.Sn.set -> void
+LimeMeta.Models.PermDto
+LimeMeta.Models.PermDto.Name.get -> string!
+LimeMeta.Models.PermDto.Name.set -> void
+LimeMeta.Models.PermDto.PermDto() -> void
+LimeMeta.Models.PermDto.Sn.get -> int
+LimeMeta.Models.PermDto.Sn.set -> void
+LimeMeta.Models.Role
+LimeMeta.Models.Role.Name.get -> string!
+LimeMeta.Models.Role.Name.set -> void
+LimeMeta.Models.Role.Perms.get -> System.Collections.Generic.List<LimeMeta.Models.Perm!>!
+LimeMeta.Models.Role.Perms.set -> void
+LimeMeta.Models.Role.Role() -> void
+LimeMeta.Models.Role.Sn.get -> int
+LimeMeta.Models.Role.Sn.set -> void
+LimeMeta.Models.Role.Users.get -> System.Collections.Generic.List<LimeMeta.Models.User!>!
+LimeMeta.Models.Role.Users.set -> void
+LimeMeta.Models.RoleDto
+LimeMeta.Models.RoleDto.Name.get -> string!
+LimeMeta.Models.RoleDto.Name.set -> void
+LimeMeta.Models.RoleDto.RoleDto() -> void
+LimeMeta.Models.RoleDto.Sn.get -> int
+LimeMeta.Models.RoleDto.Sn.set -> void
+LimeMeta.Models.RolePerm
+LimeMeta.Models.RolePerm.Perm.get -> LimeMeta.Models.Perm?
+LimeMeta.Models.RolePerm.Perm.set -> void
+LimeMeta.Models.RolePerm.PermId.get -> System.Guid
+LimeMeta.Models.RolePerm.PermId.set -> void
+LimeMeta.Models.RolePerm.Role.get -> LimeMeta.Models.Role?
+LimeMeta.Models.RolePerm.Role.set -> void
+LimeMeta.Models.RolePerm.RoleId.get -> System.Guid
+LimeMeta.Models.RolePerm.RoleId.set -> void
+LimeMeta.Models.RolePerm.RolePerm() -> void
+LimeMeta.Models.RolePermDto
+LimeMeta.Models.RolePermDto.PermId.get -> System.Guid
+LimeMeta.Models.RolePermDto.PermId.set -> void
+LimeMeta.Models.RolePermDto.RoleId.get -> System.Guid
+LimeMeta.Models.RolePermDto.RoleId.set -> void
+LimeMeta.Models.RolePermDto.RolePermDto() -> void
+LimeMeta.Models.User
+LimeMeta.Models.User.Messages.get -> System.Collections.Generic.List<LimeMeta.Models.Message!>!
+LimeMeta.Models.User.Messages.set -> void
+LimeMeta.Models.User.Name.get -> string!
+LimeMeta.Models.User.Name.set -> void
+LimeMeta.Models.User.PasswordHash.get -> string!
+LimeMeta.Models.User.PasswordHash.set -> void
+LimeMeta.Models.User.Phone.get -> string?
+LimeMeta.Models.User.Phone.set -> void
+LimeMeta.Models.User.Roles.get -> System.Collections.Generic.List<LimeMeta.Models.Role!>!
+LimeMeta.Models.User.Roles.set -> void
+LimeMeta.Models.User.User() -> void
+LimeMeta.Models.User.Username.get -> string!
+LimeMeta.Models.User.Username.set -> void
+LimeMeta.Models.UserDto
+LimeMeta.Models.UserDto.Name.get -> string!
+LimeMeta.Models.UserDto.Name.set -> void
+LimeMeta.Models.UserDto.Phone.get -> string?
+LimeMeta.Models.UserDto.Phone.set -> void
+LimeMeta.Models.UserDto.UserDto() -> void
+LimeMeta.Models.UserDto.Username.get -> string!
+LimeMeta.Models.UserDto.Username.set -> void
+LimeMeta.Models.UserRole
+LimeMeta.Models.UserRole.Role.get -> LimeMeta.Models.Role?
+LimeMeta.Models.UserRole.Role.set -> void
+LimeMeta.Models.UserRole.RoleId.get -> System.Guid
+LimeMeta.Models.UserRole.RoleId.set -> void
+LimeMeta.Models.UserRole.User.get -> LimeMeta.Models.User?
+LimeMeta.Models.UserRole.User.set -> void
+LimeMeta.Models.UserRole.UserId.get -> System.Guid
+LimeMeta.Models.UserRole.UserId.set -> void
+LimeMeta.Models.UserRole.UserRole() -> void
+LimeMeta.Models.UserRoleDto
+LimeMeta.Models.UserRoleDto.RoleId.get -> System.Guid
+LimeMeta.Models.UserRoleDto.RoleId.set -> void
+LimeMeta.Models.UserRoleDto.UserId.get -> System.Guid
+LimeMeta.Models.UserRoleDto.UserId.set -> void
+LimeMeta.Models.UserRoleDto.UserRoleDto() -> void
+LimeMeta.RoleName
+LimeMeta.Security.ILimeMetaPasswordHasher
+LimeMeta.Security.ILimeMetaPasswordHasher.HashPassword(string! password) -> string!
+LimeMeta.Security.ILimeMetaPasswordHasher.VerifyPassword(string! password, string! passwordHash) -> bool
+LimeMeta.WebSockets.LimeMetaWebSocketConnection
+LimeMeta.WebSockets.LimeMetaWebSocketConnection.Id.get -> string!
+LimeMeta.WebSockets.LimeMetaWebSocketConnection.Socket.get -> System.Net.WebSockets.WebSocket!
+LimeMeta.WebSockets.LimeMetaWebSocketConnection.User.get -> System.Security.Claims.ClaimsPrincipal!
+LimeMeta.WebSockets.LimeMetaWebSocketConnectionManager
+LimeMeta.WebSockets.LimeMetaWebSocketConnectionManager.BroadcastAsync(string! type, object? data = null, System.Threading.CancellationToken ct = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+LimeMeta.WebSockets.LimeMetaWebSocketConnectionManager.Connections.get -> System.Collections.Generic.IReadOnlyCollection<LimeMeta.WebSockets.LimeMetaWebSocketConnection!>!
+LimeMeta.WebSockets.LimeMetaWebSocketConnectionManager.LimeMetaWebSocketConnectionManager() -> void
+LimeMeta.WebSockets.LimeMetaWebSocketConnectionManager.SendToConnectionAsync(string! connectionId, string! type, object? data = null, System.Threading.CancellationToken ct = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+LimeMeta.WebSockets.LimeMetaWebSocketConnectionManager.SendToUserAsync(System.Guid userId, string! type, object? data = null, System.Threading.CancellationToken ct = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+LimeMeta.WebSockets.LimeMetaWebSocketContext
+LimeMeta.WebSockets.LimeMetaWebSocketContext.Connection.get -> LimeMeta.WebSockets.LimeMetaWebSocketConnection!
+LimeMeta.WebSockets.LimeMetaWebSocketContext.ConnectionId.get -> string!
+LimeMeta.WebSockets.LimeMetaWebSocketContext.Connections.get -> LimeMeta.WebSockets.LimeMetaWebSocketConnectionManager!
+LimeMeta.WebSockets.LimeMetaWebSocketContext.HttpContext.get -> Microsoft.AspNetCore.Http.HttpContext!
+LimeMeta.WebSockets.LimeMetaWebSocketContext.SendAsync(string! type, object? data = null, System.Threading.CancellationToken ct = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+LimeMeta.WebSockets.LimeMetaWebSocketContext.User.get -> System.Security.Claims.ClaimsPrincipal!
+LimeMeta.WebSockets.LimeMetaWebSocketContext.UserId.get -> System.Guid?
+LimeMeta.WebSockets.LimeMetaWebSocketExtensions
+LimeMeta.WebSockets.LimeMetaWebSocketOptions
+LimeMeta.WebSockets.LimeMetaWebSocketOptions.LimeMetaWebSocketOptions() -> void
+LimeMeta.WebSockets.LimeMetaWebSocketOptions.MaxMessageSize.get -> int
+LimeMeta.WebSockets.LimeMetaWebSocketOptions.MaxMessageSize.set -> void
+LimeMeta.WebSockets.LimeMetaWebSocketOptions.Path.get -> string!
+LimeMeta.WebSockets.LimeMetaWebSocketOptions.Path.set -> void
+LimeMeta.WebSockets.LimeMetaWebSocketRequest
+LimeMeta.WebSockets.LimeMetaWebSocketRequest.Data.get -> System.Text.Json.JsonElement?
+LimeMeta.WebSockets.LimeMetaWebSocketRequest.Data.set -> void
+LimeMeta.WebSockets.LimeMetaWebSocketRequest.Id.get -> string?
+LimeMeta.WebSockets.LimeMetaWebSocketRequest.Id.set -> void
+LimeMeta.WebSockets.LimeMetaWebSocketRequest.LimeMetaWebSocketRequest() -> void
+LimeMeta.WebSockets.LimeMetaWebSocketRequest.Type.get -> string!
+LimeMeta.WebSockets.LimeMetaWebSocketRequest.Type.set -> void
+LimeMeta.WebSockets.LimeMetaWebSocketResponse
+LimeMeta.WebSockets.LimeMetaWebSocketResponse.Data.get -> object?
+LimeMeta.WebSockets.LimeMetaWebSocketResponse.Data.set -> void
+LimeMeta.WebSockets.LimeMetaWebSocketResponse.Error.get -> string?
+LimeMeta.WebSockets.LimeMetaWebSocketResponse.Error.set -> void
+LimeMeta.WebSockets.LimeMetaWebSocketResponse.Id.get -> string?
+LimeMeta.WebSockets.LimeMetaWebSocketResponse.Id.set -> void
+LimeMeta.WebSockets.LimeMetaWebSocketResponse.LimeMetaWebSocketResponse() -> void
+LimeMeta.WebSockets.LimeMetaWebSocketResponse.Success.get -> bool
+LimeMeta.WebSockets.LimeMetaWebSocketResponse.Success.set -> void
+LimeMeta.WebSockets.LimeMetaWebSocketResponse.Type.get -> string!
+LimeMeta.WebSockets.LimeMetaWebSocketResponse.Type.set -> void
+LimeMeta.WebSockets.WsControllerAttribute
+LimeMeta.WebSockets.WsControllerAttribute.WsControllerAttribute() -> void
+LimeMeta.WebSockets.WsMessageAttribute
+LimeMeta.WebSockets.WsMessageAttribute.Type.get -> string!
+LimeMeta.WebSockets.WsMessageAttribute.WsMessageAttribute(string! type) -> void
+override LimeMeta.Logics.BaseLogic<T>.InvokeAfterDelete<Tm>(LimeMeta.Logics.AfterDeleteEventArgs<Tm!>! args) -> void
+override LimeMeta.Logics.BaseLogic<T>.InvokeAfterInsert<Tm>(LimeMeta.Logics.AfterInsertEventArgs<Tm!>! args) -> void
+override LimeMeta.Logics.BaseLogic<T>.InvokeAfterSelect<Tm>(LimeMeta.Logics.AfterSelectEventArgs<Tm!>! args) -> void
+override LimeMeta.Logics.BaseLogic<T>.InvokeAfterUpdate<Tm>(LimeMeta.Logics.AfterUpdateEventArgs<Tm!>! args) -> void
+override LimeMeta.Logics.BaseLogic<T>.InvokeBeforeDelete<Tm>(LimeMeta.Logics.BeforeDeleteEventArgs<Tm!>! args) -> void
+override LimeMeta.Logics.BaseLogic<T>.InvokeBeforeInsert<Tm>(LimeMeta.Logics.BeforeInsertEventArgs<Tm!>! args) -> void
+override LimeMeta.Logics.BaseLogic<T>.InvokeBeforeSelect<Tm>(LimeMeta.Logics.BeforeSelectEventArgs<Tm!>! args) -> void
+override LimeMeta.Logics.BaseLogic<T>.InvokeBeforeUpdate<Tm>(LimeMeta.Logics.BeforeUpdateEventArgs<Tm!>! args) -> void
+override LimeMeta.Logics.BaseLogic<T>.InvokeCreated(LimeMeta.Logics.CreatedEventArgs! args) -> void
+override LimeMeta.Logics.BaseLogic<T>.LogicModelType.get -> System.Type!
+static LimeMeta.Data.Extensions.FirstOrDefault<T>(this FreeSql.ISelect<T>! source, System.Linq.Expressions.Expression<System.Func<T, bool>!>! exp) -> T?
+static LimeMeta.Data.Extensions.Merge(this LimeMeta.Models.BaseObject! obj, LimeMeta.Models.BaseDto! dto) -> System.Collections.Generic.IEnumerable<string!>!
+static LimeMeta.Data.Extensions.Merge(this object! obj, Newtonsoft.Json.Linq.JObject! json) -> System.Collections.Generic.IEnumerable<string!>!
+static LimeMeta.Extensions.AddLimeMeta(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Microsoft.Extensions.Configuration.IConfiguration! configuration, Microsoft.Extensions.Hosting.IHostEnvironment! env) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static LimeMeta.Extensions.FromReadableLong(this long readableLong) -> System.DateTime
+static LimeMeta.Extensions.GetMD5(this string! s) -> string!
+static LimeMeta.Extensions.GetMD5(this System.IO.Stream! s) -> string!
+static LimeMeta.Extensions.GetPropertyValue<T>(this object! obj, string! name) -> T?
+static LimeMeta.Extensions.SetPropertyValue(this object! obj, string! name, object! value) -> void
+static LimeMeta.Extensions.ToReadableLong(this System.DateTime dateTime) -> long
+static LimeMeta.Extensions.UseLimeMeta(this Microsoft.AspNetCore.Builder.IApplicationBuilder! app) -> Microsoft.AspNetCore.Builder.IApplicationBuilder!
+static LimeMeta.Logics.DeptLogic.GetPerms(LimeMeta.Data.ILimeMeta! meta, System.Guid deptId) -> System.Collections.Generic.IEnumerable<LimeMeta.Models.Perm!>!
+static LimeMeta.Logics.DeptLogic.GetRoles(LimeMeta.Data.ILimeMeta! meta, System.Guid deptId) -> System.Collections.Generic.IEnumerable<LimeMeta.Models.Role!>!
+static LimeMeta.Logics.Extensions.AddLimeMetaModule(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Reflection.Assembly! assembly) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static LimeMeta.Logics.Extensions.UseLimeMetaModule(this Microsoft.AspNetCore.Builder.IApplicationBuilder! app, System.Reflection.Assembly! assembly) -> Microsoft.AspNetCore.Builder.IApplicationBuilder!
+static LimeMeta.Logics.FileInfoLogic.Create(LimeMeta.Data.ILimeMeta! meta, string! name) -> (LimeMeta.Models.FileInfo! info, string! path)
+static LimeMeta.Logics.FileInfoLogic.Find(LimeMeta.Data.ILimeMeta! meta, System.Guid id) -> (LimeMeta.Models.FileInfo? info, string? path)
+static LimeMeta.Logics.FileInfoLogic.GetStorePath(LimeMeta.Models.FileInfo! info, LimeMeta.Configurations.LimeMetaConfiguration! config) -> string!
+static LimeMeta.Logics.ParentChildrenLogic.CalcIdPath(LimeMeta.Data.ILimeMeta! meta, LimeMeta.Models.IParentChildren! obj, System.Type! modelType, System.Guid? userId) -> string!
+static LimeMeta.Logics.ParentChildrenLogic.CalcNamePath(LimeMeta.Data.ILimeMeta! meta, LimeMeta.Models.IParentChildren! obj, System.Type! modelType, System.Guid? userId) -> string!
+static LimeMeta.Logics.UserLogic.AfterLogin -> System.EventHandler<LimeMeta.Logics.UserLogic.AfterLoginEventArgs!>?
+static LimeMeta.Logics.UserLogic.BeforeLogin -> System.EventHandler<LimeMeta.Logics.UserLogic.BeforeLoginEventArgs!>?
+static LimeMeta.Logics.UserLogic.ChangePassword(LimeMeta.Data.ILimeMeta! meta, LimeMeta.Security.ILimeMetaPasswordHasher! passwordHasher, System.Guid authUserId, string! currentPassword, string! newPassword) -> bool
+static LimeMeta.Logics.UserLogic.GenerateJwt(LimeMeta.Configurations.LimeMetaConfiguration! config, LimeMeta.Models.User! user, System.DateTime? expires = null, System.Collections.Generic.IEnumerable<System.Security.Claims.Claim!>? claims = null) -> string!
+static LimeMeta.Logics.UserLogic.GeneratingJwt -> System.EventHandler<LimeMeta.Logics.UserLogic.GeneratingJwtEventArgs!>?
+static LimeMeta.Logics.UserLogic.GetPerms(LimeMeta.Data.ILimeMeta! meta, System.Guid userId) -> System.Collections.Generic.IEnumerable<LimeMeta.Models.Perm!>!
+static LimeMeta.Logics.UserLogic.GetRoles(LimeMeta.Data.ILimeMeta! meta, System.Guid userId) -> System.Collections.Generic.IEnumerable<LimeMeta.Models.Role!>!
+static LimeMeta.Logics.UserLogic.IsAdmin(LimeMeta.Data.ILimeMeta! meta, System.Guid userId) -> bool
+static LimeMeta.Logics.UserLogic.Login(LimeMeta.Data.ILimeMeta! meta, LimeMeta.Security.ILimeMetaPasswordHasher! passwordHasher, string! username, string! password, object? context = null) -> LimeMeta.Logics.LoginResult!
+static LimeMeta.Logics.UserLogic.ResetPassword(LimeMeta.Data.ILimeMeta! meta, LimeMeta.Security.ILimeMetaPasswordHasher! passwordHasher, System.Guid authUserId, System.Guid userId, string! newPassword) -> bool
+static LimeMeta.WebSockets.LimeMetaWebSocketExtensions.AddLimeMetaWebSockets(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static LimeMeta.WebSockets.LimeMetaWebSocketExtensions.AddLimeMetaWebSockets(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Microsoft.Extensions.Configuration.IConfiguration! configuration) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static LimeMeta.WebSockets.LimeMetaWebSocketExtensions.UseLimeMetaWebSockets(this Microsoft.AspNetCore.Builder.IApplicationBuilder! app) -> Microsoft.AspNetCore.Builder.IApplicationBuilder!
+static readonly LimeMeta.Data.BaseLimeMeta.JsonSerializerOptions -> System.Text.Json.JsonSerializerOptions!
+static readonly LimeMeta.Data.BaseLimeMeta.YamlDeserializer -> YamlDotNet.Serialization.IDeserializer!
+static readonly LimeMeta.Data.BaseLimeMeta.YamlSerializer -> YamlDotNet.Serialization.ISerializer!

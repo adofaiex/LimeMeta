@@ -1,14 +1,14 @@
 Urls: "http://127.0.0.1:6675"
 
 LimeMeta:
-  ConnectionString: "Host=localhost;Port=5432;Database=limemeta_service;Username=postgres;Password=postgres"
-  DataType: "PostgreSQL"
-  FileStorePath: "/FileStore"
+  ConnectionString: ""
+  DataType: "MySql"
+  FileStorePath: "./FileStore"
   FileStoreCount: 8192
   FileStore:
     Provider: "Local"
     Local:
-      Path: "/FileStore"
+      Path: "./FileStore"
       Count: 8192
     Pan123Cli:
       Command: "pan123"
@@ -19,8 +19,8 @@ LimeMeta:
   AdminPerm: "管理员"
   GuestPerm: "游客"
   AdminUserName: "admin"
-  AdminUserPassword: "change-me-admin-password"
-  DefaultUserPassword: "change-me-user-password"
+  AdminUserPassword: ""
+  JwtSignKey: ""
   AutoSyncSchema: true
   LoadSeedOnStartup: true
   WebSocket:

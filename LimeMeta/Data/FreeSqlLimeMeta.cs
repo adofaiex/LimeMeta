@@ -12,13 +12,14 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using FreeSql.DataAnnotations;
+using LimeMeta.Security;
 
 namespace LimeMeta.Data;
 
 /// <summary>
 /// FreeSql 元数据
 /// </summary>
-public class FreeSqlLimeMeta : BaseLimeMeta
+internal sealed class FreeSqlLimeMeta : BaseLimeMeta
 {
     /// <summary>
     /// FreeSqlLimeMeta
@@ -27,7 +28,14 @@ public class FreeSqlLimeMeta : BaseLimeMeta
     /// <param name="scopeFactory"></param>
     /// <param name="freeSql"></param>
     /// <param name="logicManager"></param>
-    public FreeSqlLimeMeta(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory, IFreeSql freeSql, ILogicManager logicManager) : base(loggerFactory, scopeFactory, logicManager)
+    /// <param name="passwordHasher"></param>
+    public FreeSqlLimeMeta(
+        ILoggerFactory loggerFactory,
+        IServiceScopeFactory scopeFactory,
+        IFreeSql freeSql,
+        ILogicManager logicManager,
+        ILimeMetaPasswordHasher passwordHasher)
+        : base(loggerFactory, scopeFactory, logicManager, passwordHasher)
     {
         FreeSql = freeSql;
     }

@@ -15,7 +15,7 @@ namespace LimeMeta.Logics;
 /// <summary>
 /// 逻辑管理器
 /// </summary>
-public class LogicManager : ILogicManager
+internal sealed class LogicManager : ILogicManager
 {
     /// <summary>
     /// Logger

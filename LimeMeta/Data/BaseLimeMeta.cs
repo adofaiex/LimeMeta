@@ -16,6 +16,7 @@ using YamlDotNet.Serialization.NamingConventions;
 using Newtonsoft.Json.Linq;
 using System.Text.Json;
 using System.Linq.Expressions;
+using LimeMeta.Security;
 
 namespace LimeMeta.Data;
 
@@ -59,11 +60,17 @@ public abstract class BaseLimeMeta : ILimeMeta
     /// <param name="loggerFactory"></param>
     /// <param name="scopeFactory"></param>
     /// <param name="logicManager"></param>
-    public BaseLimeMeta(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory, ILogicManager logicManager)
+    /// <param name="passwordHasher"></param>
+    public BaseLimeMeta(
+        ILoggerFactory loggerFactory,
+        IServiceScopeFactory scopeFactory,
+        ILogicManager logicManager,
+        ILimeMetaPasswordHasher passwordHasher)
     {
         Logger = loggerFactory.CreateLogger(GetType());
         ScopeFactory = scopeFactory;
         LogicManager = logicManager;
+        PasswordHasher = passwordHasher;
     }
 
     /// <summary>
@@ -81,6 +88,11 @@ public abstract class BaseLimeMeta : ILimeMeta
     /// LogicManager
     /// </summary>
     public ILogicManager LogicManager { get; }
+
+    /// <summary>
+    /// 密码哈希服务。
+    /// </summary>
+    protected ILimeMetaPasswordHasher PasswordHasher { get; }
 
     /// <summary>
     /// GetSeedPath
@@ -113,7 +125,7 @@ public abstract class BaseLimeMeta : ILimeMeta
         var seed = GetSeedPath();
         var type = typeof(T);
 
-        if(type == typeof(UserRole))
+        if (type == typeof(UserRole))
         {
         }
 
@@ -161,7 +173,7 @@ public abstract class BaseLimeMeta : ILimeMeta
     public Guid InitUserRolePerm()
     {
         Logger.LogInformation("初始化用户、角色、权限...");
-        
+
         using var sc = ScopeFactory.CreateScope();
         var cfg = sc.ServiceProvider.GetRequiredService<IOptions<LimeMetaConfiguration>>().Value;
 
@@ -207,7 +219,7 @@ public abstract class BaseLimeMeta : ILimeMeta
             {
                 Name = "管理员",
                 Username = cfg.AdminUserName,
-                Password = cfg.AdminUserPassword.GetMD5(),
+                PasswordHash = PasswordHasher.HashPassword(cfg.AdminUserPassword),
             };
 
             Insert(new[] { adminUser }, null, false);
@@ -373,7 +385,7 @@ public abstract class BaseLimeMeta : ILimeMeta
         }
 
         return Update(dict.Values, null, userId, enableLogic, context);
-    }    
+    }
 
     /// <summary>
     /// Delete
