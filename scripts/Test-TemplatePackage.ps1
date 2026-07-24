@@ -29,14 +29,18 @@ try {
         throw "无法生成模板项目。"
     }
 
-    $generatedProject = Get-ChildItem -LiteralPath $projectRoot -Recurse -Filter "*.csproj" |
-        Select-Object -First 1
-    if (-not $generatedProject) {
+    $generatedProjects = @(Get-ChildItem -LiteralPath $projectRoot -Recurse -Filter "*.csproj")
+    if ($generatedProjects.Count -eq 0) {
         throw "模板没有生成项目文件。"
     }
 
-    $projectText = Get-Content -LiteralPath $generatedProject.FullName -Raw
-    if ($projectText -notmatch 'Include="LimeMeta\.GraphQL"\s+Version="' + [regex]::Escape($Version) + '"') {
+    $frameworkProject = $generatedProjects |
+        Where-Object {
+            (Get-Content -LiteralPath $_.FullName -Raw) -match
+                'Include="LimeMeta\.GraphQL"\s+Version="' + [regex]::Escape($Version) + '"'
+        } |
+        Select-Object -First 1
+    if (-not $frameworkProject) {
         throw "生成项目没有精确引用 LimeMeta.GraphQL $Version。"
     }
 
@@ -82,11 +86,17 @@ try {
 "@
     [System.IO.File]::WriteAllText($nugetConfigPath, $config, [System.Text.UTF8Encoding]::new($false))
 
-    & dotnet restore $generatedProject.FullName --configfile $nugetConfigPath
+    $generatedSolution = Get-ChildItem -LiteralPath $projectRoot -Filter "*.sln" |
+        Select-Object -First 1
+    if (-not $generatedSolution) {
+        throw "模板没有生成解决方案文件。"
+    }
+
+    & dotnet restore $generatedSolution.FullName --configfile $nugetConfigPath
     if ($LASTEXITCODE -ne 0) {
         throw "生成项目还原失败。"
     }
-    & dotnet build $generatedProject.FullName -c Release --no-restore
+    & dotnet build $generatedSolution.FullName -c Release --no-restore
     if ($LASTEXITCODE -ne 0) {
         throw "生成项目构建失败。"
     }
