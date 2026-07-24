@@ -28,6 +28,9 @@ function Test-ScanLine([string]$line) {
 Push-Location $repositoryRoot
 try {
     $trackedFiles = & git ls-files --cached --others --exclude-standard
+    if ($LASTEXITCODE -ne 0) {
+        throw "无法列出 Git 当前文件。"
+    }
     foreach ($file in $trackedFiles) {
         if (-not (Test-Path -LiteralPath $file -PathType Leaf)) {
             continue
@@ -40,8 +43,15 @@ try {
 
     if (-not $CurrentTreeOnly) {
         $commits = & git rev-list --all
+        if ($LASTEXITCODE -ne 0) {
+            throw "无法列出 Git 提交历史。"
+        }
         foreach ($commit in $commits) {
             $matches = & git grep -I -n -E $pattern $commit 2>$null
+            $grepExitCode = $LASTEXITCODE
+            if ($grepExitCode -gt 1) {
+                throw "扫描 Git 提交 $commit 失败，退出码：$grepExitCode"
+            }
             foreach ($match in $matches) {
                 Test-ScanLine $match
             }
@@ -53,3 +63,4 @@ finally {
 }
 
 Write-Host "当前文件与 Git 历史秘密模式检查通过。"
+$global:LASTEXITCODE = 0
