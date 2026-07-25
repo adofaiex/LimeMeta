@@ -7,7 +7,7 @@ LimeMeta 是一个面向 .NET 10 的模型驱动后端框架。它把 FreeSql �
 首次使用时，直接从 NuGet.org 安装模板：
 
 ```powershell
-dotnet new install LimeMeta.Templates --version 1.0.0
+dotnet new install LimeMeta.Templates@1.0.0
 dotnet new limemeta -n MyService
 cd MyService
 ```
@@ -73,7 +73,7 @@ LimeMeta/
 ```powershell
 dotnet add package LimeMeta --version 1.0.0 --source https://api.nuget.org/v3/index.json
 dotnet add package LimeMeta.GraphQL --version 1.0.0 --source https://api.nuget.org/v3/index.json
-dotnet new install LimeMeta.Templates --version 1.0.0
+dotnet new install LimeMeta.Templates@1.0.0
 ```
 
 ## 常见发布与安装问题
@@ -90,7 +90,7 @@ dotnet new install LimeMeta.Templates --version 1.0.0
 
     ```powershell
     dotnet new uninstall LimeMeta.Templates
-    dotnet new install LimeMeta.Templates --version 1.0.0
+    dotnet new install LimeMeta.Templates@1.0.0
     ```
 
 - 我在 Git 状态里看到“发布（Publish）”按钮是正常吗？

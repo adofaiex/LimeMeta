@@ -89,7 +89,7 @@ GraphQL 浏览器通常可以在请求 Headers 区域填写：
   - 如有缓存干扰，执行：
     ```powershell
     dotnet new uninstall LimeMeta.Templates
-    dotnet new install LimeMeta.Templates --version 1.0.0
+    dotnet new install LimeMeta.Templates@1.0.0
     ```
 
 - 明明已发布但搜不到包？
