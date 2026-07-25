@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Xml.Linq;
 
 namespace LimeMeta.Tests;
 
@@ -21,7 +22,13 @@ public sealed class TemplateContractTests
         var developmentConfig = File.ReadAllText(
             Path.Combine(templateRoot, "LimeMetaService.WebAPI", "appsettings.Development.yml"));
 
-        Assert.Equal("1.0.0", defaultVersion);
+        var versionXml = XDocument.Load(Path.Combine(RepositoryRoot, "Directory.Build.props"));
+        var repositoryVersion = versionXml.Root!
+            .Element("PropertyGroup")!
+            .Element("VersionPrefix")!
+            .Value;
+
+        Assert.Equal(repositoryVersion, defaultVersion);
         Assert.Contains("DataType: \"MySql\"", developmentConfig);
         Assert.Contains("Port=3306", developmentConfig);
         Assert.Contains("Path: \"./FileStore\"", developmentConfig);
