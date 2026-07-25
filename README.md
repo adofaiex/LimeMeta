@@ -260,7 +260,7 @@ dotnet test LimeMeta.sln -c Release
 
 `.nuget/` 会生成三个 `.nupkg`，两个框架包同时生成 `.snupkg`。
 
-正式发布只由 `v*` Git tag 触发 GitHub Actions，并使用工作流读取的 `NUGET_API_KEY` 发布到 NuGet.org。
+正式发布只由 `v*` Git tag 触发 GitHub Actions，并使用 GitHub OIDC Trusted Publishing 发布到 NuGet.org。
 维护者的首次发布配置、检查门槛和标签步骤见 [RELEASING.md](RELEASING.md)。
 
 ## 版本与兼容性

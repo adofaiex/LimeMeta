@@ -106,18 +106,17 @@ jobs:
           Get-ChildItem .artifacts/packages -File | Get-FileHash -Algorithm SHA256 |
             ForEach-Object { "$($_.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($_.Path))" } |
             Set-Content .artifacts/SHA256SUMS -Encoding utf8NoBOM
+      - name: NuGet 登录（OIDC 临时 API Key）
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: memsys_lizi
       - name: 按依赖顺序发布到 NuGet.org
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         shell: pwsh
         run: |
-          if ([string]::IsNullOrWhiteSpace($env:NUGET_API_KEY)) {
-            throw "未配置 secret NUGET_API_KEY。请在仓库 Settings → Secrets and variables → Actions 添加 NuGet API Key。"
-          }
-
-          dotnet nuget push ".artifacts/packages/LimeMeta.${{ steps.version.outputs.version }}.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
-          dotnet nuget push ".artifacts/packages/LimeMeta.GraphQL.${{ steps.version.outputs.version }}.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
-          dotnet nuget push ".artifacts/packages/LimeMeta.Templates.${{ steps.version.outputs.version }}.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
+          dotnet nuget push ".artifacts/packages/LimeMeta.${{ steps.version.outputs.version }}.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
+          dotnet nuget push ".artifacts/packages/LimeMeta.GraphQL.${{ steps.version.outputs.version }}.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
+          dotnet nuget push ".artifacts/packages/LimeMeta.Templates.${{ steps.version.outputs.version }}.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
       - name: 创建 GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

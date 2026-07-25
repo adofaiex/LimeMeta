@@ -13,8 +13,8 @@ LimeMeta 的正式包通过 `.github/workflows/release.yml` 发布到 NuGet.org�
 
 ## 必要配置
 
-1. 在仓库 **Settings → Secrets and variables → Actions → Repository secrets** 中设置
-   `NUGET_API_KEY`，用于发布到 NuGet.org（建议使用 NuGet API Key）。
+1. 在仓库 **Settings → Secrets and variables → Actions → Repository secrets** 中配置
+   Trusted Publishing 对应的 NuGet 发布身份（OIDC 发布不需要长期 API Key）。
 2. 在 `main` 分支配置至少：
    - CI 必须通过；
    - 不允许直接推送（禁止强制推送）；
