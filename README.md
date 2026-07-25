@@ -58,8 +58,8 @@ LimeMeta/
 业务项目只引用 NuGet 包，不复制框架源码：
 
 ```xml
-<PackageReference Include="LimeMeta" Version="1.0.1" />
-<PackageReference Include="LimeMeta.GraphQL" Version="1.0.1" />
+<PackageReference Include="LimeMeta" Version="1.0.0" />
+<PackageReference Include="LimeMeta.GraphQL" Version="1.0.0" />
 ```
 
 ## 模型与 DTO
@@ -271,7 +271,7 @@ LimeMeta 使用 Semantic Versioning：
 - Minor：向后兼容功能。
 - Major：公共 API 破坏性变更。
 
-`1.0.1` 只支持 `net10.0`。模板默认固定引用与模板包相同的框架版本。
+`1.0.0` 只支持 `net10.0`。模板默认固定引用与模板包相同的框架版本。
 
 ## 安全
 
@@ -286,3 +286,4 @@ LimeMeta 使用 Semantic Versioning：
 Copyright 2026 adofaiex.
 
 框架与模板使用 Apache-2.0 授权，详见 [LICENSE](LICENSE)。
+

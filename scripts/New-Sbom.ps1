@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory)]
     [string]$OutputPath,
-    [string]$Version = "1.0.1",
+    [string]$Version = "1.0.0",
     [string]$Commit = "unknown"
 )
 
@@ -94,3 +94,4 @@ if (-not [string]::IsNullOrWhiteSpace($outputDirectory)) {
     [System.Text.UTF8Encoding]::new($false))
 
 Write-Host "SPDX 2.3 SBOM 已生成：$absoluteOutputPath"
+

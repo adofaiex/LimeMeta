@@ -43,12 +43,12 @@ Logic、系统模型授权和密码重置链路可复现。
 
 1. 更新 `CHANGELOG.md`。
 2. 更新 `Directory.Build.props`、`templates/LimeMeta.Service/.template.config/template.json`
-   与发布 Tag（如 `v1.0.1`）保持一致。
+   与发布 Tag（如 `v1.0.0`）保持一致。
 3. 在 `main` 最新提交上创建并推送 Tag：
 
    ```powershell
-   git tag v1.0.1 -m "LimeMeta 1.0.1"
-   git push origin v1.0.1
+   git tag v1.0.0 -m "LimeMeta 1.0.0"
+   git push origin v1.0.0
    ```
 
 4. 推送 Tag 后 GitHub Actions 的 `release` 工作流自动触发并完成：
@@ -64,3 +64,4 @@ Logic、系统模型授权和密码重置链路可复现。
 
 发布失败后，不得用同版本重复发布不同内容。确认问题修复后请先提
 升版本并重新打新 Tag。
+

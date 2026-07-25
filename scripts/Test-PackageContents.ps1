@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory)]
     [string]$PackageDirectory,
-    [string]$Version = "1.0.1"
+    [string]$Version = "1.0.0"
 )
 
 $ErrorActionPreference = "Stop"
@@ -145,3 +145,4 @@ foreach ($frameworkPackage in @("LimeMeta", "LimeMeta.GraphQL")) {
 }
 
 Write-Host "三个 NuGet 包的内容检查通过。"
+

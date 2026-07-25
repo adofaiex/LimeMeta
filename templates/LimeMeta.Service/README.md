@@ -333,8 +333,8 @@ dotnet publish LimeMetaService.WebAPI/LimeMetaService.WebAPI.csproj \
 修改 `LimeMetaService/LimeMetaService.csproj` 中两个包的版本，并保持一致：
 
 ```xml
-<PackageReference Include="LimeMeta" Version="1.0.1" />
-<PackageReference Include="LimeMeta.GraphQL" Version="1.0.1" />
+<PackageReference Include="LimeMeta" Version="1.0.0" />
+<PackageReference Include="LimeMeta.GraphQL" Version="1.0.0" />
 ```
 
 然后运行：
@@ -345,3 +345,4 @@ dotnet build
 ```
 
 升级前阅读 LimeMeta 的 `CHANGELOG.md`。不要把框架源码复制进业务仓库；需要替换的能力优先通过 DI、Logic、GraphQL Type Extension、FastEndpoints 或文件/WebSocket 扩展点完成。
+

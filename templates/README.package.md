@@ -17,7 +17,7 @@ cd MyService
 创建指定框架版本的项目：
 
 ```powershell
-dotnet new limemeta -n MyService --limeMetaVersion 1.0.1
+dotnet new limemeta -n MyService --limeMetaVersion 1.0.0
 ```
 
 ## 生成后从哪里开始
@@ -41,3 +41,4 @@ dotnet new uninstall LimeMeta.Templates
 ```
 
 项目生成后，框架包版本固定写入业务项目的 `.csproj`，不会因为模板更新而自动改变。升级项目前请同时更新 `LimeMeta` 和 `LimeMeta.GraphQL`，并保持版本一致。
+

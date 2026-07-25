@@ -21,7 +21,7 @@ public sealed class TemplateContractTests
         var developmentConfig = File.ReadAllText(
             Path.Combine(templateRoot, "LimeMetaService.WebAPI", "appsettings.Development.yml"));
 
-        Assert.Equal("1.0.1", defaultVersion);
+        Assert.Equal("1.0.0", defaultVersion);
         Assert.Contains("DataType: \"MySql\"", developmentConfig);
         Assert.Contains("Port=3306", developmentConfig);
         Assert.Contains("Path: \"./FileStore\"", developmentConfig);
@@ -99,3 +99,4 @@ public sealed class TemplateContractTests
             ?? throw new DirectoryNotFoundException("无法定位 LimeMeta 仓库根目录。");
     }
 }
+

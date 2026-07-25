@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory)]
     [string]$PackageDirectory,
-    [string]$Version = "1.0.1"
+    [string]$Version = "1.0.0"
 )
 
 $ErrorActionPreference = "Stop"
@@ -106,3 +106,4 @@ finally {
 }
 
 Write-Host "模板本地安装、生成、还原和构建检查通过。"
+
