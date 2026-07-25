@@ -71,50 +71,6 @@ public sealed class LimeMetaConfiguration
     /// 文件存储配置
     /// </summary>
     public FileStoreConfiguration FileStore { get; set; } = new();
-
-    /// <summary>
-    /// 是否允许用户自助注册。
-    /// </summary>
-    public bool AllowSelfRegister { get; set; } = true;
-
-    /// <summary>
-    /// 注册是否要求邮箱验证码。
-    /// </summary>
-    public bool RegisterRequireEmailCode { get; set; } = true;
-
-    /// <summary>
-    /// SMTP 发信配置。
-    /// </summary>
-    public SmtpConfiguration Smtp { get; set; } = new();
-}
-
-/// <summary>
-/// SMTP 发信配置。
-/// </summary>
-public sealed class SmtpConfiguration
-{
-    public string Host { get; set; } = "smtp.163.com";
-
-    public int Port { get; set; } = 465;
-
-    public bool UseSsl { get; set; } = true;
-
-    public string UserName { get; set; } = string.Empty;
-
-    public string Password { get; set; } = string.Empty;
-
-    public string From { get; set; } = string.Empty;
-
-    public string FromDisplayName { get; set; } = "LimeMeta";
-
-    /// <summary>
-    /// 是否已配置到可发信状态。
-    /// </summary>
-    public bool IsConfigured =>
-        !string.IsNullOrWhiteSpace(Host)
-        && !string.IsNullOrWhiteSpace(UserName)
-        && !string.IsNullOrWhiteSpace(Password)
-        && !string.IsNullOrWhiteSpace(From);
 }
 
 /// <summary>

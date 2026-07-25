@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using LimeMeta.Attributes;
 using LimeMeta.Models;
 using LimeMeta.Logics;
 using LimeMeta.Data;
@@ -67,11 +66,6 @@ internal sealed class QueryType : ObjectType<Query>
         // 动态为每个 ModelType 生成查询字段
         foreach (var modelType in LogicManager.ModelTypes)
         {
-            if (modelType.GetCustomAttribute<LimeMetaIgnoreGraphQLAttribute>() != null)
-            {
-                continue;
-            }
-
             var method = typeof(QueryType)
                 .GetMethod(nameof(AddQueryField), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
                 .MakeGenericMethod(modelType);

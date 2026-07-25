@@ -23,16 +23,6 @@ LimeMeta:
   JwtSignKey: ""
   AutoSyncSchema: true
   LoadSeedOnStartup: true
-  AllowSelfRegister: true
-  RegisterRequireEmailCode: true
-  Smtp:
-    Host: "smtp.163.com"
-    Port: 465
-    UseSsl: true
-    UserName: ""
-    Password: ""
-    From: ""
-    FromDisplayName: "LimeMeta"
   WebSocket:
     Path: "/api/ws"
     MaxMessageSize: 1048576

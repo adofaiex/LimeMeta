@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using FreeSql.DataAnnotations;
 using LimeMeta.Attributes;
 using System.Text.Json.Serialization;
@@ -36,18 +40,6 @@ public class User : BaseAudit
     public string? Phone { get; set; }
 
     /// <summary>
-    /// 邮箱
-    /// </summary>
-    [Column(Name = "email", StringLength = 200), Indexed]
-    public string? Email { get; set; }
-
-    /// <summary>
-    /// 头像文件 ID
-    /// </summary>
-    [Column(Name = "avatar_file_id"), Indexed]
-    public Guid? AvatarFileId { get; set; }
-
-    /// <summary>
     /// 角色
     /// </summary>
     [Navigate(ManyToMany = typeof(UserRole))]
@@ -65,13 +57,18 @@ public class User : BaseAudit
 /// </summary>
 public class UserDto : BaseDto
 {
+    /// <summary>
+    /// 名称
+    /// </summary>
     public required string Name { get; set; }
 
+    /// <summary>
+    /// 用户名
+    /// </summary>
     public required string Username { get; set; }
 
+    /// <summary>
+    /// 手机
+    /// </summary>
     public string? Phone { get; set; }
-
-    public string? Email { get; set; }
-
-    public Guid? AvatarFileId { get; set; }
 }

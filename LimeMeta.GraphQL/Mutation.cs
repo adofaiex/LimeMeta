@@ -1,6 +1,5 @@
 using HotChocolate.Authorization;
 using HotChocolate.Resolvers;
-using LimeMeta.Account;
 using LimeMeta.Data;
 using LimeMeta.Logics;
 using LimeMeta.Models;
@@ -11,69 +10,14 @@ namespace LimeMeta.GraphQL;
 internal sealed class Mutation
 {
     [AllowAnonymous]
-    public async Task<LoginResult> Login(
+    public LoginResult Login(
         [Service] ILimeMeta meta,
         [Service] ILimeMetaPasswordHasher passwordHasher,
-        [Service] AccountRegistrationService accountService,
         IResolverContext context,
         string username,
-        string password,
-        CancellationToken ct)
+        string password)
     {
-        var result = UserLogic.Login(meta, passwordHasher, username, password, context);
-        return await accountService.EnrichLoginAsync(result, username, ct);
-    }
-
-    [AllowAnonymous]
-    public async Task<bool> SendRegisterCode(
-        string email,
-        [Service] AccountRegistrationService accountService,
-        CancellationToken ct)
-    {
-        try
-        {
-            await accountService.SendRegisterCodeAsync(email, ct);
-            return true;
-        }
-        catch (LimeMetaException ex)
-        {
-            throw new GraphQLException(ex.Message);
-        }
-    }
-
-    [AllowAnonymous]
-    public async Task<LoginResult> Register(
-        string username,
-        string password,
-        string email,
-        string? code,
-        [Service] AccountRegistrationService accountService,
-        CancellationToken ct)
-    {
-        try
-        {
-            return await accountService.RegisterAsync(username, password, email, code, ct);
-        }
-        catch (LimeMetaException ex)
-        {
-            throw new GraphQLException(ex.Message);
-        }
-    }
-
-    public async Task<LoginResult> UpdateMyAvatar(
-        Guid fileId,
-        [Service] AccountRegistrationService accountService,
-        IResolverContext context,
-        CancellationToken ct)
-    {
-        try
-        {
-            return await accountService.UpdateMyAvatarAsync(GetCurrentUserId(context), fileId, ct);
-        }
-        catch (LimeMetaException ex)
-        {
-            throw new GraphQLException(ex.Message);
-        }
+        return UserLogic.Login(meta, passwordHasher, username, password, context);
     }
 
     public Guid CreateUser(
@@ -84,27 +28,16 @@ internal sealed class Mutation
         string username,
         string password,
         string? phone,
-        string? email,
         IReadOnlyList<Guid>? roleIds)
     {
         var authUserId = GetCurrentUserId(context);
         EnsureAdmin(meta, authUserId);
-
-        if (!string.IsNullOrWhiteSpace(email))
-        {
-            email = email.Trim().ToLowerInvariant();
-            if (meta.Query<User>().Any(x => x.Email == email))
-            {
-                throw new GraphQLException("该邮箱已被占用。");
-            }
-        }
 
         var user = new User
         {
             Name = name,
             Username = username,
             Phone = phone,
-            Email = string.IsNullOrWhiteSpace(email) ? null : email,
             PasswordHash = passwordHasher.HashPassword(password)
         };
 
@@ -119,7 +52,6 @@ internal sealed class Mutation
         Guid userId,
         string? name,
         string? phone,
-        string? email,
         IReadOnlyList<Guid>? roleIds)
     {
         var authUserId = GetCurrentUserId(context);
@@ -139,19 +71,6 @@ internal sealed class Mutation
         {
             user.Phone = phone;
             fields.Add(nameof(User.Phone));
-        }
-
-        if (email is not null)
-        {
-            var normalized = string.IsNullOrWhiteSpace(email) ? null : email.Trim().ToLowerInvariant();
-            if (normalized is not null
-                && meta.Query<User>().Any(x => x.Email == normalized && x.Id != userId))
-            {
-                throw new GraphQLException("该邮箱已被占用。");
-            }
-
-            user.Email = normalized;
-            fields.Add(nameof(User.Email));
         }
 
         if (fields.Count > 0)

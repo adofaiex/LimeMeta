@@ -12,20 +12,28 @@ namespace LimeMeta.Endpoints;
 /// </summary>
 internal sealed class FileUploadEndpoint : Endpoint<FileUploadRequest, FileUploadResponse>
 {
+    /// <summary>
+    /// Configure
+    /// </summary>
     public override void Configure()
     {
         Post("/api/file/upload");
-        AllowFileUploads();
+        AllowFileUploads(); // 核心：必须调用此方法以告知 Swagger 这是个文件上传接口
     }
 
+    /// <summary>
+    /// HandleAsync
+    /// </summary>
+    /// <param name="req"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
     public override async Task HandleAsync(FileUploadRequest req, CancellationToken ct)
     {
-        var claim = User.Claims.First(r => r.Type == UserLogic.ClaimUserId);
-        var userId = Guid.Parse(claim.Value);
+        var cliam = User.Claims.First(r => r.Type == UserLogic.ClaimUserId);
+        var userId = Guid.Parse(cliam.Value);
 
         var meta = Resolve<ILimeMeta>();
         var storage = Resolve<IFileStorageProviderResolver>().Current;
-        var urlResolver = Resolve<FileUrlResolver>();
 
         var items = new List<FileUploadResponseItem>();
         foreach (var file in req.Files)
@@ -50,44 +58,66 @@ internal sealed class FileUploadEndpoint : Endpoint<FileUploadRequest, FileUploa
                 Meta = saveResult.Meta
             };
 
-            meta.Insert([info], userId);
+            meta.Insert(new[] { info }, userId);
 
-            // 确保返回稳定公开 URL（Local 依赖 Id；Pan123 可能上传时已写直链）
-            info.Url = await urlResolver.ResolveAsync(info, persist: true, ct);
-
-            items.Add(new FileUploadResponseItem
+            var item = new FileUploadResponseItem
             {
                 Id = info.Id,
                 Name = file.FileName,
                 Provider = info.Provider,
-                ProviderId = info.ProviderId,
-                Url = info.Url
-            });
+                ProviderId = info.ProviderId
+            };
+            items.Add(item);
         }
 
         await Send.OkAsync(new FileUploadResponse { Items = items }, ct);
     }
 }
 
+/// <summary>
+/// FileUploadRequest
+/// </summary>
 internal sealed class FileUploadRequest
 {
+    /// <summary>
+    /// Files
+    /// </summary>
     public List<IFormFile> Files { get; set; } = [];
 }
 
+/// <summary>
+/// FileUploadResponse
+/// </summary>
 internal sealed class FileUploadResponse
 {
+    /// <summary>
+    /// Files
+    /// </summary>
     public List<FileUploadResponseItem> Items { get; set; } = [];
 }
 
+/// <summary>
+/// FileUploadResponseItem
+/// </summary>
 internal sealed class FileUploadResponseItem
 {
+    /// <summary>
+    /// Id
+    /// </summary>
     public Guid Id { get; set; }
 
+    /// <summary>
+    /// Name
+    /// </summary>
     public required string Name { get; set; }
 
+    /// <summary>
+    /// Provider
+    /// </summary>
     public string? Provider { get; set; }
 
+    /// <summary>
+    /// ProviderId
+    /// </summary>
     public string? ProviderId { get; set; }
-
-    public string? Url { get; set; }
 }

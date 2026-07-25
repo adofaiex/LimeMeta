@@ -1,8 +1,10 @@
-using System.Reflection;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
-using LimeMeta.Attributes;
-using LimeMeta.Authorization;
+using System.Threading.Tasks;
 using LimeMeta.Data;
+using LimeMeta.Authorization;
 using LimeMeta.Logics;
 using LimeMeta.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,38 +12,62 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
 namespace LimeMeta.GraphQL;
-
 /// <summary>
 /// MutationType
 /// </summary>
 internal sealed class MutationType : ObjectType<Mutation>
 {
+    /// <summary>
+    /// LogicManager
+    /// </summary>
+    /// <value></value>
     public ILogicManager LogicManager { get; }
 
+    /// <summary>
+    /// Logger
+    /// </summary>
+    /// <value></value>
     public ILogger<MutationType> Logger { get; }
 
+    /// <summary>
+    /// MutationType
+    /// </summary>
+    /// <param name="logicManager"></param>
+    /// <param name="loggerFactory"></param>
     public MutationType(ILogicManager logicManager, ILoggerFactory loggerFactory)
     {
         LogicManager = logicManager;
         Logger = loggerFactory.CreateLogger<MutationType>();
     }
 
+    /// <summary>
+    /// Configure
+    /// </summary>
+    /// <param name="desc"></param>
     protected override void Configure(IObjectTypeDescriptor<Mutation> desc)
     {
         desc.Authorize();
 
         var mi = GetType().GetMethod(nameof(RegisterModel))!;
 
-        foreach (var model in LogicManager.ModelTypes)
+        var models = LogicManager.ModelTypes;
+        foreach (var model in models)
         {
             if (!model.IsSubclassOf(typeof(BaseObject))) continue;
-            if (model.GetCustomAttribute<LimeMetaIgnoreGraphQLAttribute>() != null) continue;
 
             var dtoType = LogicManager.GetModelDtoType(model);
             mi.MakeGenericMethod(model, dtoType).Invoke(null, [desc, LogicManager, Logger]);
         }
     }
 
+    /// <summary>
+    /// RegisterModel
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TDto"></typeparam>
+    /// <param name="desc"></param>
+    /// <param name="logicManager"></param>
+    /// <param name="logger"></param>
     public static void RegisterModel<T, TDto>(IObjectTypeDescriptor<Mutation> desc, ILogicManager logicManager, ILogger logger)
         where T : BaseObject, new()
         where TDto : BaseDto, new()
@@ -56,6 +82,15 @@ internal sealed class MutationType : ObjectType<Mutation>
         }
     }
 
+    /// <summary>
+    /// Insert
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TDto"></typeparam>
+    /// <param name="desc"></param>
+    /// <param name="logicManager"></param>
+    /// <param name="logger"></param>
+    /// <returns></returns>
     public static void Insert<T, TDto>(IObjectTypeDescriptor<Mutation> desc, ILogicManager logicManager, ILogger logger)
         where T : BaseObject, new()
         where TDto : BaseDto, new()
@@ -63,69 +98,119 @@ internal sealed class MutationType : ObjectType<Mutation>
         var type = typeof(T);
 
         desc.Field($"insert{type.Name}")
-            .Argument("objs", a => a.Type<NonNullType<ListType<NonNullType<InputObjectType<TDto>>>>>())
-            .Type<NonNullType<ListType<NonNullType<UuidType>>>>()
-            .Resolve(async ctx =>
+            .Authorize()
+            .Argument("objs", a => a.Type(typeof(List<TDto>)))
+            .Resolve(ctx =>
             {
-                var userId = Guid.Parse(ctx.GetUser()!.Claims.First(r => r.Type == UserLogic.ClaimUserId).Value);
-                var meta = ctx.Service<ILimeMeta>();
-                ctx.Service<ILimeMetaAuthorizationService>()
-                    .EnsureAuthorized(meta, userId, typeof(T), LimeMetaOperation.Insert);
+                var cliam = ctx.GetUser()!.Claims.First(r => r.Type == UserLogic.ClaimUserId);
+                var userId = Guid.Parse(cliam.Value);
 
-                var dtos = ctx.ArgumentValue<List<TDto>>("objs");
-                var objs = logicManager.ModelMapper.Map<List<T>>(dtos);
-                meta.Insert(objs, userId, true, ctx);
-                return objs.Select(o => o.Id).ToList();
+                var meta = ctx.Service<ILimeMeta>();
+                var authorization = ctx.Service<ILimeMetaAuthorizationService>();
+
+                var newObjs = new List<T>();
+                var objs = ctx.ArgumentValue<List<TDto>>("objs");
+
+                try
+                {
+                    authorization.EnsureAuthorized(meta, userId, type, LimeMetaOperation.Insert);
+                    foreach (var dto in objs)
+                    {
+                        var obj = logicManager.ModelMapper.Map<TDto, T>(dto);
+                        newObjs.Add(obj);
+                    }
+
+                    meta.Insert(newObjs, userId, true, ctx);
+                    return newObjs.Select(r => r.Id);
+                }
+                catch (Exception ex)
+                {
+                    meta.Logger.LogError(ex, "新增异常");
+                    ctx.ReportError(ex.Message);
+                    return [];
+                }
             });
     }
 
+
+    /// <summary>
+    /// Update
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="desc"></param>
+    /// <param name="logicManager"></param>
+    /// <param name="logger"></param>
     public static void Update<T>(IObjectTypeDescriptor<Mutation> desc, ILogicManager logicManager, ILogger logger)
         where T : BaseObject, new()
     {
         var type = typeof(T);
 
         desc.Field($"update{type.Name}")
-            .Argument("objs", a => a.Type<NonNullType<ListType<NonNullType<AnyType>>>>())
-            .Type<NonNullType<IntType>>()
+            .Authorize()
+            .Argument("objs", a => a.Type(typeof(List<JsonElement>)))
             .Resolve(ctx =>
             {
-                var userId = Guid.Parse(ctx.GetUser()!.Claims.First(r => r.Type == UserLogic.ClaimUserId).Value);
+                var objs = ctx.ArgumentValue<List<JsonElement>>("objs");
                 var meta = ctx.Service<ILimeMeta>();
-                ctx.Service<ILimeMetaAuthorizationService>()
-                    .EnsureAuthorized(meta, userId, typeof(T), LimeMetaOperation.Update);
+                var authorization = ctx.Service<ILimeMetaAuthorizationService>();
 
-                var raw = ctx.ArgumentValue<List<object>>("objs");
-                var jobjs = raw.Select(r =>
+                var cliam = ctx.GetUser()!.Claims.First(r => r.Type == UserLogic.ClaimUserId);
+                var userId = Guid.Parse(cliam.Value);
+
+                int total = 0;
+                try
                 {
-                    if (r is JsonElement je)
-                    {
-                        return JObject.Parse(je.GetRawText());
-                    }
+                    authorization.EnsureAuthorized(meta, userId, type, LimeMetaOperation.Update);
+                    total = meta.Update<T>(objs.Select(r => JObject.Parse(r.ToString())), userId, true, ctx);
+                }
+                catch (Exception ex)
+                {
+                    meta.Logger.LogError(ex, "更新异常");
+                    ctx.ReportError(ex.Message);
+                }
 
-                    return JObject.FromObject(r);
-                }).ToList();
-
-                return meta.Update<T>(jobjs, userId, true, ctx);
+                return total;
             });
     }
 
+    /// <summary>
+    /// Delete
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="desc"></param>
+    /// <param name="logicManager"></param>
+    /// <param name="logger"></param>
     public static void Delete<T>(IObjectTypeDescriptor<Mutation> desc, ILogicManager logicManager, ILogger logger)
         where T : BaseObject, new()
     {
         var type = typeof(T);
 
         desc.Field($"delete{type.Name}")
-            .Argument("ids", a => a.Type<NonNullType<ListType<NonNullType<UuidType>>>>())
-            .Type<NonNullType<IntType>>()
+            .Authorize()
+            .Argument("ids", a => a.Type(typeof(List<Guid>)))
             .Resolve(ctx =>
             {
-                var userId = Guid.Parse(ctx.GetUser()!.Claims.First(r => r.Type == UserLogic.ClaimUserId).Value);
-                var meta = ctx.Service<ILimeMeta>();
-                ctx.Service<ILimeMetaAuthorizationService>()
-                    .EnsureAuthorized(meta, userId, typeof(T), LimeMetaOperation.Delete);
-
                 var ids = ctx.ArgumentValue<List<Guid>>("ids");
-                return meta.Delete<T>(r => ids.Contains(r.Id), userId, true, ctx);
+
+                var cliam = ctx.GetUser()!.Claims.First(r => r.Type == UserLogic.ClaimUserId);
+                var userId = Guid.Parse(cliam.Value);
+
+                var total = 0;
+                var meta = ctx.Service<ILimeMeta>();
+                var authorization = ctx.Service<ILimeMetaAuthorizationService>();
+
+                try
+                {
+                    authorization.EnsureAuthorized(meta, userId, type, LimeMetaOperation.Delete);
+                    total = meta.Delete<T>(r => ids.Contains(r.Id), userId, true, ctx);
+                }
+                catch (Exception ex)
+                {
+                    ctx.ReportError(ex);
+                }
+
+                return total;
             });
     }
 }
+

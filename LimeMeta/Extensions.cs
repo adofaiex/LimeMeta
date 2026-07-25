@@ -5,14 +5,12 @@ using FastEndpoints.Security;
 using FastEndpoints.Swagger;
 using FreeSql;
 using FreeSql.DataAnnotations;
-using LimeMeta.Account;
 using LimeMeta.Attributes;
 using LimeMeta.Authorization;
 using LimeMeta.Configurations;
 using LimeMeta.Data;
 using LimeMeta.Files;
 using LimeMeta.Logics;
-using LimeMeta.Mail;
 using LimeMeta.Models;
 using LimeMeta.Security;
 using LimeMeta.TypeHandlers;
@@ -83,10 +81,6 @@ public static class Extensions
         services.AddScoped<IFileStorageProvider>(sp => sp.GetRequiredService<LocalFileStorageProvider>());
         services.AddScoped<IFileStorageProvider>(sp => sp.GetRequiredService<Pan123CliFileStorageProvider>());
         services.AddScoped<IFileStorageProviderResolver, FileStorageProviderResolver>();
-        services.AddScoped<FileUrlResolver>();
-        services.TryAddSingleton<ILimeMetaEmailSender, SmtpLimeMetaEmailSender>();
-        services.AddScoped<EmailVerificationService>();
-        services.AddScoped<AccountRegistrationService>();
 
         // 添加 JWT；普通 HTTP 仅接受 Authorization/AppKey 请求头，WebSocket 专用路径可接受 access_token。
         var webSocketPath = configuration.GetValue<string>("LimeMeta:WebSocket:Path") ?? "/api/ws";
