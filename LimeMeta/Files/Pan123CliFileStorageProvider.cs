@@ -75,6 +75,20 @@ internal sealed class Pan123CliFileStorageProvider : IFileStorageProvider
                 throw new InvalidOperationException("pan123 上传成功但未返回 fileID。");
             }
 
+            string? url = null;
+            if (options.UseDirectLink)
+            {
+                try
+                {
+                    var linkData = await _runner.RunAsync(["direct-link", "url", providerId], ct);
+                    url = GetString(linkData, "url");
+                }
+                catch
+                {
+                    // 直链获取失败不阻断上传；后续 ResolvePublicUrlAsync / OpenAsync 可重试
+                }
+            }
+
             return new FileStorageSaveResult
             {
                 Provider = ProviderName,
@@ -84,6 +98,7 @@ internal sealed class Pan123CliFileStorageProvider : IFileStorageProvider
                 Hash = hash,
                 ProviderId = providerId,
                 ProviderPath = options.ParentFileId.ToString(),
+                Url = url,
                 Meta = data.GetRawText()
             };
         }
@@ -132,6 +147,25 @@ internal sealed class Pan123CliFileStorageProvider : IFileStorageProvider
         {
             FilePath = path
         };
+    }
+
+    /// <inheritdoc />
+    public async Task<string?> ResolvePublicUrlAsync(FileInfo info, CancellationToken ct)
+    {
+        if (!string.IsNullOrWhiteSpace(info.Url))
+        {
+            return info.Url;
+        }
+
+        if (!_config.FileStore.Pan123Cli.UseDirectLink || string.IsNullOrWhiteSpace(info.ProviderId))
+        {
+            return $"/api/file/download?id={info.Id}";
+        }
+
+        var open = await OpenAsync(info, ct);
+        return string.IsNullOrWhiteSpace(open.RedirectUrl)
+            ? $"/api/file/download?id={info.Id}"
+            : open.RedirectUrl;
     }
 
     /// <inheritdoc />

@@ -12,30 +12,34 @@ namespace LimeMeta.Endpoints;
 /// </summary>
 internal sealed class FileDownloadEndpoint : Endpoint<FileDownloadRequest>
 {
-    /// <summary>
-    /// Configure
-    /// </summary>
+    /// <inheritdoc />
     public override void Configure()
     {
         Get("/api/file/download");
+        AllowAnonymous();
     }
 
-    /// <summary>
-    /// HandleAsync
-    /// </summary>
-    /// <param name="req"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
+    /// <inheritdoc />
     public override async Task HandleAsync(FileDownloadRequest req, CancellationToken ct)
     {
-        // var cliam = User.Claims.First(r => r.Type == UserLogic.ClaimUserId);
-        // var userId = Guid.Parse(cliam.Value);
-
         var meta = Resolve<ILimeMeta>();
         var info = meta.Query<ModelFileInfo>().FirstOrDefault(r => r.Id == req.Id);
         if (info == null)
         {
             await Send.NotFoundAsync(ct);
+            return;
+        }
+
+        var urlResolver = Resolve<FileUrlResolver>();
+        var publicUrl = await urlResolver.ResolveAsync(info, persist: true, ct);
+
+        if (req.Redirect == false)
+        {
+            await Send.OkAsync(new FileDownloadUrlResponse
+            {
+                Id = info.Id,
+                Url = publicUrl ?? $"/api/file/download?id={info.Id}"
+            }, ct);
             return;
         }
 
@@ -69,13 +73,19 @@ internal sealed class FileDownloadEndpoint : Endpoint<FileDownloadRequest>
     }
 }
 
-/// <summary>
-/// FileDownloadRequest
-/// </summary>
 internal sealed class FileDownloadRequest
 {
-    /// <summary>
-    /// Id
-    /// </summary>
     public required Guid Id { get; set; }
+
+    /// <summary>
+    /// 是否 HTTP 重定向到公开地址。false 时返回 JSON { id, url }。
+    /// </summary>
+    public bool? Redirect { get; set; } = true;
+}
+
+internal sealed class FileDownloadUrlResponse
+{
+    public Guid Id { get; set; }
+
+    public required string Url { get; set; }
 }

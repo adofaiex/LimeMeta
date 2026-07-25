@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-25
+
+### Added
+
+- 文件存储公开 URL：`IFileStorageProvider.ResolvePublicUrlAsync`、`FileUrlResolver`；Pan123 上传写入直链；上传响应返回 `url`；下载支持 `redirect=false`。
+- 内置用户字段：`User.Email`、`User.AvatarFileId`；`LoginResult` 增加 `userId`/`email`/`avatarUrl`。
+- 内置 SMTP（`LimeMeta:Smtp`）与邮箱验证码；匿名 `sendRegisterCode` / `register`；登录态 `updateMyAvatar`。
+- `[LimeMetaIgnoreGraphQL]`：模型参与建表但不生成自动 GraphQL CRUD。
+- 配置：`AllowSelfRegister`、`RegisterRequireEmailCode`。
+
 ## [1.0.1] - 2026-07-25
 
 ### Fixed

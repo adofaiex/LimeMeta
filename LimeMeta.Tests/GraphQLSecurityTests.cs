@@ -38,9 +38,16 @@ public sealed class GraphQLSecurityTests
 
         Assert.DoesNotContain("passwordHash", schema, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("crypt(", schema, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("EmailVerificationCode(", schema, StringComparison.Ordinal);
+        Assert.DoesNotContain("insertEmailVerificationCode(", schema, StringComparison.Ordinal);
         Assert.Contains("login(", schema, StringComparison.Ordinal);
         Assert.Contains("createUser(", schema, StringComparison.Ordinal);
         Assert.Contains("changePassword(", schema, StringComparison.Ordinal);
+        Assert.Contains("sendRegisterCode(", schema, StringComparison.Ordinal);
+        Assert.Contains("register(", schema, StringComparison.Ordinal);
+        Assert.Contains("updateMyAvatar(", schema, StringComparison.Ordinal);
+        Assert.Contains("avatarUrl", schema, StringComparison.Ordinal);
+        Assert.Contains("userId", schema, StringComparison.Ordinal);
     }
 
     private sealed class TestEnvironment : IHostEnvironment

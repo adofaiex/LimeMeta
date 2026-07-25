@@ -58,6 +58,17 @@ LimeMeta:
       TempPath: "./TempUpload"
       Overwrite: false
 
+  AllowSelfRegister: true
+  RegisterRequireEmailCode: true
+  Smtp:
+    Host: "smtp.163.com"
+    Port: 465
+    UseSsl: true
+    UserName: ""
+    Password: ""
+    From: ""
+    FromDisplayName: "LimeMeta"
+
   WebSocket:
     Path: "/api/ws"
     MaxMessageSize: 1048576
@@ -75,6 +86,9 @@ LimeMeta:
 | `JwtExpires` | JWT 有效期，单位毫秒 |
 | `AutoSyncSchema` | 启动时是否根据模型同步表结构 |
 | `LoadSeedOnStartup` | 启动时是否初始化管理员并加载 Seed |
+| `AllowSelfRegister` | 是否开放匿名自助注册（`sendRegisterCode` / `register`） |
+| `RegisterRequireEmailCode` | 注册是否必须校验邮箱验证码 |
+| `Smtp` | 发信配置；未配齐时 Development 可将验证码打到日志，Production 会拒绝发信 |
 | `FileStore.Provider` | 当前上传使用的文件 Provider |
 | `WebSocket.Path` | WebSocket 统一入口 |
 | `WebSocket.MaxMessageSize` | 单条 WebSocket 消息最大字节数 |
