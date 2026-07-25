@@ -7,9 +7,15 @@ LimeMeta 是一个面向 .NET 10 的模型驱动后端框架。它把 FreeSql �
 首次使用时，直接从 NuGet.org 安装模板：
 
 ```powershell
-dotnet new install LimeMeta.Templates
+dotnet new install LimeMeta.Templates --version 1.0.0
 dotnet new limemeta -n MyService
 cd MyService
+```
+
+如果你希望显式固定版本，也可以先指定安装参数：
+
+```powershell
+dotnet new install LimeMeta.Templates@1.0.0
 ```
 
 模板默认使用 MySQL。先创建数据库并修改开发连接串：
@@ -61,6 +67,39 @@ LimeMeta/
 <PackageReference Include="LimeMeta" Version="1.0.0" />
 <PackageReference Include="LimeMeta.GraphQL" Version="1.0.0" />
 ```
+
+应用开发者常用安装命令（固定 1.0.0）：
+
+```powershell
+dotnet add package LimeMeta --version 1.0.0 --source https://api.nuget.org/v3/index.json
+dotnet add package LimeMeta.GraphQL --version 1.0.0 --source https://api.nuget.org/v3/index.json
+dotnet new install LimeMeta.Templates --version 1.0.0
+```
+
+## 常见发布与安装问题
+
+- 为什么我搜索不到 `LimeMeta` 系列包？
+  - NuGet.org 有索引延迟是常态。上传成功后通常会在数分钟到几十分钟内完成索引，期间可能搜索不到。
+  - 如果你已知版本，仍可按版本安装：
+    - `dotnet new install LimeMeta.Templates@1.0.0`
+    - `dotnet add package LimeMeta --version 1.0.0`
+    - `dotnet add package LimeMeta.GraphQL --version 1.0.0`
+
+- 创建项目时报 “找不到模板包”？
+  - 先清理本地模板缓存重装：
+
+    ```powershell
+    dotnet new uninstall LimeMeta.Templates
+    dotnet new install LimeMeta.Templates --version 1.0.0
+    ```
+
+- 我在 Git 状态里看到“发布（Publish）”按钮是正常吗？
+  - 这是正常的。它通常表示当前分支尚未关联远端上游分支或尚未推送。
+  - 可以这样把本地 `main` 与远端 `main` 关联并推送：
+
+    ```powershell
+    git push --set-upstream origin main
+    ```
 
 ## 模型与 DTO
 

@@ -82,6 +82,24 @@ GraphQL 浏览器通常可以在请求 Headers 区域填写：
 
 如果登录结果中的 `token` 是 `null`，表示用户名或密码错误。框架不会在错误信息中区分两者。
 
+## 常见安装与环境问题
+
+- 安装了模板但 `dotnet new limemeta` 仍找不到模板？
+  - 先确认模板安装成功：`dotnet new list` 里能看到 `LimeMeta Service`。
+  - 如有缓存干扰，执行：
+    ```powershell
+    dotnet new uninstall LimeMeta.Templates
+    dotnet new install LimeMeta.Templates --version 1.0.0
+    ```
+
+- 明明已发布但搜不到包？
+  - NuGet 上线有索引延迟，先按版本直接安装即可：
+    ```powershell
+    dotnet new install LimeMeta.Templates@1.0.0
+    dotnet add package LimeMeta --version 1.0.0
+    dotnet add package LimeMeta.GraphQL --version 1.0.0
+    ```
+
 ## 写第一个业务模型
 
 在 `LimeMetaService/Models/Article.cs` 新建：
