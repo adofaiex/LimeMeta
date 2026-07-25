@@ -8,7 +8,7 @@
     <NoWarn>$(NoWarn);1591;RS0026</NoWarn>
     <PackageId>LimeMeta</PackageId>
     <Title>LimeMeta 后端框架</Title>
-    <Description>adofaiex 内部模型驱动 .NET 后端框架，提供数据库结构同步、Logic 生命周期、认证、REST、文件存储与 WebSocket。</Description>
+    <Description>模型驱动 .NET 后端框架，提供数据库结构同步、Logic 生命周期、认证、REST、文件存储与 WebSocket。</Description>
     <PackageTags>limemeta;backend;webapi;freesql;fastendpoints;websocket</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

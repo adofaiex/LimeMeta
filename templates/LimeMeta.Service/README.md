@@ -6,19 +6,15 @@
 
 ## 先在 10 分钟内跑起来
 
-### 1. 配置组织 NuGet 源
+### 1. 准备 NuGet 还原环境
 
-项目依赖 `adofaiex` 私有 GitHub Packages。每个开发者和 CI 环境都必须拥有仓库读取权限，并在还原前提供具有 `read:packages` 权限的 classic PAT：
+项目依赖 nuget.org 托管的 `LimeMeta` 与 `LimeMeta.GraphQL` 包。只要用户环境可访问 NuGet.org，通常不需要额外配置。
 
 ```powershell
-$env:GITHUB_USER = "你的 GitHub 用户名"
-$env:GITHUB_PACKAGES_TOKEN = "具有 read:packages 权限的 classic PAT"
-$env:NuGetPackageSourceCredentials_adofaiex = "Username=$env:GITHUB_USER;Password=$env:GITHUB_PACKAGES_TOKEN"
-
-dotnet nuget add source "https://nuget.pkg.github.com/adofaiex/index.json" --name adofaiex
+dotnet restore
 ```
 
-源地址可以保存在当前用户的 NuGet 配置中，但凭据只应通过本机安全存储、环境变量或 CI Secret 提供。不要在业务项目中提交 PAT、明文密码或带凭据的 `NuGet.config`。
+如需固定源，可在本机 `NuGet.config` 中保留 `https://api.nuget.org/v3/index.json`。
 
 ### 2. 准备 MySQL
 
@@ -337,8 +333,8 @@ dotnet publish LimeMetaService.WebAPI/LimeMetaService.WebAPI.csproj \
 修改 `LimeMetaService/LimeMetaService.csproj` 中两个包的版本，并保持一致：
 
 ```xml
-<PackageReference Include="LimeMeta" Version="1.0.0" />
-<PackageReference Include="LimeMeta.GraphQL" Version="1.0.0" />
+<PackageReference Include="LimeMeta" Version="1.0.1" />
+<PackageReference Include="LimeMeta.GraphQL" Version="1.0.1" />
 ```
 
 然后运行：

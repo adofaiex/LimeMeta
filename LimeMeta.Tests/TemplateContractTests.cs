@@ -21,7 +21,7 @@ public sealed class TemplateContractTests
         var developmentConfig = File.ReadAllText(
             Path.Combine(templateRoot, "LimeMetaService.WebAPI", "appsettings.Development.yml"));
 
-        Assert.Equal("1.0.0", defaultVersion);
+        Assert.Equal("1.0.1", defaultVersion);
         Assert.Contains("DataType: \"MySql\"", developmentConfig);
         Assert.Contains("Port=3306", developmentConfig);
         Assert.Contains("Path: \"./FileStore\"", developmentConfig);
@@ -29,7 +29,7 @@ public sealed class TemplateContractTests
     }
 
     [Fact]
-    public void Template_DocumentsOrganizationFeedWithoutEmbeddedCredentials()
+    public void Template_DocumentsPublicNugetFeedWithoutEmbeddedCredentials()
     {
         var templateRoot = Path.Combine(RepositoryRoot, "templates", "LimeMeta.Service");
 
@@ -46,7 +46,8 @@ public sealed class TemplateContractTests
                                !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
                 .Select(File.ReadAllText));
 
-        Assert.Contains("https://nuget.pkg.github.com/adofaiex/index.json", templateText);
+        Assert.Contains("https://api.nuget.org/v3/index.json", templateText);
+        Assert.DoesNotContain("nuget.pkg.github.com/adofaiex/index.json", templateText);
         Assert.DoesNotContain("ClearTextPassword", templateText);
         Assert.DoesNotContain("memsys-lizi", templateText);
         Assert.DoesNotMatch(@"gh[pousr]_[A-Za-z0-9_]{20,}", templateText);

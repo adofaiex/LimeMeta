@@ -1,59 +1,26 @@
-# 组织内部发布指南
+# 公开发布指南
 
-LimeMeta 的正式包只通过 `.github/workflows/release.yml` 发布到
-`adofaiex` 的私有 GitHub Packages。禁止发布到 NuGet.org、个人包源或
-其他公共 Registry，也不要在仓库中保存 PAT。
+LimeMeta 的正式包通过 `.github/workflows/release.yml` 发布到 NuGet.org。
 
 ## 发布目标
 
 - 源码仓库：`https://github.com/adofaiex/LimeMeta`
-- NuGet 源：`https://nuget.pkg.github.com/adofaiex/index.json`
+- NuGet 源：`https://api.nuget.org/v3/index.json`
 - 包：`LimeMeta`、`LimeMeta.GraphQL`、`LimeMeta.Templates`
-- 可见性：Private，并继承 `adofaiex/LimeMeta` 的访问权限
-- 发布凭据：GitHub Actions 为当前仓库签发的短期 `GITHUB_TOKEN`
+- 可见性：Public（公开读取）
+- 版本要求：`Directory.Build.props` 的 `VersionPrefix`、模板 `limeMetaVersion`
+  与 Tag 必须完全一致
 
-## 一次性组织配置
+## 必要配置
 
-1. 保持仓库为 Private，并用组织 Team 管理 Read、Write、Maintain 和
-   Admin 权限。
-2. 在仓库 **Settings → Actions → General** 中允许工作流获得所声明的
-   `packages: write` 和 `contents: write` 权限。
-3. 第一次发布后，在三个 Package 的设置中确认：
-   - 包关联到 `adofaiex/LimeMeta`；
-   - 包继承仓库访问权限；
-   - 未授予组织外部账号或仓库访问权限。
-4. 当前组织为 GitHub Free，私有仓库不能上传 CodeQL 结果，因此不要设置
-   `ENABLE_CODEQL`。未来升级并启用 GitHub Code Security 后，再设置
-   `ENABLE_CODEQL=true`。
-5. 为 `main` 配置适合当前组织套餐的分支规则，至少要求 CI 通过并禁止强推。
+1. 在仓库 **Settings → Secrets and variables → Actions → Repository secrets** 中设置
+   `NUGET_API_KEY`，用于发布到 NuGet.org（建议使用 NuGet API Key）。
+2. 在 `main` 分支配置至少：
+   - CI 必须通过；
+   - 不允许直接推送（禁止强制推送）；
+   - 发布分支要求 `main` 最近成功构建并可回滚。
 
-GitHub Free for organizations 的私有 Packages 与 Actions Artifacts 共享 500 MB
-存储额度，每月包含 1 GB 包下载流量。发布前应在组织 Billing 中设置预算提醒并
-定期清理不再使用的预发布版本。
-
-## 开发者安装凭据
-
-GitHub 的 NuGet Registry 要求客户端认证。每位使用者必须：
-
-1. 拥有 `adofaiex/LimeMeta` 的读取权限。
-2. 创建具有 `read:packages` 权限的 classic PAT；如果组织启用了 SAML SSO，
-   还要为该 Token 授权组织访问。
-3. 在用户级 NuGet 配置中登记源，并通过当前终端环境变量提供凭据：
-
-   ```powershell
-   $env:GITHUB_USER = "你的 GitHub 用户名"
-   $env:GITHUB_PACKAGES_TOKEN = "具有 read:packages 权限的 classic PAT"
-   $env:NuGetPackageSourceCredentials_adofaiex = "Username=$env:GITHUB_USER;Password=$env:GITHUB_PACKAGES_TOKEN"
-
-   dotnet nuget add source "https://nuget.pkg.github.com/adofaiex/index.json" --name adofaiex
-   dotnet new install LimeMeta.Templates
-   ```
-
-不得把 Token、`packageSourceCredentials` 或明文密码提交到任何仓库。
-
-## 发布门槛
-
-只有以下检查全部通过，才可创建标签：
+## 发布门槛（本地或 CI）
 
 ```powershell
 dotnet restore LimeMeta.sln
@@ -69,26 +36,31 @@ pwsh ./scripts/Test-PackageContents.ps1 -PackageDirectory .artifacts/packages
 pwsh ./scripts/Test-TemplatePackage.ps1 -PackageDirectory .artifacts/packages
 ```
 
-MySQL 与 PostgreSQL 的数据库冒烟作业也必须通过。流水线会验证建表、管理员
-初始化、健康检查、登录、CRUD、聚合、Logic、系统模型授权和密码修改。
+MySQL 与 PostgreSQL 数据库冒烟测试也必须通过，确保建表、登录、CRUD、聚合、
+Logic、系统模型授权和密码重置链路可复现。
 
-## 创建内部发布
+## 创建发布
 
-1. 更新 `CHANGELOG.md` 的发布日期。
-2. 确认 `Directory.Build.props`、模板 `limeMetaVersion` 和计划标签完全一致。
-3. 确认 CI 已通过，并确认本次版本尚未发布到组织包源。
-4. 在 `main` 最新提交上创建并推送带签名标签：
+1. 更新 `CHANGELOG.md`。
+2. 更新 `Directory.Build.props`、`templates/LimeMeta.Service/.template.config/template.json`
+   与发布 Tag（如 `v1.0.1`）保持一致。
+3. 在 `main` 最新提交上创建并推送 Tag：
 
    ```powershell
-   git tag -s v1.0.0 -m "LimeMeta 1.0.0"
-   git push origin v1.0.0
+   git tag v1.0.1 -m "LimeMeta 1.0.1"
+   git push origin v1.0.1
    ```
 
-发布工作流会再次运行完整检查，只构建一次发布二进制，并依次发布
-`LimeMeta`、`LimeMeta.GraphQL`、`LimeMeta.Templates`。私有 GitHub Release
-会保存 `.nupkg`、`.snupkg`、SHA-256 和 SPDX SBOM。当前组织套餐不支持私有
-仓库 Artifact Attestations，因此发布流程不生成证明；升级到 GitHub Enterprise
-Cloud 后再启用。
+4. 推送 Tag 后 GitHub Actions 的 `release` 工作流自动触发并完成：
+   - 全历史扫描与依赖漏洞扫描
+   - 全量构建/测试
+   - MySQL 与 PostgreSQL 冒烟测试
+   - 包审计、模板烟雾测试
+   - `.nupkg`、`.snupkg`、SHA-256 和 SPDX SBOM 生成
+   - 推送到 NuGet.org 三个包
+   - 创建 GitHub Release 并附带校验文件
 
-发布失败时，不得用相同版本上传不同内容。确认已经成功上传的包后，修复问题、
-增加版本号并重新运行完整发布流程。
+## 异常处理
+
+发布失败后，不得用同版本重复发布不同内容。确认问题修复后请先提
+升版本并重新打新 Tag。

@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory)]
     [string]$OutputPath,
-    [string]$Version = "1.0.0",
+    [string]$Version = "1.0.1",
     [string]$Commit = "unknown"
 )
 
@@ -36,9 +36,9 @@ $packages = @(
         versionInfo = $Version
         downloadLocation = "NOASSERTION"
         filesAnalyzed = $false
-        licenseConcluded = "LicenseRef-adofaiex-internal"
-        licenseDeclared = "LicenseRef-adofaiex-internal"
-        copyrightText = "Copyright 2026 adofaiex. All rights reserved."
+        licenseConcluded = "Apache-2.0"
+        licenseDeclared = "Apache-2.0"
+        copyrightText = "Copyright © 2026 adofaiex. All rights reserved."
     }
 )
 $relationships = @()
@@ -74,9 +74,9 @@ $document = [ordered]@{
     }
     hasExtractedLicensingInfos = @(
         [ordered]@{
-            licenseId = "LicenseRef-adofaiex-internal"
+            licenseId = "Apache-2.0"
             extractedText = [System.IO.File]::ReadAllText((Join-Path $repositoryRoot "LICENSE"))
-            name = "LimeMeta Internal Use License"
+            name = "Apache License 2.0"
         }
     )
     packages = $packages

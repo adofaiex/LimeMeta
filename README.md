@@ -2,24 +2,15 @@
 
 LimeMeta 是一个面向 .NET 10 的模型驱动后端框架。它把 FreeSql 数据访问、数据库结构同步、GraphQL 自动查询与修改、FastEndpoints、Logic 生命周期、JWT 认证、文件存储和 WebSocket 组合在一起。
 
-> 本仓库及其 NuGet 包仅供 `adofaiex` 组织授权成员内部使用，禁止向组织外分发。
-
 ## 安装模板
 
-首次使用时，先在当前用户的 NuGet 配置中登记组织包源。不要把 PAT 写入仓库或项目配置：
+首次使用时，直接从 NuGet.org 安装模板：
 
 ```powershell
-$env:GITHUB_USER = "你的 GitHub 用户名"
-$env:GITHUB_PACKAGES_TOKEN = "具有 read:packages 权限的 classic PAT"
-$env:NuGetPackageSourceCredentials_adofaiex = "Username=$env:GITHUB_USER;Password=$env:GITHUB_PACKAGES_TOKEN"
-
-dotnet nuget add source "https://nuget.pkg.github.com/adofaiex/index.json" --name adofaiex
 dotnet new install LimeMeta.Templates
 dotnet new limemeta -n MyService
 cd MyService
 ```
-
-PAT 对应的 GitHub 账号还必须拥有 `adofaiex/LimeMeta` 的读取权限。上述凭据环境变量只对当前终端有效；请勿提交包含 `packageSourceCredentials`、PAT 或明文密码的 `NuGet.config`。
 
 模板默认使用 MySQL。先创建数据库并修改开发连接串：
 
@@ -67,8 +58,8 @@ LimeMeta/
 业务项目只引用 NuGet 包，不复制框架源码：
 
 ```xml
-<PackageReference Include="LimeMeta" Version="1.0.0" />
-<PackageReference Include="LimeMeta.GraphQL" Version="1.0.0" />
+<PackageReference Include="LimeMeta" Version="1.0.1" />
+<PackageReference Include="LimeMeta.GraphQL" Version="1.0.1" />
 ```
 
 ## 模型与 DTO
@@ -269,7 +260,7 @@ dotnet test LimeMeta.sln -c Release
 
 `.nuget/` 会生成三个 `.nupkg`，两个框架包同时生成 `.snupkg`。
 
-正式发布只由 `v*` Git tag 触发 GitHub Actions，并使用工作流自带的短期 `GITHUB_TOKEN` 发布到 `adofaiex` 的私有 GitHub Packages。
+正式发布只由 `v*` Git tag 触发 GitHub Actions，并使用工作流读取的 `NUGET_API_KEY` 发布到 NuGet.org。
 维护者的首次发布配置、检查门槛和标签步骤见 [RELEASING.md](RELEASING.md)。
 
 ## 版本与兼容性
@@ -280,18 +271,18 @@ LimeMeta 使用 Semantic Versioning：
 - Minor：向后兼容功能。
 - Major：公共 API 破坏性变更。
 
-`1.0.0` 只支持 `net10.0`。模板默认固定引用与模板包相同的框架版本。
+`1.0.1` 只支持 `net10.0`。模板默认固定引用与模板包相同的框架版本。
 
 ## 安全
 
-请勿在普通 Issue 中披露安全漏洞。内部报告方式见 [SECURITY.md](SECURITY.md)。
+请勿在普通 Issue 中披露安全漏洞。报告方式见 [SECURITY.md](SECURITY.md)。
 
 ## 参与贡献
 
-组织内贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)，协作行为规范见 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
+贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)，协作行为规范见 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
 
 ## 许可证
 
-Copyright 2026 adofaiex. All rights reserved.
+Copyright 2026 adofaiex.
 
-这是组织内部专有软件，使用与分发限制见 [LICENSE](LICENSE)。
+框架与模板使用 Apache-2.0 授权，详见 [LICENSE](LICENSE)。

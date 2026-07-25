@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory)]
     [string]$PackageDirectory,
-    [string]$Version = "1.0.0"
+    [string]$Version = "1.0.1"
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,7 +15,7 @@ $expectedPackages = @(
 $forbiddenPatterns = @(
     "ghp_[A-Za-z0-9]+",
     "github_pat_[A-Za-z0-9_]+",
-    "nuget\.pkg\.github\.com/memsys-lizi",
+    "nuget\.pkg\.github\.com/adofaiex",
     "<packageSourceCredentials",
     "ClearTextPassword",
     "Main\.txt",
@@ -68,8 +68,16 @@ foreach ($fileName in $expectedPackages) {
         }
         [xml]$metadataDocument = Get-Content -LiteralPath $nuspec.FullName -Raw
         $metadata = $metadataDocument.package.metadata
-        if ($metadata.license.type -ne "file" -or $metadata.license.InnerText -ne "LICENSE") {
-            throw "$fileName 的许可证元数据不正确。"
+        if ([string]$metadata.license.type -eq "expression") {
+            if ([string]$metadata.license.InnerText -ne "Apache-2.0") {
+                throw "$fileName 的许可证表达式应为 Apache-2.0。"
+            }
+        } elseif ([string]$metadata.license.type -eq "file") {
+            if ([string]$metadata.license.InnerText -ne "LICENSE") {
+                throw "$fileName 的许可证文件声明不正确。"
+            }
+        } else {
+            throw "$fileName 缺少许可证元数据。"
         }
         if ($metadata.icon -ne "limemeta-icon.png" -or [string]::IsNullOrWhiteSpace($metadata.readme)) {
             throw "$fileName 缺少图标或 README 元数据。"

@@ -6,7 +6,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>LimeMeta.Templates</PackageId>
     <Title>LimeMeta 项目模板</Title>
-    <Description>用于创建 adofaiex 内部 LimeMeta MySQL 后端服务的 dotnet new 项目模板。</Description>
+    <Description>用于创建 LimeMeta MySQL 后端服务的 dotnet new 项目模板。</Description>
     <PackageTags>limemeta;dotnet-new;templates;webapi;graphql;mysql</PackageTags>
     <PackageType>Template</PackageType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
