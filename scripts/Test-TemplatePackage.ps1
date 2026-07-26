@@ -2,14 +2,19 @@
 param(
     [Parameter(Mandatory)]
     [string]$PackageDirectory,
-    [string]$Version = "1.0.0"
+    [string]$Version
 )
 
 $ErrorActionPreference = "Stop"
 $packageRoot = (Resolve-Path -LiteralPath $PackageDirectory).Path
-$templatePackage = Join-Path $packageRoot "LimeMeta.Templates.$Version.nupkg"
-if (-not (Test-Path -LiteralPath $templatePackage)) {
-    throw "缺少模板包：$templatePackage"
+$packages = @(Get-ChildItem -LiteralPath $packageRoot -Filter "*.nupkg" -File)
+if ($packages.Count -ne 1 -or $packages[0].Name -notlike "LimeMeta.Templates.*.nupkg") {
+    throw "发布目录只能包含一个 LimeMeta.Templates nupkg。"
+}
+$templatePackage = $packages[0].FullName
+if (-not [string]::IsNullOrWhiteSpace($Version) -and
+    $packages[0].Name -ne "LimeMeta.Templates.$Version.nupkg") {
+    throw "模板包版本不匹配：期望 LimeMeta.Templates.$Version.nupkg，实际为 $($packages[0].Name)"
 }
 
 $smokeRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("limemeta-template-" + [guid]::NewGuid().ToString("N"))
