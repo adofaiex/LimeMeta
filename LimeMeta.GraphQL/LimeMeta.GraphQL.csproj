@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="FreeSql.Extensions.Linq" Version="3.5.309" />
-    <PackageReference Include="HotChocolate.AspNetCore" Version="16.0.0" />
+    <PackageReference Include="HotChocolate.AspNetCore" Version="16.5.1" />
     <PackageReference Include="HotChocolate.Types.Analyzers" Version="16.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
