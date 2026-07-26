@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-07-26
+
 ### Changed
 
 - 停止构建和发布 `LimeMeta`、`LimeMeta.GraphQL` 框架 NuGet 包。
