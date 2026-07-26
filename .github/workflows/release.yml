@@ -87,22 +87,19 @@ jobs:
           -DataType PostgreSQL
           -ConnectionString 'Host=127.0.0.1;Port=5432;Database=limemeta_ci;Username=postgres;Password=local-ci-password;'
           -Port 5181
-      - name: 只构建一次发布包
+      - name: 构建源码内置模板包
         env:
           CI: "true"
         run: |
-          dotnet pack LimeMeta/LimeMeta.csproj -c Release --no-restore --no-build -o .artifacts/packages -p:PackageVersion=${{ steps.version.outputs.version }} -p:RepositoryCommit=${{ github.sha }}
-          dotnet pack LimeMeta.GraphQL/LimeMeta.GraphQL.csproj -c Release --no-restore --no-build -o .artifacts/packages -p:PackageVersion=${{ steps.version.outputs.version }} -p:RepositoryCommit=${{ github.sha }}
           dotnet pack LimeMeta.Templates.csproj -c Release --no-restore --no-build -o .artifacts/packages -p:PackageVersion=${{ steps.version.outputs.version }} -p:RepositoryCommit=${{ github.sha }}
       - name: 审计包与模板
         shell: pwsh
         run: |
           ./scripts/Test-PackageContents.ps1 -PackageDirectory .artifacts/packages -Version '${{ steps.version.outputs.version }}'
           ./scripts/Test-TemplatePackage.ps1 -PackageDirectory .artifacts/packages -Version '${{ steps.version.outputs.version }}'
-      - name: 生成 SBOM 与 SHA-256
+      - name: 生成 SHA-256
         shell: pwsh
         run: |
-          ./scripts/New-Sbom.ps1 -OutputPath .artifacts/LimeMeta-${{ steps.version.outputs.version }}.spdx.json -Version '${{ steps.version.outputs.version }}' -Commit '${{ github.sha }}'
           Get-ChildItem .artifacts/packages -File | Get-FileHash -Algorithm SHA256 |
             ForEach-Object { "$($_.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($_.Path))" } |
             Set-Content .artifacts/SHA256SUMS -Encoding utf8NoBOM
@@ -111,11 +108,9 @@ jobs:
         id: nuget-login
         with:
           user: memsys_lizi
-      - name: 按依赖顺序发布到 NuGet.org
+      - name: 发布模板包到 NuGet.org
         shell: pwsh
         run: |
-          dotnet nuget push ".artifacts/packages/LimeMeta.${{ steps.version.outputs.version }}.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
-          dotnet nuget push ".artifacts/packages/LimeMeta.GraphQL.${{ steps.version.outputs.version }}.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
           dotnet nuget push ".artifacts/packages/LimeMeta.Templates.${{ steps.version.outputs.version }}.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols
       - name: 创建 GitHub Release
         env:
@@ -124,7 +119,6 @@ jobs:
           gh release create "${{ github.ref_name }}"
           .artifacts/packages/*
           .artifacts/SHA256SUMS
-          .artifacts/LimeMeta-${{ steps.version.outputs.version }}.spdx.json
           --verify-tag
           --title "LimeMeta ${{ steps.version.outputs.version }}"
           --generate-notes

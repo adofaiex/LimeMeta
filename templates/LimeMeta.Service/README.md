@@ -1,14 +1,14 @@
 # LimeMetaService 开发指南
 
-这是由 `LimeMeta.Templates` 生成的 .NET 10 后端项目。它不是只有空目录的 WebAPI 脚手架：只要定义一个模型和对应 DTO，LimeMeta 就会完成数据库表同步，并生成带分页、过滤、排序、聚合、增删改和授权检查的 GraphQL 接口。
+这是由 `LimeMeta.Templates` 生成的 .NET 10 后端项目。生成结果已经包含 `LimeMeta` 与 `LimeMeta.GraphQL` 的完整框架源码：只要定义一个模型和对应 DTO，框架就会完成数据库表同步，并生成带分页、过滤、排序、聚合、增删改和授权检查的 GraphQL 接口。
 
-模板默认使用 MySQL，业务代码放在 `LimeMetaService/`，宿主、环境配置、种子数据和发布入口放在 `LimeMetaService.WebAPI/`。
+模板默认使用 MySQL。业务代码放在 `LimeMetaService/`，宿主、环境配置、种子数据和发布入口放在 `LimeMetaService.WebAPI/`；框架实现位于同一解决方案的 `LimeMeta/` 和 `LimeMeta.GraphQL/`，可以直接调试和修改。
 
 ## 先在 10 分钟内跑起来
 
-### 1. 准备 NuGet 还原环境
+### 1. 还原第三方依赖
 
-项目依赖 nuget.org 托管的 `LimeMeta` 与 `LimeMeta.GraphQL` 包。只要用户环境可访问 NuGet.org，通常不需要额外配置。
+框架源码已经包含在当前解决方案中，不需要下载 LimeMeta 框架包。FreeSql、HotChocolate 等第三方依赖仍从 NuGet.org 还原。
 
 ```powershell
 dotnet restore
@@ -89,15 +89,13 @@ GraphQL 浏览器通常可以在请求 Headers 区域填写：
   - 如有缓存干扰，执行：
     ```powershell
     dotnet new uninstall LimeMeta.Templates
-    dotnet new install LimeMeta.Templates@1.0.0
+    dotnet new install LimeMeta.Templates
     ```
 
-- 明明已发布但搜不到包？
-  - NuGet 上线有索引延迟，先按版本直接安装即可：
+- 明明已发布但搜不到模板？
+  - NuGet 上线有索引延迟，可以稍后重试或按已知模板版本安装：
     ```powershell
-    dotnet new install LimeMeta.Templates@1.0.0
-    dotnet add package LimeMeta --version 1.0.0
-    dotnet add package LimeMeta.GraphQL --version 1.0.0
+    dotnet new install LimeMeta.Templates
     ```
 
 ## 写第一个业务模型
@@ -211,7 +209,11 @@ LimeMetaService/
 ├── LimeMetaService.sln
 ├── README.md                         当前入口文档
 ├── docs/                             按主题拆分的完整开发文档
+├── LICENSE
+├── NOTICE
 ├── build-release.bat                 Windows 发布脚本
+├── LimeMeta/                         框架核心源码，可直接修改
+├── LimeMeta.GraphQL/                 自动 GraphQL 框架源码，可直接修改
 ├── LimeMetaService/                  业务类库
 │   ├── Extensions.cs                 业务模块、DI、GraphQL 扩展注册
 │   ├── Models/                       模型和 DTO
@@ -346,21 +348,16 @@ dotnet publish LimeMetaService.WebAPI/LimeMetaService.WebAPI.csproj \
   /p:UseAppHost=false
 ```
 
-## 升级 LimeMeta
+## 修改与更新框架源码
 
-修改 `LimeMetaService/LimeMetaService.csproj` 中两个包的版本，并保持一致：
+`LimeMeta/` 和 `LimeMeta.GraphQL/` 是生成时取得的独立源码快照，通过下面的项目引用参与编译：
 
 ```xml
-<PackageReference Include="LimeMeta" Version="1.0.0" />
-<PackageReference Include="LimeMeta.GraphQL" Version="1.0.0" />
+<ProjectReference Include="..\LimeMeta\LimeMeta.csproj" />
+<ProjectReference Include="..\LimeMeta.GraphQL\LimeMeta.GraphQL.csproj" />
 ```
 
-然后运行：
+可以像修改业务代码一样直接修改这两个目录，重新构建后立即生效。安装新版模板不会覆盖当前项目，也没有自动同步上游源码的脚本。
 
-```powershell
-dotnet restore
-dotnet build
-```
-
-升级前阅读 LimeMeta 的 `CHANGELOG.md`。不要把框架源码复制进业务仓库；需要替换的能力优先通过 DI、Logic、GraphQL Type Extension、FastEndpoints 或文件/WebSocket 扩展点完成。
+需要引入新版本框架实现时，先创建一个临时的新模板项目，与当前两个框架目录进行人工比较，再有选择地合并。已经做过业务定制的框架源码不要直接整目录覆盖。
 

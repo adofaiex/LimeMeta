@@ -8,31 +8,59 @@ public sealed class TemplateContractTests
     private static readonly string RepositoryRoot = FindRepositoryRoot();
 
     [Fact]
-    public void Template_DefaultsToMatchingStableVersionAndMySql()
+    public void Template_EmbedsFrameworkSourceAndUsesProjectReferences()
     {
         var templateRoot = Path.Combine(RepositoryRoot, "templates", "LimeMeta.Service");
-        var templateJson = File.ReadAllText(
-            Path.Combine(templateRoot, ".template.config", "template.json"));
-        using var document = JsonDocument.Parse(templateJson);
-        var defaultVersion = document.RootElement
-            .GetProperty("symbols")
-            .GetProperty("limeMetaVersion")
-            .GetProperty("defaultValue")
-            .GetString();
+        var templateJsonPath = Path.Combine(templateRoot, ".template.config", "template.json");
+        using var document = JsonDocument.Parse(File.ReadAllText(templateJsonPath));
+        var root = document.RootElement;
+
+        Assert.False(root.TryGetProperty("symbols", out _));
+        Assert.DoesNotContain("__LIMEMETA_VERSION__", File.ReadAllText(templateJsonPath));
+
+        var businessProject = File.ReadAllText(
+            Path.Combine(templateRoot, "LimeMetaService", "LimeMetaService.csproj"));
+        Assert.Contains(@"ProjectReference Include=""..\LimeMeta\LimeMeta.csproj""", businessProject);
+        Assert.Contains(@"ProjectReference Include=""..\LimeMeta.GraphQL\LimeMeta.GraphQL.csproj""", businessProject);
+        Assert.DoesNotContain(@"PackageReference Include=""LimeMeta", businessProject);
+
+        var solution = File.ReadAllText(Path.Combine(templateRoot, "LimeMetaService.sln"));
+        Assert.Equal(4, solution.Split('\n').Count(line => line.StartsWith("Project(", StringComparison.Ordinal)));
+        Assert.Contains(@"""LimeMeta"", ""LimeMeta\LimeMeta.csproj""", solution);
+        Assert.Contains(@"""LimeMeta.GraphQL"", ""LimeMeta.GraphQL\LimeMeta.GraphQL.csproj""", solution);
+
+        var templateProject = XDocument.Load(Path.Combine(RepositoryRoot, "LimeMeta.Templates.csproj"));
+        var packedIncludes = templateProject
+            .Descendants("Content")
+            .Select(element => (string?)element.Attribute("Include"))
+            .Where(value => value is not null)
+            .ToArray();
+        Assert.Contains("LimeMeta/**/*.cs", packedIncludes);
+        Assert.Contains("LimeMeta.GraphQL/**/*.cs", packedIncludes);
+        Assert.Contains("LICENSE", packedIncludes);
+        Assert.Contains("NOTICE", packedIncludes);
+    }
+
+    [Fact]
+    public void Template_DefaultsToMySqlAndContainsNoFrameworkPackageReferences()
+    {
+        var templateRoot = Path.Combine(RepositoryRoot, "templates", "LimeMeta.Service");
         var developmentConfig = File.ReadAllText(
             Path.Combine(templateRoot, "LimeMetaService.WebAPI", "appsettings.Development.yml"));
+        var templateText = string.Join(
+            '\n',
+            Directory.EnumerateFiles(templateRoot, "*", SearchOption.AllDirectories)
+                .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
+                               !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+                .Select(File.ReadAllText));
 
-        var versionXml = XDocument.Load(Path.Combine(RepositoryRoot, "Directory.Build.props"));
-        var repositoryVersion = versionXml.Root!
-            .Element("PropertyGroup")!
-            .Element("VersionPrefix")!
-            .Value;
-
-        Assert.Equal(repositoryVersion, defaultVersion);
         Assert.Contains("DataType: \"MySql\"", developmentConfig);
         Assert.Contains("Port=3306", developmentConfig);
         Assert.Contains("Path: \"./FileStore\"", developmentConfig);
         Assert.DoesNotContain("Path: \"/FileStore\"", developmentConfig);
+        Assert.DoesNotContain(@"PackageReference Include=""LimeMeta""", templateText);
+        Assert.DoesNotContain(@"PackageReference Include=""LimeMeta.GraphQL""", templateText);
+        Assert.DoesNotContain("__LIMEMETA_VERSION__", templateText);
     }
 
     [Fact]
@@ -92,6 +120,8 @@ public sealed class TemplateContractTests
         Assert.Contains("FastEndpoints", allDocumentation);
         Assert.Contains("WebSocket", allDocumentation);
         Assert.Contains("Seed/Perm.yaml", allDocumentation);
+        Assert.Contains("ProjectReference", allDocumentation);
+        Assert.Contains("框架源码", allDocumentation);
     }
 
     private static string FindRepositoryRoot()
@@ -106,4 +136,3 @@ public sealed class TemplateContractTests
             ?? throw new DirectoryNotFoundException("无法定位 LimeMeta 仓库根目录。");
     }
 }
-

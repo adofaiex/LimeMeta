@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LimeMeta" Version="__LIMEMETA_VERSION__" />
-    <PackageReference Include="LimeMeta.GraphQL" Version="__LIMEMETA_VERSION__" />
+    <ProjectReference Include="..\LimeMeta\LimeMeta.csproj" />
+    <ProjectReference Include="..\LimeMeta.GraphQL\LimeMeta.GraphQL.csproj" />
   </ItemGroup>
 
   <ItemGroup>

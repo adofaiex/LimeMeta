@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 停止构建和发布 `LimeMeta`、`LimeMeta.GraphQL` 框架 NuGet 包。
+- `LimeMeta.Templates` 生成的解决方案改为直接包含两个框架源码项目，并通过 `ProjectReference` 使用。
+- 模板生成结构由两个项目调整为四个项目；生成后的框架源码作为独立快照由业务项目自行维护。
+- 发布工作流改为只验证和发布源码内置模板包。
+
 ## [1.0.1] - 2026-07-25
 
 ### Fixed

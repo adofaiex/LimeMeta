@@ -6,7 +6,6 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $packageRoot = (Resolve-Path -LiteralPath $PackageDirectory).Path
 $templatePackage = Join-Path $packageRoot "LimeMeta.Templates.$Version.nupkg"
 if (-not (Test-Path -LiteralPath $templatePackage)) {
@@ -24,31 +23,57 @@ try {
         throw "无法从本地 nupkg 安装模板。"
     }
 
-    & dotnet new limemeta -n GeneratedService -o $projectRoot --limeMetaVersion $Version --debug:custom-hive $hiveRoot
+    & dotnet new limemeta -n GeneratedService -o $projectRoot --debug:custom-hive $hiveRoot
     if ($LASTEXITCODE -ne 0) {
         throw "无法生成模板项目。"
     }
 
+    $expectedProjects = @(
+        "LimeMeta/LimeMeta.csproj",
+        "LimeMeta.GraphQL/LimeMeta.GraphQL.csproj",
+        "GeneratedService/GeneratedService.csproj",
+        "GeneratedService.WebAPI/GeneratedService.WebAPI.csproj"
+    )
+    foreach ($relativePath in $expectedProjects) {
+        if (-not (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath))) {
+            throw "生成项目缺少：$relativePath"
+        }
+    }
+
     $generatedProjects = @(Get-ChildItem -LiteralPath $projectRoot -Recurse -Filter "*.csproj")
-    if ($generatedProjects.Count -eq 0) {
-        throw "模板没有生成项目文件。"
+    if ($generatedProjects.Count -ne 4) {
+        throw "模板应生成四个项目，实际为 $($generatedProjects.Count) 个。"
     }
 
-    $frameworkProject = $generatedProjects |
-        Where-Object {
-            (Get-Content -LiteralPath $_.FullName -Raw) -match
-                'Include="LimeMeta\.GraphQL"\s+Version="' + [regex]::Escape($Version) + '"'
-        } |
-        Select-Object -First 1
-    if (-not $frameworkProject) {
-        throw "生成项目没有精确引用 LimeMeta.GraphQL $Version。"
+    $allProjectText = $generatedProjects |
+        ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw } |
+        Join-String -Separator "`n"
+    if ($allProjectText -match 'PackageReference\s+Include="LimeMeta(?:\.GraphQL)?"') {
+        throw "生成项目仍包含 LimeMeta 框架包引用。"
     }
 
-    $developmentConfig = Get-ChildItem -LiteralPath $projectRoot -Recurse -Filter "appsettings.Development.yml" |
-        Select-Object -First 1
-    if (-not $developmentConfig -or
-        (Get-Content -LiteralPath $developmentConfig.FullName -Raw) -notmatch "DataType:\s*['`"]?MySql") {
-        throw "生成项目默认数据库不是 MySQL。"
+    $businessProject = Get-Content -LiteralPath (
+        Join-Path $projectRoot "GeneratedService/GeneratedService.csproj") -Raw
+    if ($businessProject -notmatch 'ProjectReference\s+Include="\.\.\\LimeMeta\\LimeMeta\.csproj"' -or
+        $businessProject -notmatch 'ProjectReference\s+Include="\.\.\\LimeMeta\.GraphQL\\LimeMeta\.GraphQL\.csproj"') {
+        throw "业务项目没有通过 ProjectReference 引用两个框架源码项目。"
+    }
+
+    foreach ($relativePath in @(
+        "LimeMeta/Extensions.cs",
+        "LimeMeta/Data/FreeSqlLimeMeta.cs",
+        "LimeMeta.GraphQL/QueryType.cs",
+        "LICENSE",
+        "NOTICE"
+    )) {
+        if (-not (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath))) {
+            throw "生成结果缺少框架源码或许可证文件：$relativePath"
+        }
+    }
+
+    if (Get-ChildItem -LiteralPath $projectRoot -Recurse -Force |
+        Where-Object { $_.FullName -match '[\\/](PublicAPI\.(?:Shipped|Unshipped)\.txt|bin|obj)([\\/]|$)' }) {
+        throw "生成结果包含 PublicAPI 基线或构建产物。"
     }
 
     $expectedDocuments = @(
@@ -60,8 +85,7 @@ try {
         "docs/05-configuration-and-deployment.md"
     )
     foreach ($relativePath in $expectedDocuments) {
-        $documentPath = Join-Path $projectRoot $relativePath
-        if (-not (Test-Path -LiteralPath $documentPath)) {
+        if (-not (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath))) {
             throw "生成项目缺少开发文档：$relativePath"
         }
     }
@@ -72,38 +96,37 @@ try {
         throw "模板 README 没有正确替换项目名称。"
     }
 
-    $nugetConfigPath = Join-Path $smokeRoot "NuGet.config"
-    $escapedPackageRoot = [System.Security.SecurityElement]::Escape($packageRoot)
-    $config = @"
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <clear />
-    <add key="local" value="$escapedPackageRoot" />
-    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
-  </packageSources>
-</configuration>
-"@
-    [System.IO.File]::WriteAllText($nugetConfigPath, $config, [System.Text.UTF8Encoding]::new($false))
-
     $generatedSolution = Get-ChildItem -LiteralPath $projectRoot -Filter "*.sln" |
         Select-Object -First 1
     if (-not $generatedSolution) {
         throw "模板没有生成解决方案文件。"
     }
+    $solutionProjects = & dotnet sln $generatedSolution.FullName list
+    if ($LASTEXITCODE -ne 0 -or @($solutionProjects | Where-Object { $_ -match '\.csproj$' }).Count -ne 4) {
+        throw "生成解决方案没有包含四个项目。"
+    }
 
-    & dotnet restore $generatedSolution.FullName --configfile $nugetConfigPath
+    & dotnet restore $generatedSolution.FullName
     if ($LASTEXITCODE -ne 0) {
         throw "生成项目还原失败。"
     }
-    & dotnet build $generatedSolution.FullName -c Release --no-restore
+    & dotnet build $generatedSolution.FullName -c Release --no-restore -warnaserror
     if ($LASTEXITCODE -ne 0) {
         throw "生成项目构建失败。"
+    }
+
+    $sourceSmokePath = Join-Path $projectRoot "LimeMeta/TemplateSourceSmoke.cs"
+    [System.IO.File]::WriteAllText(
+        $sourceSmokePath,
+        "namespace LimeMeta; internal static class TemplateSourceSmoke { internal const bool Enabled = true; }",
+        [System.Text.UTF8Encoding]::new($false))
+    & dotnet build $generatedSolution.FullName -c Release --no-restore -warnaserror
+    if ($LASTEXITCODE -ne 0) {
+        throw "修改生成后的框架源码后重新构建失败。"
     }
 }
 finally {
     Remove-Item -LiteralPath $smokeRoot -Recurse -Force
 }
 
-Write-Host "模板本地安装、生成、还原和构建检查通过。"
-
+Write-Host "模板本地安装、四项目源码生成、还原和构建检查通过。"

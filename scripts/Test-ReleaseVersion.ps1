@@ -18,13 +18,6 @@ if ($repositoryVersion -ne $version) {
     throw "标签版本 $version 与 Directory.Build.props 中的 $repositoryVersion 不一致。"
 }
 
-$templateJsonPath = Join-Path $repositoryRoot "templates/LimeMeta.Service/.template.config/template.json"
-$template = Get-Content -LiteralPath $templateJsonPath -Raw | ConvertFrom-Json
-$templateVersion = [string]$template.symbols.limeMetaVersion.defaultValue
-if ($templateVersion -ne $version) {
-    throw "模板默认版本 $templateVersion 与标签版本 $version 不一致。"
-}
-
 & git -C $repositoryRoot fetch origin main --no-tags
 if ($LASTEXITCODE -ne 0) {
     throw "无法获取 origin/main。"
@@ -34,4 +27,4 @@ if ($LASTEXITCODE -ne 0) {
     throw "标签提交 $Commit 不属于 main 分支。"
 }
 
-Write-Host "发布版本 $version、模板版本和 main 分支归属检查通过。"
+Write-Host "模板包发布版本 $version 和 main 分支归属检查通过。"

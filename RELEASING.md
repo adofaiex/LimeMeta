@@ -1,67 +1,43 @@
-# 公开发布指南
+# 发布 LimeMeta 模板
 
-LimeMeta 的正式包通过 `.github/workflows/release.yml` 发布到 NuGet.org。
+LimeMeta 只发布 `LimeMeta.Templates`。`LimeMeta` 与 `LimeMeta.GraphQL` 是不可打包的源码项目，由模板包直接嵌入生成结果。
 
-## 发布目标
+## 发布前检查
 
-- 源码仓库：`https://github.com/adofaiex/LimeMeta`
-- NuGet 源：`https://api.nuget.org/v3/index.json`
-- 包：`LimeMeta`、`LimeMeta.GraphQL`、`LimeMeta.Templates`
-- 可见性：Public（公开读取）
-- 版本要求：`Directory.Build.props` 的 `VersionPrefix`、模板 `limeMetaVersion`
-  与 Tag 必须完全一致
+- 本地分支与 `origin/main` 同步，工作区干净。
+- `Directory.Build.props` 的 `VersionPrefix` 与准备创建的 `v*` 标签一致。
+- NuGet.org 已为 `LimeMeta.Templates` 配置 GitHub OIDC Trusted Publishing。
 
-## 必要配置
-
-1. 在仓库 **Settings → Secrets and variables → Actions → Repository secrets** 中配置
-   Trusted Publishing 对应的 NuGet 发布身份（OIDC 发布不需要长期 API Key）。
-2. 在 `main` 分支配置至少：
-   - CI 必须通过；
-   - 不允许直接推送（禁止强制推送）；
-   - 发布分支要求 `main` 最近成功构建并可回滚。
-
-## 发布门槛（本地或 CI）
+执行：
 
 ```powershell
 dotnet restore LimeMeta.sln
 dotnet format LimeMeta.sln --verify-no-changes --no-restore
 dotnet build LimeMeta.sln -c Release --no-restore -warnaserror
 dotnet test LimeMeta.sln -c Release --no-build --no-restore
-pwsh ./scripts/Test-Secrets.ps1
 
-dotnet pack LimeMeta/LimeMeta.csproj -c Release --no-build -o .artifacts/packages
-dotnet pack LimeMeta.GraphQL/LimeMeta.GraphQL.csproj -c Release --no-build -o .artifacts/packages
 dotnet pack LimeMeta.Templates.csproj -c Release --no-build -o .artifacts/packages
-pwsh ./scripts/Test-PackageContents.ps1 -PackageDirectory .artifacts/packages
-pwsh ./scripts/Test-TemplatePackage.ps1 -PackageDirectory .artifacts/packages
+.\scripts\Test-PackageContents.ps1 -PackageDirectory .artifacts/packages -Version 1.0.3
+.\scripts\Test-TemplatePackage.ps1 -PackageDirectory .artifacts/packages -Version 1.0.3
 ```
 
-MySQL 与 PostgreSQL 数据库冒烟测试也必须通过，确保建表、登录、CRUD、聚合、
-Logic、系统模型授权和密码重置链路可复现。
+验收必须确认模板只生成四个源码项目，不存在 LimeMeta 框架 `PackageReference`，并能在修改内置框架源码后重新构建。
 
-## 创建发布
+## 正式发布
 
-1. 更新 `CHANGELOG.md`。
-2. 更新 `Directory.Build.props`、`templates/LimeMeta.Service/.template.config/template.json`
-   与发布 Tag（如 `v1.0.0`）保持一致。
-3. 在 `main` 最新提交上创建并推送 Tag：
+```powershell
+git tag -s v1.0.3 -m "LimeMeta Templates 1.0.3"
+git push origin v1.0.3
+```
 
-   ```powershell
-   git tag v1.0.0 -m "LimeMeta 1.0.0"
-   git push origin v1.0.0
-   ```
+`.github/workflows/release.yml` 会：
 
-4. 推送 Tag 后 GitHub Actions 的 `release` 工作流自动触发并完成：
-   - 全历史扫描与依赖漏洞扫描
-   - 全量构建/测试
-   - MySQL 与 PostgreSQL 冒烟测试
-   - 包审计、模板烟雾测试
-   - `.nupkg`、`.snupkg`、SHA-256 和 SPDX SBOM 生成
-   - 推送到 NuGet.org 三个包
-   - 创建 GitHub Release 并附带校验文件
+1. 校验标签版本、提交属于 `main`。
+2. 执行格式、构建、测试、漏洞、许可证、秘密和双数据库检查。
+3. 只构建并审计 `LimeMeta.Templates.<version>.nupkg`。
+4. 安装模板、生成四项目源码解决方案并完成两次构建。
+5. 生成 SHA-256 校验文件。
+6. 使用 NuGet OIDC 临时密钥发布模板包。
+7. 创建包含模板包和校验文件的 GitHub Release。
 
-## 异常处理
-
-发布失败后，不得用同版本重复发布不同内容。确认问题修复后请先提
-升版本并重新打新 Tag。
-
+禁止恢复长期 NuGet API Key，也不要重新发布两个框架包。

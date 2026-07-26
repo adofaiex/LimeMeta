@@ -2,35 +2,23 @@
 
 LimeMeta 是一个面向 .NET 10 的模型驱动后端框架。它把 FreeSql 数据访问、数据库结构同步、GraphQL 自动查询与修改、FastEndpoints、Logic 生命周期、JWT 认证、文件存储和 WebSocket 组合在一起。
 
-## 安装模板
+LimeMeta 通过项目模板分发。模板生成的解决方案直接包含 `LimeMeta` 与 `LimeMeta.GraphQL` 的完整可编译源码，不再引用这两个框架 NuGet 包。生成后可以在业务仓库中直接阅读、调试和修改框架实现。
 
-首次使用时，直接从 NuGet.org 安装模板：
+## 创建项目
+
+从 NuGet.org 安装唯一保留的模板包：
 
 ```powershell
-dotnet new install LimeMeta.Templates@1.0.0
+dotnet new install LimeMeta.Templates
 dotnet new limemeta -n MyService
 cd MyService
 ```
 
-如果你希望显式固定版本，也可以先指定安装参数：
-
-```powershell
-dotnet new install LimeMeta.Templates@1.0.0
-```
-
-模板默认使用 MySQL。先创建数据库并修改开发连接串：
+模板默认使用 MySQL。创建数据库并修改 `MyService.WebAPI/appsettings.Development.yml` 中的连接串：
 
 ```sql
-CREATE DATABASE limemeta_service CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE my_service CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
-
-开发配置位于：
-
-```text
-MyService.WebAPI/appsettings.Development.yml
-```
-
-修改 `LimeMeta.ConnectionString` 后运行：
 
 ```powershell
 dotnet run --project MyService.WebAPI
@@ -41,69 +29,32 @@ dotnet run --project MyService.WebAPI
 - GraphQL：`http://127.0.0.1:6675/api/gql`
 - WebSocket：`ws://127.0.0.1:6675/api/ws`
 
-生成项目自带完整中文开发手册，涵盖内置用户/角色/部门/权限、模型与 DTO、自动 GraphQL、Logic、新增 HTTP/GraphQL/WebSocket 接口、种子、文件和部署。也可直接阅读：
-
-- [模板开发指南](templates/LimeMeta.Service/README.md)
-- [框架结构与内置能力](templates/LimeMeta.Service/docs/01-overview.md)
-- [模型、DTO 与自动 GraphQL](templates/LimeMeta.Service/docs/02-models-and-graphql.md)
-- [用户、角色、权限与安全](templates/LimeMeta.Service/docs/03-users-and-authorization.md)
-- [Logic、接口与扩展](templates/LimeMeta.Service/docs/04-logic-and-extensions.md)
-- [配置、种子、文件与部署](templates/LimeMeta.Service/docs/05-configuration-and-deployment.md)
-
-## 仓库组成
+## 生成后的结构
 
 ```text
-LimeMeta/
-├── LimeMeta/                  核心框架包
-├── LimeMeta.GraphQL/          GraphQL 扩展包
-├── LimeMeta.WebAPI/           框架开发宿主
-├── templates/LimeMeta.Service dotnet new 业务模板
-└── LimeMeta.Templates.csproj  模板 NuGet 包
+MyService/
+├── LimeMeta/                 框架核心源码
+├── LimeMeta.GraphQL/         GraphQL 框架源码
+├── MyService/                业务模型、DTO、Logic 和服务
+├── MyService.WebAPI/         ASP.NET Core 宿主、配置和 Seed
+├── docs/                     中文开发手册
+├── LICENSE
+├── NOTICE
+└── MyService.sln
 ```
 
-业务项目只引用 NuGet 包，不复制框架源码：
+业务项目通过源码项目引用使用框架：
 
 ```xml
-<PackageReference Include="LimeMeta" Version="1.0.0" />
-<PackageReference Include="LimeMeta.GraphQL" Version="1.0.0" />
+<ProjectReference Include="..\LimeMeta\LimeMeta.csproj" />
+<ProjectReference Include="..\LimeMeta.GraphQL\LimeMeta.GraphQL.csproj" />
 ```
 
-应用开发者常用安装命令（固定 1.0.0）：
+这两个框架目录是创建项目时的源码快照，之后归生成项目所有。更新模板不会自动覆盖已有项目，也不提供自动上游同步；业务团队可以保留本地改动，或在需要时人工比较新模板源码。
 
-```powershell
-dotnet add package LimeMeta --version 1.0.0 --source https://api.nuget.org/v3/index.json
-dotnet add package LimeMeta.GraphQL --version 1.0.0 --source https://api.nuget.org/v3/index.json
-dotnet new install LimeMeta.Templates@1.0.0
-```
+## 模型与自动 GraphQL
 
-## 常见发布与安装问题
-
-- 为什么我搜索不到 `LimeMeta` 系列包？
-  - NuGet.org 有索引延迟是常态。上传成功后通常会在数分钟到几十分钟内完成索引，期间可能搜索不到。
-  - 如果你已知版本，仍可按版本安装：
-    - `dotnet new install LimeMeta.Templates@1.0.0`
-    - `dotnet add package LimeMeta --version 1.0.0`
-    - `dotnet add package LimeMeta.GraphQL --version 1.0.0`
-
-- 创建项目时报 “找不到模板包”？
-  - 先清理本地模板缓存重装：
-
-    ```powershell
-    dotnet new uninstall LimeMeta.Templates
-    dotnet new install LimeMeta.Templates@1.0.0
-    ```
-
-- 我在 Git 状态里看到“发布（Publish）”按钮是正常吗？
-  - 这是正常的。它通常表示当前分支尚未关联远端上游分支或尚未推送。
-  - 可以这样把本地 `main` 与远端 `main` 关联并推送：
-
-    ```powershell
-    git push --set-upstream origin main
-    ```
-
-## 模型与 DTO
-
-模型继承 `BaseObject`、`BaseAudit` 或 `BaseParentChildren`，并带 `[Table]`。每个模型需要同命名空间、同前缀的 DTO。
+模型继承 `BaseObject`、`BaseAudit` 或 `BaseParentChildren<T>`，添加 FreeSql `[Table]`，并在相同命名空间定义 `<ModelName>Dto`：
 
 ```csharp
 namespace MyService.Models;
@@ -124,7 +75,7 @@ public sealed class ArticleDto : BaseDto
 }
 ```
 
-框架会生成：
+框架自动生成：
 
 ```text
 Article
@@ -134,35 +85,9 @@ updateArticle
 deleteArticle
 ```
 
-查询支持分页、HotChocolate Filtering、Sorting、导航属性和聚合。
+查询支持分页、HotChocolate Filtering、Sorting、导航属性和聚合。业务程序集通过模板中的 `AddLimeMetaModule` 注册。
 
-## Logic 生命周期
-
-```csharp
-namespace MyService.Logics;
-
-using LimeMeta.Logics;
-using MyService.Models;
-
-public sealed class ArticleLogic : BaseLogic<Article>
-{
-    public ArticleLogic(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory)
-        : base(loggerFactory, scopeFactory)
-    {
-        BeforeInsert += (_, args) =>
-        {
-            foreach (var article in args.Objs)
-            {
-                article.Title = article.Title.Trim();
-            }
-        };
-    }
-}
-```
-
-支持 Select、Insert、Update、Delete 的 Before/After 事件。业务程序集由模板中的 `AddLimeMetaModule` 自动注册。
-
-## 认证与授权
+## 认证、配置与存储
 
 登录：
 
@@ -175,33 +100,9 @@ mutation {
 }
 ```
 
-后续请求添加：
+后续请求使用 `Authorization: Bearer <token>`。密码由 BCrypt 处理；自动模型操作通过 `ILimeMetaAuthorizationService` 授权，生产项目应按业务要求替换默认授权策略。
 
-```text
-Authorization: Bearer <token>
-```
-
-密码由服务端 BCrypt 处理，每个密码拥有独立随机盐。密码哈希不会出现在 GraphQL Schema、DTO 或响应中。
-
-自动模型操作通过 `ILimeMetaAuthorizationService` 授权：
-
-- 普通业务模型默认允许已认证用户操作。
-- LimeMeta 内置系统模型的修改默认仅允许管理员。
-- 业务项目可以替换该服务实现更细粒度的权限策略。
-
-专用用户 Mutation：
-
-- `createUser`
-- `updateUser`
-- `deleteUser`
-- `changePassword`
-- `resetUserPassword`
-
-内置 `login` 返回 `name` 和 `token`。业务项目可以通过 `BeforeLogin`、`AfterLogin`、`GeneratingJwt` 扩展风控、审计和 JWT Claim；需要返回头像、部门、角色、权限或业务资料时，新增自己的 GraphQL 登录 Mutation 并在内部调用 `UserLogic.Login`。完整示例见[用户权限文档](templates/LimeMeta.Service/docs/03-users-and-authorization.md)。
-
-## 配置
-
-生产环境必须显式提供数据库连接串、管理员初始密码和至少 32 字节的 JWT 密钥。推荐通过环境变量注入：
+生产环境必须显式提供数据库连接串、管理员初始密码和至少 32 字节的 JWT 密钥：
 
 ```bash
 export LimeMeta__ConnectionString="Server=127.0.0.1;Port=3306;Database=app;Uid=app;Pwd=strong-password;Charset=utf8mb4;"
@@ -209,120 +110,49 @@ export LimeMeta__AdminUserPassword="strong-admin-password"
 export LimeMeta__JwtSignKey="replace-with-at-least-32-random-bytes"
 ```
 
-检测到缺失值、过短 JWT 密钥或生产示例密码时，应用会拒绝启动。
-
-主要配置：
-
-```yaml
-LimeMeta:
-  ConnectionString: ""
-  DataType: "MySql"
-  AdminUserName: "admin"
-  AdminUserPassword: ""
-  JwtSignKey: ""
-  JwtExpires: 86400000
-  AutoSyncSchema: true
-  LoadSeedOnStartup: true
-  FileStore:
-    Provider: "Local"
-    Local:
-      Path: "./FileStore"
-      Count: 8192
-  WebSocket:
-    Path: "/api/ws"
-    MaxMessageSize: 1048576
-```
-
-`access_token` 查询参数只在 WebSocket 路径接受；普通 HTTP JWT 使用 `Authorization`，AppKey 使用 `x-limemeta-app-key` 请求头。
-
-## PostgreSQL
-
-框架仍支持 PostgreSQL。修改配置：
-
-```yaml
-LimeMeta:
-  DataType: "PostgreSQL"
-  ConnectionString: "Host=127.0.0.1;Port=5432;Database=app;Username=app;Password=strong-password"
-```
-
-模板同时引用 MySQL 和 PostgreSQL Provider。
-
-## 种子数据与建表
-
-启动顺序：
-
-```text
-Seed/BeforeUpdateSchema.sql
-→ FreeSql 同步模型表结构
-→ Seed/AfterUpdateSchema.sql
-→ 初始化管理员/角色/权限
-→ 加载模型 YAML
-```
-
-模型种子文件必须命名为：
-
-```text
-Seed/<ModelType>.yaml
-```
-
-例如 `Article` 对应 `Seed/Article.yaml`。
-
-## 文件与 WebSocket
-
-内置文件接口：
+框架支持 MySQL、PostgreSQL、本地文件存储和 123 云盘 CLI。内置 HTTP 文件接口为：
 
 - `POST /api/file/upload`
 - `GET /api/file/download?id=<guid>`
 
-支持本地存储和 123 云盘 CLI。
+## 仓库组成
 
-WebSocket 控制器：
-
-```csharp
-[WsController]
-public sealed class NoticeWs
-{
-    [WsMessage("notice.ping")]
-    public object Ping(LimeMetaWebSocketContext context)
-        => new { ok = true, context.Connection.Id };
-}
+```text
+LimeMeta/                       核心框架源码项目
+LimeMeta.GraphQL/               GraphQL 源码项目
+LimeMeta.WebAPI/                框架开发与数据库冒烟宿主
+LimeMeta.Tests/                 自动化测试
+templates/LimeMeta.Service/     业务模板骨架和中文手册
+LimeMeta.Templates.csproj       唯一发布的 NuGet 模板包
 ```
 
-## 构建与打包
+框架项目本身不可打包。模板构建时直接把仓库中的两个框架源码项目映射到模板内容，避免在仓库内维护重复副本。
+
+## 构建与验证
 
 ```powershell
-dotnet restore
-dotnet build LimeMeta.sln -c Release
-dotnet test LimeMeta.sln -c Release
-.\pack.bat
+dotnet restore LimeMeta.sln
+dotnet format LimeMeta.sln --verify-no-changes --no-restore
+dotnet build LimeMeta.sln -c Release --no-restore -warnaserror
+dotnet test LimeMeta.sln -c Release --no-build --no-restore
+dotnet pack LimeMeta.Templates.csproj -c Release -o .artifacts/packages
+.\scripts\Test-PackageContents.ps1 -PackageDirectory .artifacts/packages -Version 1.0.3
+.\scripts\Test-TemplatePackage.ps1 -PackageDirectory .artifacts/packages -Version 1.0.3
 ```
 
-`.nuget/` 会生成三个 `.nupkg`，两个框架包同时生成 `.snupkg`。
+CI 还会在 MySQL 与 PostgreSQL 上执行真实登录、CRUD、聚合、Logic 和授权冒烟测试。
 
-正式发布只由 `v*` Git tag 触发 GitHub Actions，并使用 GitHub OIDC Trusted Publishing 发布到 NuGet.org。
-维护者的首次发布配置、检查门槛和标签步骤见 [RELEASING.md](RELEASING.md)。
+正式发布由 `v*` Git tag 触发 GitHub Actions，通过 NuGet OIDC Trusted Publishing 只发布 `LimeMeta.Templates`，并创建带模板包和 SHA-256 校验文件的 GitHub Release。维护说明见 [RELEASING.md](RELEASING.md)。
 
-## 版本与兼容性
+## 文档与许可证
 
-LimeMeta 使用 Semantic Versioning：
+生成项目自带完整中文手册：
 
-- Patch：兼容修复。
-- Minor：向后兼容功能。
-- Major：公共 API 破坏性变更。
+- [模板开发指南](templates/LimeMeta.Service/README.md)
+- [框架结构与内置能力](templates/LimeMeta.Service/docs/01-overview.md)
+- [模型、DTO 与自动 GraphQL](templates/LimeMeta.Service/docs/02-models-and-graphql.md)
+- [用户、角色、权限与安全](templates/LimeMeta.Service/docs/03-users-and-authorization.md)
+- [Logic、接口与扩展](templates/LimeMeta.Service/docs/04-logic-and-extensions.md)
+- [配置、种子、文件与部署](templates/LimeMeta.Service/docs/05-configuration-and-deployment.md)
 
-`1.0.0` 只支持 `net10.0`。模板默认固定引用与模板包相同的框架版本。
-
-## 安全
-
-请勿在普通 Issue 中披露安全漏洞。报告方式见 [SECURITY.md](SECURITY.md)。
-
-## 参与贡献
-
-贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)，协作行为规范见 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
-
-## 许可证
-
-Copyright 2026 adofaiex.
-
-框架与模板使用 Apache-2.0 授权，详见 [LICENSE](LICENSE)。
-
+项目使用 Apache-2.0 许可证。安全问题请按 [SECURITY.md](SECURITY.md) 私密报告。

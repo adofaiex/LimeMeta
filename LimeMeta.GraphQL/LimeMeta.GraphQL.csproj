@@ -4,13 +4,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <PackageId>LimeMeta.GraphQL</PackageId>
-    <Title>LimeMeta GraphQL 扩展</Title>
-    <Description>为 LimeMeta 模型自动生成查询、聚合和安全 Mutation 的 HotChocolate GraphQL 扩展。</Description>
-    <PackageTags>limemeta;graphql;hotchocolate;backend</PackageTags>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,14 +19,6 @@
     <PackageReference Include="HotChocolate.Data" Version="16.0.0" />
     <PackageReference Include="HotChocolate.Data.Spatial" Version="16.0.0" />
     <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="16.0.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -38,22 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LimeMeta\LimeMeta.csproj">
-      <Version>[$(PackageVersion)]</Version>
-    </ProjectReference>
+    <ProjectReference Include="..\LimeMeta\LimeMeta.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
-
-  <Target Name="UseExactLimeMetaPackageDependency" BeforeTargets="GenerateNuspec">
-    <ItemGroup>
-      <_ProjectReferencesWithVersions
-        Update="$(MSBuildThisFileDirectory)..\LimeMeta\LimeMeta.csproj"
-        ProjectVersion="[$(PackageVersion)]" />
-    </ItemGroup>
-  </Target>
 
 </Project>
 

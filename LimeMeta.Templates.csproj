@@ -5,9 +5,9 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <IsPackable>true</IsPackable>
     <PackageId>LimeMeta.Templates</PackageId>
-    <Title>LimeMeta 项目模板</Title>
-    <Description>用于创建 LimeMeta MySQL 后端服务的 dotnet new 项目模板。</Description>
-    <PackageTags>limemeta;dotnet-new;templates;webapi;graphql;mysql</PackageTags>
+    <Title>LimeMeta 源码项目模板</Title>
+    <Description>创建内置 LimeMeta 与 LimeMeta.GraphQL 完整源码的 .NET 10 模型驱动后端服务。</Description>
+    <PackageTags>limemeta;dotnet-new;templates;source;webapi;graphql;mysql</PackageTags>
     <PackageType>Template</PackageType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <IncludeContentInPack>true</IncludeContentInPack>
@@ -24,12 +24,28 @@
              Exclude="templates/LimeMeta.Service/**/bin/**;templates/LimeMeta.Service/**/obj/**;templates/LimeMeta.Service/.template.config/**;templates/LimeMeta.Service/.gitignore" />
     <Content Include="templates/LimeMeta.Service/.template.config/template.json" />
     <Content Include="templates/LimeMeta.Service/.gitignore" />
+    <Content Include="LimeMeta/**/*.cs"
+             Exclude="LimeMeta/**/bin/**;LimeMeta/**/obj/**"
+             Pack="true"
+             PackagePath="content/templates/LimeMeta.Service/LimeMeta/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="LimeMeta/LimeMeta.csproj"
+             Pack="true"
+             PackagePath="content/templates/LimeMeta.Service/LimeMeta/LimeMeta.csproj" />
+    <Content Include="LimeMeta.GraphQL/**/*.cs"
+             Exclude="LimeMeta.GraphQL/**/bin/**;LimeMeta.GraphQL/**/obj/**"
+             Pack="true"
+             PackagePath="content/templates/LimeMeta.Service/LimeMeta.GraphQL/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="LimeMeta.GraphQL/LimeMeta.GraphQL.csproj"
+             Pack="true"
+             PackagePath="content/templates/LimeMeta.Service/LimeMeta.GraphQL/LimeMeta.GraphQL.csproj" />
+    <Content Include="LICENSE"
+             Pack="true"
+             PackagePath="content/templates/LimeMeta.Service/" />
+    <Content Include="NOTICE"
+             Pack="true"
+             PackagePath="content/templates/LimeMeta.Service/" />
     <Compile Remove="templates/**/*" />
     <None Include="templates/README.package.md" Pack="true" PackagePath="README.md" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
 
 </Project>

@@ -23,9 +23,9 @@
 
 4. 提交 Pull Request，说明动机、兼容性、安全影响和验证方式。
 
-## 公共 API
+## 框架源码兼容性
 
-`LimeMeta` 和 `LimeMeta.GraphQL` 从 1.0 开始遵循 Semantic Versioning。新增公共 API 必须有 XML 文档和测试；删除或改变既有公共 API 只能进入新的主版本。
+`LimeMeta` 和 `LimeMeta.GraphQL` 不再作为独立 NuGet 包发布，但模板使用者会在业务仓库中持有它们的源码快照。改变公共类型或运行行为时仍必须补充 XML 文档、测试和迁移说明，避免新模板生成的项目出现无说明的破坏性变化。
 
 ## 安全问题
 

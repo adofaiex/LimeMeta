@@ -69,8 +69,8 @@ jobs:
         shell: pwsh
         run: ./scripts/Test-Secrets.ps1
 
-  package-smoke:
-    name: NuGet 与模板验收
+  template-smoke:
+    name: 源码内置模板验收
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -80,13 +80,11 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet restore LimeMeta.sln
-      - run: dotnet pack LimeMeta/LimeMeta.csproj -c Release --no-restore -o .artifacts/packages
-      - run: dotnet pack LimeMeta.GraphQL/LimeMeta.GraphQL.csproj -c Release --no-restore -o .artifacts/packages
       - run: dotnet pack LimeMeta.Templates.csproj -c Release --no-restore -o .artifacts/packages
       - name: 审计包内容
         shell: pwsh
         run: ./scripts/Test-PackageContents.ps1 -PackageDirectory .artifacts/packages
-      - name: 安装模板并构建生成项目
+      - name: 安装模板并构建四项目源码解决方案
         shell: pwsh
         run: ./scripts/Test-TemplatePackage.ps1 -PackageDirectory .artifacts/packages
       - name: 保存验收包

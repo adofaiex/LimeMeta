@@ -16,15 +16,6 @@
     "language": "C#",
     "type": "project"
   },
-  "symbols": {
-    "limeMetaVersion": {
-      "type": "parameter",
-      "datatype": "text",
-      "defaultValue": "1.0.3",
-      "replaces": "__LIMEMETA_VERSION__",
-      "description": "LimeMeta NuGet package version. The template defaults to the matching stable framework version."
-    }
-  },
   "primaryOutputs": [
     {
       "path": "LimeMetaService.sln"
@@ -34,6 +25,12 @@
     },
     {
       "path": "LimeMetaService.WebAPI/LimeMetaService.WebAPI.csproj"
+    },
+    {
+      "path": "LimeMeta/LimeMeta.csproj"
+    },
+    {
+      "path": "LimeMeta.GraphQL/LimeMeta.GraphQL.csproj"
     }
   ],
   "sources": [
