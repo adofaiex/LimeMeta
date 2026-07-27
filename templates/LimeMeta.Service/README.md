@@ -143,6 +143,8 @@ public sealed class ArticleDto : BaseDto
 2. 模型必须标记 FreeSql 的 `[Table]`。
 3. DTO 必须和模型处于同一命名空间，并准确命名为 `<模型名>Dto`。
 
+如果模型需要数据库同步、Seed、Logic 和 `ILimeMeta`，但不应生成自动 GraphQL 查询、聚合和 Mutation，请在模型上添加 `[DisableGraphQL]`。该模型仍需提供 `<ModelName>Dto`。如果已公开模型的导航属性指向该模型，还应在导航属性上添加 HotChocolate 的 `[GraphQLIgnore]`。
+
 新增一条数据：
 
 ```graphql

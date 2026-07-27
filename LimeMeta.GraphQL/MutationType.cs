@@ -10,6 +10,7 @@ using LimeMeta.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using LimeMeta.Attributes;
 
 namespace LimeMeta.GraphQL;
 /// <summary>
@@ -54,6 +55,7 @@ internal sealed class MutationType : ObjectType<Mutation>
         foreach (var model in models)
         {
             if (!model.IsSubclassOf(typeof(BaseObject))) continue;
+            if (model.IsDefined(typeof(DisableGraphQLAttribute), inherit: true)) continue;
 
             var dtoType = LogicManager.GetModelDtoType(model);
             mi.MakeGenericMethod(model, dtoType).Invoke(null, [desc, LogicManager, Logger]);

@@ -80,6 +80,20 @@ DTO 是写入边界。导航属性通常不放进 DTO，只接收外键 `Categor
 
 明确数据库表名。没有 `[Table]` 的类型不会被 LimeMeta 当作模型。
 
+如果模型仍需参与数据库结构同步、Seed、Logic 和 `ILimeMeta` 数据操作，但不应生成自动 GraphQL 根字段，可以添加：
+
+```csharp
+using LimeMeta.Attributes;
+
+[Table(Name = "internal_job")]
+[DisableGraphQL]
+public sealed class InternalJob : BaseAudit
+{
+}
+```
+
+`[DisableGraphQL]` 会关闭该模型的自动查询、聚合以及增删改 Mutation。模型仍属于 LimeMeta 模型，因此仍需提供 `<ModelName>Dto`。它不会自动隐藏其他已公开模型上的导航属性；如果导航属性也不应出现在 Schema 中，请在该属性上添加 HotChocolate 的 `[GraphQLIgnore]`。
+
 ```csharp
 [Column(Name = "title", StringLength = 200)]
 ```

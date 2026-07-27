@@ -87,6 +87,20 @@ deleteArticle
 
 查询支持分页、HotChocolate Filtering、Sorting、导航属性和聚合。业务程序集通过模板中的 `AddLimeMetaModule` 注册。
 
+如果模型仍需参与数据库结构同步、Seed、Logic 和 `ILimeMeta` 数据操作，但不应自动生成 GraphQL 根字段，可以添加：
+
+```csharp
+using LimeMeta.Attributes;
+
+[Table(Name = "internal_job")]
+[DisableGraphQL]
+public sealed class InternalJob : BaseAudit
+{
+}
+```
+
+这会关闭该模型的自动查询、聚合及增删改 Mutation。模型仍需按约定定义 `<ModelName>Dto`。若其他已公开模型通过导航属性引用它，还应在对应导航属性上使用 HotChocolate 的 `[GraphQLIgnore]`。
+
 ## 认证、配置与存储
 
 登录：

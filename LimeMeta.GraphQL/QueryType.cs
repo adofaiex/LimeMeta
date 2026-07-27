@@ -23,6 +23,7 @@ using HotChocolate.Data.Sorting.Expressions;
 using HotChocolate.Data.Sorting;
 using NetTopologySuite.Geometries;
 using System.Text.Json;
+using LimeMeta.Attributes;
 
 namespace LimeMeta.GraphQL;
 /// <summary>
@@ -66,6 +67,8 @@ internal sealed class QueryType : ObjectType<Query>
         // 动态为每个 ModelType 生成查询字段
         foreach (var modelType in LogicManager.ModelTypes)
         {
+            if (modelType.IsDefined(typeof(DisableGraphQLAttribute), inherit: true)) continue;
+
             var method = typeof(QueryType)
                 .GetMethod(nameof(AddQueryField), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
                 .MakeGenericMethod(modelType);

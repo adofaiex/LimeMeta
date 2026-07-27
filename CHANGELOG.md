@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-07-27
+
+### Added
+
+- 新增模型级 `[DisableGraphQL]`，允许模型继续使用数据库同步、Seed、Logic 和 `ILimeMeta`，同时关闭自动 GraphQL 查询、聚合和 Mutation。
+
 ## [2.0.0] - 2026-07-26
 
 ### Changed
