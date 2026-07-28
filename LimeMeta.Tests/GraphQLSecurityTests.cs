@@ -93,6 +93,7 @@ public sealed class GraphQLSecurityTests
 }
 
 [Table(Name = "graphql_visible_test_model")]
+[LimeMetaAllowAuthenticated(Read = true, Create = true, Update = true, Delete = true)]
 public sealed class GraphQLVisibleTestModel : BaseObject
 {
 }

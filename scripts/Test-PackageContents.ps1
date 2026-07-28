@@ -49,6 +49,9 @@ try {
         "content/templates/LimeMeta.Service/NOTICE",
         "content/templates/LimeMeta.Service/LimeMeta/LimeMeta.csproj",
         "content/templates/LimeMeta.Service/LimeMeta/Extensions.cs",
+        "content/templates/LimeMeta.Service/LimeMeta/Attributes/LimeMetaAuthorizeAttribute.cs",
+        "content/templates/LimeMeta.Service/LimeMeta/Attributes/LimeMetaAllowAuthenticatedAttribute.cs",
+        "content/templates/LimeMeta.Service/LimeMeta/Authorization/ModelAuthorizationPolicy.cs",
         "content/templates/LimeMeta.Service/LimeMeta.GraphQL/LimeMeta.GraphQL.csproj",
         "content/templates/LimeMeta.Service/LimeMeta.GraphQL/QueryType.cs"
     )) {
@@ -127,6 +130,13 @@ try {
     if ($businessProject -match 'PackageReference\s+Include="LimeMeta(?:\.GraphQL)?"' -or
         $businessProject -notmatch 'ProjectReference\s+Include="\.\.\\LimeMeta\\LimeMeta\.csproj"') {
         throw "业务项目没有正确使用框架源码 ProjectReference。"
+    }
+
+    $templateReadme = Get-Content -LiteralPath (
+        Join-Path $extractRoot "content/templates/LimeMeta.Service/README.md") -Raw
+    if ($templateReadme -notmatch "LimeMetaAuthorize" -or
+        $templateReadme -notmatch "未声明访问策略") {
+        throw "模板 README 缺少安全的模型权限声明说明。"
     }
 
     $developmentConfig = Get-ChildItem -LiteralPath $extractRoot -Recurse -Filter "appsettings.Development.yml" -Force |

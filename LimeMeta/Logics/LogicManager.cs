@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using LimeMeta.Attributes;
+using LimeMeta.Authorization;
 using FreeSql.DataAnnotations;
 using LimeMeta.Models;
 using AutoMapper;
@@ -71,6 +72,10 @@ internal sealed class LogicManager : ILogicManager
         _modelTypes = [.. scanAssemblies
             .SelectMany(GetLoadableTypes)
             .Where(t => t.GetCustomAttribute<TableAttribute>() != null && t.IsSubclassOf(typeof(BaseObject)))];
+        foreach (var modelType in _modelTypes)
+        {
+            ModelAuthorizationPolicy.Validate(modelType);
+        }
 
         RebuildModelMapper(loggerFactory);
 
@@ -112,6 +117,7 @@ internal sealed class LogicManager : ILogicManager
         {
             if (_modelTypes.Contains(modelType)) continue;
 
+            ModelAuthorizationPolicy.Validate(modelType);
             _modelTypes.Add(modelType);
             modelChanged = true;
         }

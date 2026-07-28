@@ -66,6 +66,9 @@ try {
 
     foreach ($relativePath in @(
         "LimeMeta/Extensions.cs",
+        "LimeMeta/Attributes/LimeMetaAuthorizeAttribute.cs",
+        "LimeMeta/Attributes/LimeMetaAllowAuthenticatedAttribute.cs",
+        "LimeMeta/Authorization/ModelAuthorizationPolicy.cs",
         "LimeMeta/Data/FreeSqlLimeMeta.cs",
         "LimeMeta.GraphQL/QueryType.cs",
         "LICENSE",

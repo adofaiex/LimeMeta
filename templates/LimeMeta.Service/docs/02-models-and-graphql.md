@@ -10,9 +10,11 @@
 namespace LimeMetaService.Models;
 
 using FreeSql.DataAnnotations;
+using LimeMeta.Attributes;
 using LimeMeta.Models;
 
 [Table(Name = "category")]
+[LimeMetaAuthorize("内容.分类")]
 public sealed class Category : BaseParentChildren<Category>
 {
     [Column(Name = "name", StringLength = 100)]
@@ -38,9 +40,11 @@ public sealed class CategoryDto : BaseParentChildrenDto
 namespace LimeMetaService.Models;
 
 using FreeSql.DataAnnotations;
+using LimeMeta.Attributes;
 using LimeMeta.Models;
 
 [Table(Name = "article")]
+[LimeMetaAuthorize("内容.文章")]
 public sealed class Article : BaseAudit
 {
     [Column(Name = "title", StringLength = 200)]
@@ -69,6 +73,41 @@ public sealed class ArticleDto : BaseDto
 ```
 
 DTO 是写入边界。导航属性通常不放进 DTO，只接收外键 `CategoryId`，可以避免客户端一次提交整棵对象图。
+
+## 每个模型必须声明谁能操作
+
+只要模型会生成自动 GraphQL API，就必须用 `[LimeMetaAuthorize]` 声明每种操作所需的权限：
+
+```csharp
+[LimeMetaAuthorize("工具", Create = "工具.上传")]
+public sealed class Tool : BaseAudit
+{
+}
+```
+
+这段声明的实际含义是：
+
+| 自动操作 | 需要的权限 |
+| --- | --- |
+| 查询、聚合 | `工具` |
+| 新增 | `工具.上传` |
+| 编辑 | `工具.编辑` |
+| 删除 | `工具.删除` |
+
+构造参数是读取权限和其他权限的默认前缀。`Read`、`Create`、`Update`、`Delete` 都可以按业务需要单独覆盖。同一权限组可以在多个模型上复用，例如 `Tool`、`ToolVersion` 和 `ToolVersionFile` 都可以使用 `工具` 这一组。
+
+权限本身仍在 `Seed/Perm.yaml` 中定义，并通过角色分配给用户。模型上的标记只是把自动 API 的操作对应到权限名称；它不会创建 Seed 数据。管理员始终可以执行所有自动操作。
+
+如果确实只需要“登录即可”，必须明确写出允许哪些操作：
+
+```csharp
+[LimeMetaAllowAuthenticated(Read = true)]
+public sealed class PublicNotice : BaseAudit
+{
+}
+```
+
+这里任意已登录用户可查询和聚合，新增、编辑、删除仍只允许管理员。业务模型没有声明访问策略，或者同时声明多种策略，应用都会在启动时失败，而不是默认放行。
 
 ## FreeSql 标记怎么用
 

@@ -1,25 +1,48 @@
+using System.Collections.Concurrent;
+using LimeMeta.Configurations;
 using LimeMeta.Data;
 using LimeMeta.Logics;
-using LimeMeta.Models;
 
 namespace LimeMeta.Authorization;
 
-internal sealed class DefaultLimeMetaAuthorizationService : ILimeMetaAuthorizationService
+internal sealed class DefaultLimeMetaAuthorizationService(
+    LimeMetaConfiguration configuration) : ILimeMetaAuthorizationService
 {
+    private readonly ConcurrentDictionary<Guid, HashSet<string>> _permissionCache = [];
+
     public void EnsureAuthorized(ILimeMeta meta, Guid userId, Type modelType, LimeMetaOperation operation)
     {
         ArgumentNullException.ThrowIfNull(meta);
         ArgumentNullException.ThrowIfNull(modelType);
 
-        if (operation is LimeMetaOperation.Query or LimeMetaOperation.Aggregate)
+        var requirement = ModelAuthorizationPolicy.Resolve(modelType, operation);
+        if (requirement.Kind == ModelAuthorizationRequirementKind.Authenticated)
         {
             return;
         }
 
-        var isSystemModel = modelType.Assembly == typeof(User).Assembly;
-        if (isSystemModel && !UserLogic.IsAdmin(meta, userId))
+        var permissions = _permissionCache.GetOrAdd(
+            userId,
+            id => new HashSet<string>(
+                UserLogic.GetPerms(meta, id).Select(item => item.Name),
+                StringComparer.Ordinal));
+
+        if (permissions.Contains(configuration.AdminPerm))
         {
-            throw new UnauthorizedAccessException($"只有管理员可以修改系统模型 {modelType.Name}。");
+            return;
+        }
+
+        if (requirement.Kind == ModelAuthorizationRequirementKind.Denied)
+        {
+            throw new UnauthorizedAccessException(
+                $"模型 {modelType.Name} 不允许执行 {operation} 操作。");
+        }
+
+        if (requirement.Permission is null ||
+            !permissions.Contains(requirement.Permission))
+        {
+            throw new UnauthorizedAccessException(
+                $"缺少权限：{requirement.Permission}");
         }
     }
 }

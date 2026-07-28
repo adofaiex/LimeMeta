@@ -189,13 +189,15 @@ delete<ModelName>
 - `User` 不生成通用增删改，改用安全的专用用户 Mutation。
 - `Perm` 不生成通用增删改，权限定义建议通过 Seed 或经过明确管理员校验的专用接口维护。
 
-自动 GraphQL 不等于“自动安全”。默认策略只区分系统模型和业务模型：
+自动 GraphQL 会统一执行模型权限检查：
 
-- 所有查询和聚合：已认证用户可用。
-- 业务模型增删改：已认证用户可用。
-- 内置系统模型增删改：管理员可用。
+- 业务模型使用 `[LimeMetaAuthorize]`，把查询、聚合、新增、编辑、删除映射到 `Perm.Name`。
+- 只有明确使用 `[LimeMetaAllowAuthenticated]` 的操作才允许任意已登录用户调用。
+- `[DisableGraphQL]` 模型不生成自动接口。
+- 没有声明访问策略的业务模型会让应用启动失败。
+- 内置系统模型允许已登录用户查询，新增、编辑、删除仅允许管理员。
 
-真实项目上线前通常要替换 `ILimeMetaAuthorizationService`，按权限名、租户、数据归属或模型类型限制操作。
+固定权限名无法表达租户或其他运行时规则时，才需要替换 `ILimeMetaAuthorizationService`。数据归属等逐行规则仍由 Logic 处理。
 
 ## `ILimeMeta` 是什么
 

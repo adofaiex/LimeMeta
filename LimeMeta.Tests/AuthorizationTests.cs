@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using FreeSql;
+using LimeMeta.Attributes;
 using LimeMeta.Authorization;
 using LimeMeta.Configurations;
 using LimeMeta.Data;
@@ -11,11 +12,63 @@ namespace LimeMeta.Tests;
 
 public sealed class AuthorizationTests
 {
+    [Theory]
+    [InlineData(LimeMetaOperation.Query, "工具")]
+    [InlineData(LimeMetaOperation.Aggregate, "工具")]
+    [InlineData(LimeMetaOperation.Insert, "工具.上传")]
+    [InlineData(LimeMetaOperation.Update, "工具.编辑")]
+    [InlineData(LimeMetaOperation.Delete, "工具.删除")]
+    public void ModelPolicy_MapsOperationsToDeclaredPermissions(
+        LimeMetaOperation operation,
+        string expectedPermission)
+    {
+        var requirement = ModelAuthorizationPolicy.Resolve(
+            typeof(SecuredBusinessModel),
+            operation);
+
+        Assert.Equal(ModelAuthorizationRequirementKind.Permission, requirement.Kind);
+        Assert.Equal(expectedPermission, requirement.Permission);
+    }
+
     [Fact]
-    public void DefaultPolicy_AllowsBusinessModelsButRejectsSystemMutationForNonAdmin()
+    public void ModelPolicy_RejectsBusinessModelWithoutAccessDeclaration()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => ModelAuthorizationPolicy.Validate(typeof(UnconfiguredBusinessModel)));
+
+        Assert.Contains("LimeMetaAuthorize", exception.Message);
+        Assert.Contains("LimeMetaAllowAuthenticated", exception.Message);
+        Assert.Contains("DisableGraphQL", exception.Message);
+    }
+
+    [Fact]
+    public void ModelPolicy_RejectsConflictingAccessDeclarations()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => ModelAuthorizationPolicy.Validate(typeof(ConflictingBusinessModel)));
+
+        Assert.Contains("只能声明一种", exception.Message);
+    }
+
+    [Fact]
+    public void ModelPolicy_RejectsEmptyAuthenticatedAccessDeclaration()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => ModelAuthorizationPolicy.Validate(typeof(EmptyAuthenticatedBusinessModel)));
+
+        Assert.Contains("至少需要允许一种操作", exception.Message);
+    }
+
+    [Fact]
+    public void DefaultPolicy_AllowsExplicitReadButRejectsUnapprovedWriteForNonAdmin()
     {
         var services = new ServiceCollection();
-        services.AddSingleton(new LimeMetaConfiguration { AdminUserName = "admin" });
+        var configuration = new LimeMetaConfiguration
+        {
+            AdminUserName = "admin",
+            AdminPerm = "admin"
+        };
+        services.AddSingleton(configuration);
         using var provider = services.BuildServiceProvider();
 
         var users = new Mock<ISelect<User>>();
@@ -29,14 +82,37 @@ public sealed class AuthorizationTests
             .Returns(provider.GetRequiredService<IServiceScopeFactory>());
         meta.Setup(item => item.Query<User>()).Returns(users.Object);
 
-        var policy = new DefaultLimeMetaAuthorizationService();
+        var policy = new DefaultLimeMetaAuthorizationService(configuration);
         var userId = Guid.NewGuid();
 
-        policy.EnsureAuthorized(meta.Object, userId, typeof(BusinessModel), LimeMetaOperation.Insert);
+        policy.EnsureAuthorized(
+            meta.Object,
+            userId,
+            typeof(AuthenticatedReadModel),
+            LimeMetaOperation.Query);
         policy.EnsureAuthorized(meta.Object, userId, typeof(User), LimeMetaOperation.Query);
+        Assert.Throws<UnauthorizedAccessException>(() =>
+            policy.EnsureAuthorized(
+                meta.Object,
+                userId,
+                typeof(AuthenticatedReadModel),
+                LimeMetaOperation.Insert));
         Assert.Throws<UnauthorizedAccessException>(() =>
             policy.EnsureAuthorized(meta.Object, userId, typeof(User), LimeMetaOperation.Update));
     }
 
-    private sealed class BusinessModel : BaseObject;
+    [LimeMetaAuthorize("工具", Create = "工具.上传")]
+    private sealed class SecuredBusinessModel : BaseObject;
+
+    [LimeMetaAllowAuthenticated(Read = true)]
+    private sealed class AuthenticatedReadModel : BaseObject;
+
+    [LimeMetaAuthorize("冲突")]
+    [DisableGraphQL]
+    private sealed class ConflictingBusinessModel : BaseObject;
+
+    [LimeMetaAllowAuthenticated]
+    private sealed class EmptyAuthenticatedBusinessModel : BaseObject;
+
+    private sealed class UnconfiguredBusinessModel : BaseObject;
 }

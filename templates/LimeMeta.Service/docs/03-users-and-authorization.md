@@ -362,108 +362,63 @@ query {
 
 ## 默认模型授权策略
 
-自动生成的 GraphQL Query 和 Mutation 都会调用：
+自动生成的 GraphQL API 默认采用“没有声明就不启动”，而不是“新模型先对所有登录用户开放”。每个业务模型必须选择以下三种方式之一：
+
+### 1. 按权限名称控制
 
 ```csharp
-ILimeMetaAuthorizationService.EnsureAuthorized(
-    ILimeMeta meta,
-    Guid userId,
-    Type modelType,
-    LimeMetaOperation operation);
-```
+using LimeMeta.Attributes;
 
-操作包括：
-
-- `Query`
-- `Aggregate`
-- `Insert`
-- `Update`
-- `Delete`
-
-默认规则：
-
-| 模型 | Query / Aggregate | Insert / Update / Delete |
-| --- | --- | --- |
-| 业务模型 | 已认证即可 | 已认证即可 |
-| LimeMeta 内置系统模型 | 已认证即可 | 仅管理员 |
-
-这是能启动开发的基线，不是大多数生产系统的最终权限设计。
-
-## 替换为业务授权策略
-
-在 `LimeMetaService/Services/ProjectAuthorizationService.cs`：
-
-```csharp
-namespace LimeMetaService.Services;
-
-using LimeMeta.Authorization;
-using LimeMeta.Data;
-using LimeMeta.Logics;
-using LimeMeta.Models;
-using LimeMetaService.Models;
-
-public sealed class ProjectAuthorizationService : ILimeMetaAuthorizationService
+[LimeMetaAuthorize("工具", Create = "工具.上传")]
+public sealed class Tool : BaseAudit
 {
-    public void EnsureAuthorized(
-        ILimeMeta meta,
-        Guid userId,
-        Type modelType,
-        LimeMetaOperation operation)
-    {
-        if (UserLogic.IsAdmin(meta, userId))
-        {
-            return;
-        }
-
-        var permissionNames = UserLogic.GetPerms(meta, userId)
-            .Select(x => x.Name)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        if (modelType == typeof(Article))
-        {
-            var required = operation switch
-            {
-                LimeMetaOperation.Query or LimeMetaOperation.Aggregate
-                    => ProjectPerms.ArticleRead,
-                LimeMetaOperation.Insert or LimeMetaOperation.Update
-                    => ProjectPerms.ArticleWrite,
-                LimeMetaOperation.Delete
-                    => ProjectPerms.ArticlePublish,
-                _ => throw new ArgumentOutOfRangeException(nameof(operation))
-            };
-
-            if (!permissionNames.Contains(required))
-            {
-                throw new UnauthorizedAccessException($"缺少权限：{required}");
-            }
-
-            return;
-        }
-
-        var isSystemModel = modelType.Assembly == typeof(User).Assembly;
-        if (isSystemModel &&
-            operation is LimeMetaOperation.Insert
-                or LimeMetaOperation.Update
-                or LimeMetaOperation.Delete)
-        {
-            throw new UnauthorizedAccessException("只有管理员可以修改系统模型。");
-        }
-    }
 }
 ```
 
-在模板的 `Extensions.cs` 中注册：
+对应关系：
+
+| 自动操作 | 需要的权限 |
+| --- | --- |
+| Query、Aggregate | `工具` |
+| Insert | `工具.上传` |
+| Update | `工具.编辑` |
+| Delete | `工具.删除` |
+
+`[LimeMetaAuthorize("工具")]` 会自动产生 `.新增`、`.编辑`、`.删除` 三个默认名称；上例只把新增改成了更符合产品语言的 `.上传`。也可以通过 `Read`、`Create`、`Update`、`Delete` 分别覆盖。
+
+把对应的权限名称写入 `Seed/Perm.yaml`，再通过角色授予用户。多个模型可以复用同一组权限，因此模型数量增加时不需要维护一个不断变长的 `switch`。
+
+### 2. 明确允许任意登录用户
 
 ```csharp
-using LimeMeta.Authorization;
-using LimeMetaService.Services;
-
-services.AddScoped<ILimeMetaAuthorizationService, ProjectAuthorizationService>();
+[LimeMetaAllowAuthenticated(Read = true)]
+public sealed class PublicNotice : BaseAudit
+{
+}
 ```
 
-模板先注册框架默认实现，再调用 `AddLimeMetaService`；后注册的业务实现会成为单服务解析结果。
+这里仅查询和聚合对任意已登录用户开放。没有设为 `true` 的新增、编辑、删除仍只有管理员可执行。这个标记是有意放宽权限时的明确声明，不是默认行为。
 
-这个接口只能决定“整个操作允许还是拒绝”，不能改写查询来实现逐行数据权限。比如“编辑只能看到自己创建的文章”，应在 `ArticleLogic.BeforeSelect` 中追加条件，并在 Update/Delete 的专用接口或 Logic 中再次校验对象归属。
+### 3. 不生成自动 GraphQL
+
+```csharp
+[DisableGraphQL]
+public sealed class InternalJob : BaseAudit
+{
+}
+```
+
+模型仍可用于数据库同步、Seed、Logic 和 `ILimeMeta`，但不会生成查询、聚合和增删改根字段。
+
+业务模型没有任何一种标记、同时使用多种标记、权限名为空，都会在应用启动时直接报错。管理员始终可以执行全部自动模型操作。LimeMeta 内置系统模型继续保持“登录用户可查询、只有管理员可修改”。
+
+## 什么时候还需要自定义授权服务
+
+大部分“某个模型的增删改查分别需要什么权限”都可以直接在模型上声明，不需要自己实现服务。
+
+只有规则无法用固定权限名表达时，例如权限取决于租户、请求来源或运行时上下文，才需要实现 `ILimeMetaAuthorizationService`。这个接口决定的是一次完整操作能否开始，不能改写查询实现逐行数据权限。
+
+例如“普通发布者只能看自己创建的工具”，仍应在 `ToolLogic.BeforeSelect` 中追加创建人条件；编辑和删除还要在 Logic 中再次校验目标数据的归属。模型权限先判断“这个人有没有编辑工具的资格”，Logic 再判断“这条具体数据是不是他能编辑的”，两层职责不同。
 
 ## 自定义接口必须主动授权
 

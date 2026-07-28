@@ -106,9 +106,11 @@ GraphQL 浏览器通常可以在请求 Headers 区域填写：
 namespace LimeMetaService.Models;
 
 using FreeSql.DataAnnotations;
+using LimeMeta.Attributes;
 using LimeMeta.Models;
 
 [Table(Name = "article")]
+[LimeMetaAuthorize("文章")]
 public sealed class Article : BaseAudit
 {
     [Column(Name = "title", StringLength = 200)]
@@ -137,13 +139,27 @@ public sealed class ArticleDto : BaseDto
 - `updateArticle`：只更新请求中实际提供的字段。
 - `deleteArticle`：按 ID 批量删除。
 
-三个不可省略的约定：
+四个不可省略的约定：
 
 1. 模型必须继承 `BaseObject`、`BaseAudit` 或 `BaseParentChildren<T>`。
 2. 模型必须标记 FreeSql 的 `[Table]`。
 3. DTO 必须和模型处于同一命名空间，并准确命名为 `<模型名>Dto`。
+4. 模型必须选择 `[LimeMetaAuthorize]`、`[LimeMetaAllowAuthenticated]` 或 `[DisableGraphQL]` 中的一种访问策略。
 
-如果模型需要数据库同步、Seed、Logic 和 `ILimeMeta`，但不应生成自动 GraphQL 查询、聚合和 Mutation，请在模型上添加 `[DisableGraphQL]`。该模型仍需提供 `<ModelName>Dto`。如果已公开模型的导航属性指向该模型，还应在导航属性上添加 HotChocolate 的 `[GraphQLIgnore]`。
+上面的 `[LimeMetaAuthorize("文章")]` 表示：
+
+- 查询和聚合需要 `文章` 权限。
+- 新增需要 `文章.新增` 权限。
+- 编辑需要 `文章.编辑` 权限。
+- 删除需要 `文章.删除` 权限。
+
+默认权限名可以按业务词汇单独覆盖，例如 `[LimeMetaAuthorize("工具", Create = "工具.上传")]`。把这些权限名称写入 `LimeMetaService.WebAPI/Seed/Perm.yaml` 后，再通过角色分配给用户。管理员始终可以执行全部操作。
+
+如果某些操作只要求用户登录，可以使用 `[LimeMetaAllowAuthenticated(Read = true)]`；示例表示任意登录用户可查询和聚合，但新增、编辑、删除仍只有管理员可执行。
+
+如果模型需要数据库同步、Seed、Logic 和 `ILimeMeta`，但不应生成自动 GraphQL 查询、聚合和 Mutation，请使用 `[DisableGraphQL]`。该模型仍需提供 `<ModelName>Dto`。如果已公开模型的导航属性指向该模型，还应在导航属性上添加 HotChocolate 的 `[GraphQLIgnore]`。
+
+框架会在应用启动时检查这项声明。业务模型未声明访问策略，或者同时声明多种策略，都会直接启动失败，避免新接口意外对所有登录用户开放。
 
 新增一条数据：
 
@@ -290,7 +306,7 @@ app.UseLimeMetaGraphQL();
 - `changePassword`
 - `resetUserPassword`
 
-管理员可管理其他用户；普通用户只能修改自己的密码。内置系统模型的新增、修改和删除默认仅允许管理员；普通业务模型默认允许任意已认证用户操作。上线前通常应替换 `ILimeMetaAuthorizationService`，把业务权限规则写清楚。
+管理员可管理其他用户；普通用户只能修改自己的密码。内置系统模型的新增、修改和删除仅允许管理员。业务模型必须用 `[LimeMetaAuthorize]`、`[LimeMetaAllowAuthenticated]` 或 `[DisableGraphQL]` 明确访问策略，未声明就不能启动，因此通常不再需要维护按模型分支的自定义授权服务。
 
 详细关系、继承规则、用户 Mutation 示例和自定义授权见 [用户、角色、权限与安全](docs/03-users-and-authorization.md)。
 
@@ -298,7 +314,7 @@ app.UseLimeMetaGraphQL();
 
 - [框架结构与内置能力](docs/01-overview.md)：先建立完整心智模型，了解每个目录和内置模型。
 - [模型、DTO 与自动 GraphQL](docs/02-models-and-graphql.md)：字段、关联、树模型、CRUD、过滤、排序和聚合。
-- [用户、角色、权限与安全](docs/03-users-and-authorization.md)：管理员初始化、角色/部门关系、密码、JWT、AppKey 和自定义授权。
+- [用户、角色、权限与安全](docs/03-users-and-authorization.md)：管理员初始化、角色/部门关系、模型权限、密码、JWT 和 AppKey。
 - [Logic、HTTP 接口、GraphQL 扩展与 WebSocket](docs/04-logic-and-extensions.md)：写业务规则和新的接口。
 - [配置、种子、文件存储与部署](docs/05-configuration-and-deployment.md)：MySQL/PostgreSQL、环境变量、Seed、发布和故障排查。
 

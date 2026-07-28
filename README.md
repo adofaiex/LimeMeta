@@ -60,9 +60,11 @@ MyService/
 namespace MyService.Models;
 
 using FreeSql.DataAnnotations;
+using LimeMeta.Attributes;
 using LimeMeta.Models;
 
 [Table(Name = "article")]
+[LimeMetaAuthorize("文章")]
 public sealed class Article : BaseAudit
 {
     [Column(Name = "title", StringLength = 200)]
@@ -87,6 +89,25 @@ deleteArticle
 
 查询支持分页、HotChocolate Filtering、Sorting、导航属性和聚合。业务程序集通过模板中的 `AddLimeMetaModule` 注册。
 
+每个业务模型都必须明确选择一种访问方式，避免新模型在不知情的情况下对所有登录用户开放：
+
+```csharp
+// 查询/聚合需要“工具”，新增需要“工具.上传”，
+// 编辑和删除默认需要“工具.编辑”“工具.删除”。
+[LimeMetaAuthorize("工具", Create = "工具.上传")]
+public sealed class Tool : BaseAudit
+{
+}
+
+// 只有读取对任意已登录用户开放；写操作仍只允许管理员。
+[LimeMetaAllowAuthenticated(Read = true)]
+public sealed class PublicArticle : BaseAudit
+{
+}
+```
+
+`[LimeMetaAuthorize("工具")]` 默认对应：查询与聚合 → `工具`，新增 → `工具.新增`，编辑 → `工具.编辑`，删除 → `工具.删除`。任一项都可以单独改名。权限名称仍应写入业务项目的 `Seed/Perm.yaml`，模型标记只负责说明每种操作需要哪个权限。管理员不受这些限制。
+
 如果模型仍需参与数据库结构同步、Seed、Logic 和 `ILimeMeta` 数据操作，但不应自动生成 GraphQL 根字段，可以添加：
 
 ```csharp
@@ -101,6 +122,8 @@ public sealed class InternalJob : BaseAudit
 
 这会关闭该模型的自动查询、聚合及增删改 Mutation。模型仍需按约定定义 `<ModelName>Dto`。若其他已公开模型通过导航属性引用它，还应在对应导航属性上使用 HotChocolate 的 `[GraphQLIgnore]`。
 
+缺少上述三种标记之一，或同时使用多种标记，应用都会在启动时给出明确错误；不会等到接口被误调用后才发现。
+
 ## 认证、配置与存储
 
 登录：
@@ -114,7 +137,7 @@ mutation {
 }
 ```
 
-后续请求使用 `Authorization: Bearer <token>`。密码由 BCrypt 处理；自动模型操作通过 `ILimeMetaAuthorizationService` 授权，生产项目应按业务要求替换默认授权策略。
+后续请求使用 `Authorization: Bearer <token>`。密码由 BCrypt 处理；自动模型操作会按照模型上的权限标记统一检查。只有需要更特殊的跨模型规则时，才需要自行实现 `ILimeMetaAuthorizationService`。
 
 生产环境必须显式提供数据库连接串、管理员初始密码和至少 32 字节的 JWT 密钥：
 
