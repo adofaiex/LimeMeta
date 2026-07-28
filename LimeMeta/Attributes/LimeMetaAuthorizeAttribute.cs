@@ -15,6 +15,12 @@ public sealed class LimeMetaAuthorizeAttribute : Attribute
     public LimeMetaAuthorizeAttribute(string permissionPrefix)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(permissionPrefix);
+        if (permissionPrefix.Contains('|', StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                "权限前缀不能包含备选权限分隔符“|”。",
+                nameof(permissionPrefix));
+        }
 
         PermissionPrefix = permissionPrefix;
         Read = permissionPrefix;
@@ -30,21 +36,25 @@ public sealed class LimeMetaAuthorizeAttribute : Attribute
 
     /// <summary>
     /// 查询和聚合所需权限。
+    /// 可用 <c>|</c> 分隔多个备选权限，满足其一即可。
     /// </summary>
     public string Read { get; set; }
 
     /// <summary>
     /// 新增所需权限。
+    /// 可用 <c>|</c> 分隔多个备选权限，满足其一即可。
     /// </summary>
     public string Create { get; set; }
 
     /// <summary>
     /// 修改所需权限。
+    /// 可用 <c>|</c> 分隔多个备选权限，满足其一即可。
     /// </summary>
     public string Update { get; set; }
 
     /// <summary>
     /// 删除所需权限。
+    /// 可用 <c>|</c> 分隔多个备选权限，满足其一即可。
     /// </summary>
     public string Delete { get; set; }
 }

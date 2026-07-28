@@ -59,6 +59,46 @@ public sealed class AuthorizationTests
         Assert.Contains("至少需要允许一种操作", exception.Message);
     }
 
+    [Theory]
+    [InlineData("工具", true)]
+    [InlineData("审核管理.工具审核", true)]
+    [InlineData("工具.编辑", false)]
+    public void ModelPolicy_AcceptsAnyOneOfDeclaredPermissions(
+        string grantedPermission,
+        bool expected)
+    {
+        var requirement = ModelAuthorizationPolicy.Resolve(
+            typeof(MultipleReadPermissionsModel),
+            LimeMetaOperation.Query);
+        var permissions = new HashSet<string>(
+            [grantedPermission],
+            StringComparer.Ordinal);
+
+        Assert.Equal(
+            expected,
+            ModelAuthorizationPolicy.HasAnyPermission(
+                permissions,
+                requirement.Permission!));
+    }
+
+    [Fact]
+    public void ModelPolicy_RejectsEmptyPermissionAlternative()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => ModelAuthorizationPolicy.Validate(typeof(EmptyPermissionAlternativeModel)));
+
+        Assert.Contains("包含空的备选权限", exception.Message);
+    }
+
+    [Fact]
+    public void AuthorizeAttribute_RejectsAlternativeDelimiterInPermissionPrefix()
+    {
+        var exception = Assert.Throws<ArgumentException>(
+            () => new LimeMetaAuthorizeAttribute("工具|审核管理"));
+
+        Assert.Contains("权限前缀不能包含", exception.Message);
+    }
+
     [Fact]
     public void DefaultPolicy_AllowsExplicitReadButRejectsUnapprovedWriteForNonAdmin()
     {
@@ -113,6 +153,16 @@ public sealed class AuthorizationTests
 
     [LimeMetaAllowAuthenticated]
     private sealed class EmptyAuthenticatedBusinessModel : BaseObject;
+
+    [LimeMetaAuthorize(
+        "工具",
+        Read = "工具 | 审核管理.工具审核")]
+    private sealed class MultipleReadPermissionsModel : BaseObject;
+
+    [LimeMetaAuthorize(
+        "工具",
+        Read = "工具||审核管理.工具审核")]
+    private sealed class EmptyPermissionAlternativeModel : BaseObject;
 
     private sealed class UnconfiguredBusinessModel : BaseObject;
 }

@@ -123,12 +123,34 @@ internal static class ModelAuthorizationPolicy
 
     private static void ValidatePermission(Type modelType, string operation, string permission)
     {
-        if (!string.IsNullOrWhiteSpace(permission))
+        if (string.IsNullOrWhiteSpace(permission))
         {
-            return;
+            throw new InvalidOperationException(
+                $"模型 {modelType.FullName} 的 {operation} 权限名称不能为空。");
         }
 
-        throw new InvalidOperationException(
-            $"模型 {modelType.FullName} 的 {operation} 权限名称不能为空。");
+        var alternatives = permission.Split(
+            '|',
+            StringSplitOptions.TrimEntries);
+        if (alternatives.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new InvalidOperationException(
+                $"模型 {modelType.FullName} 的 {operation} 包含空的备选权限。");
+        }
+    }
+
+    internal static bool HasAnyPermission(
+        IReadOnlySet<string> permissions,
+        string requirement)
+    {
+        ArgumentNullException.ThrowIfNull(permissions);
+        ArgumentException.ThrowIfNullOrWhiteSpace(requirement);
+
+        return requirement
+            .Split(
+                '|',
+                StringSplitOptions.TrimEntries |
+                StringSplitOptions.RemoveEmptyEntries)
+            .Any(permissions.Contains);
     }
 }

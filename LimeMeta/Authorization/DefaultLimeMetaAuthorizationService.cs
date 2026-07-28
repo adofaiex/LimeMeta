@@ -39,7 +39,9 @@ internal sealed class DefaultLimeMetaAuthorizationService(
         }
 
         if (requirement.Permission is null ||
-            !permissions.Contains(requirement.Permission))
+            !ModelAuthorizationPolicy.HasAnyPermission(
+                permissions,
+                requirement.Permission))
         {
             throw new UnauthorizedAccessException(
                 $"缺少权限：{requirement.Permission}");

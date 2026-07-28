@@ -155,6 +155,8 @@ public sealed class ArticleDto : BaseDto
 
 默认权限名可以按业务词汇单独覆盖，例如 `[LimeMetaAuthorize("工具", Create = "工具.上传")]`。把这些权限名称写入 `LimeMetaService.WebAPI/Seed/Perm.yaml` 后，再通过角色分配给用户。管理员始终可以执行全部操作。
 
+如果同一个操作允许多种身份，可以用 `|` 分隔备选权限，例如 `Read = "工具|审核管理.工具审核"`。用户拥有其中任意一个即可读取。`|` 是保留分隔符，权限名称本身不要包含它；数据归属和允许修改哪些字段仍应由 Logic 校验。
+
 如果某些操作只要求用户登录，可以使用 `[LimeMetaAllowAuthenticated(Read = true)]`；示例表示任意登录用户可查询和聚合，但新增、编辑、删除仍只有管理员可执行。
 
 如果模型需要数据库同步、Seed、Logic 和 `ILimeMeta`，但不应生成自动 GraphQL 查询、聚合和 Mutation，请使用 `[DisableGraphQL]`。该模型仍需提供 `<ModelName>Dto`。如果已公开模型的导航属性指向该模型，还应在导航属性上添加 HotChocolate 的 `[GraphQLIgnore]`。

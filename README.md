@@ -108,6 +108,20 @@ public sealed class PublicArticle : BaseAudit
 
 `[LimeMetaAuthorize("工具")]` 默认对应：查询与聚合 → `工具`，新增 → `工具.新增`，编辑 → `工具.编辑`，删除 → `工具.删除`。任一项都可以单独改名。权限名称仍应写入业务项目的 `Seed/Perm.yaml`，模型标记只负责说明每种操作需要哪个权限。管理员不受这些限制。
 
+一个操作允许多种身份时，可以用 `|` 分隔备选权限：
+
+```csharp
+[LimeMetaAuthorize(
+    "工具",
+    Read = "工具|审核管理.工具审核",
+    Update = "工具.编辑|审核管理.工具审核")]
+public sealed class Tool : BaseAudit
+{
+}
+```
+
+普通工具用户和审核员都可以读取；编辑者或审核员都可以进入更新操作。满足任意一个权限即可，具体数据归属和“审核员只能修改审核字段”等规则仍由 Logic 校验。`|` 是保留分隔符，权限名称本身不要包含它。
+
 如果模型仍需参与数据库结构同步、Seed、Logic 和 `ILimeMeta` 数据操作，但不应自动生成 GraphQL 根字段，可以添加：
 
 ```csharp

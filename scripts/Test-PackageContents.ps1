@@ -135,7 +135,8 @@ try {
     $templateReadme = Get-Content -LiteralPath (
         Join-Path $extractRoot "content/templates/LimeMeta.Service/README.md") -Raw
     if ($templateReadme -notmatch "LimeMetaAuthorize" -or
-        $templateReadme -notmatch "未声明访问策略") {
+        $templateReadme -notmatch "未声明访问策略" -or
+        $templateReadme -notmatch "备选权限") {
         throw "模板 README 缺少安全的模型权限声明说明。"
     }
 
