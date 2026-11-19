@@ -23,7 +23,7 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - name: 初始化 CodeQL
-        uses: github/codeql-action/init@3b0bd1d116c0bde30213346b22d4f634d96a2fb0
+        uses: github/codeql-action/init@4187e74d05793876e9989daffde9c3e66b4acd07
         with:
           languages: csharp
       - run: dotnet restore LimeMeta.sln
